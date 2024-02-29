@@ -1,0 +1,6 @@
+# ninja log v5
+1	45	1709250216532881997	CMakeFiles/NFA.dir/other/linked_list.c.o	803fb02c7a09eeff
+0	58	1709250216544881997	CMakeFiles/NFA.dir/main.c.o	190bea5892950385
+0	117	1709250216604881996	CMakeFiles/NFA.dir/nfa.c.o	445a6aaa2bf24adf
+0	738	1709250217224881992	CMakeFiles/NFA.dir/big_int/big_int.c.o	8299e96cefe93a9c
+738	772	1709250217256881991	NFA	d6d3a93ffc53696a
