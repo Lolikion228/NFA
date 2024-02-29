@@ -36,7 +36,7 @@ int main(){
     NFA_add_transition(nfa,0,2, tr1);
     NFA_add_transition(nfa,1,1, tr3);
     NFA_add_transition(nfa,1,5, tr4);
-//    NFA_add_transition(nfa,2,3, tr2);
+
     NFA_add_transition(nfa,2,4, tr1);
 
 
