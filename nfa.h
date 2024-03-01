@@ -36,14 +36,13 @@ typedef struct NFA{
     int states_cnt;
     char dim; //<=255!!!!
     NFA_state *initial_state;
-    NFA_state *current_state;
 } NFA;
 
 NFA *NFA_init(char dim);
 
 NFA_state *NFA_state_init(NFA *a,int is_final);
 
-void NFA_add_state(NFA *a,NFA_state *state);
+void NFA_add_state(NFA *a,int is_final);
 
 void NFA_state_free(NFA_state *s);
 

@@ -19,7 +19,6 @@ NFA *NFA_init(char dim){
     a->dim = dim;
     a->initial_state=NFA_state_init(a,0);
     a->initial_state->index=0;
-    a->current_state=a->initial_state;
     a->states = malloc(sizeof(NFA_state));
     if(!a->states){
         printf("memory allocation error in NFA_init_2\n");
@@ -49,7 +48,8 @@ NFA_state *NFA_state_init(NFA *a,int is_final){
 }
 
 
-void NFA_add_state(NFA *a,NFA_state *state){
+void NFA_add_state(NFA *a,int is_final){
+    NFA_state *state=NFA_state_init(a,is_final);
     a->states=realloc(a->states,((a->states_cnt)+1)*sizeof(NFA_state));
     if(!a->states){
         printf("memory allocation error in NFA_add_state\n");
@@ -145,32 +145,32 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
 
     big_int *sent2= big_int_copy(sentence);
 
+    NFA_state *a_current_state=a->initial_state;
+
     if(verbose==1){
         printf("sentence: ");
         big_int_print(sent2);
     }
 
+    if(0!=  ((sent2->bit_len)%a->dim) ){
+        (sent2->bit_len) += a->dim- ((sent2->bit_len)%a->dim) ;
+    }
+
     long max_num_words= (sent2->bit_len)/a->dim;
     long processed_words= 0;
 
-//    big_int *curr_word= big_int_get("0");
-//    big_int *two=big_int_get("10");
-    //big_int *dvdr= big_int_lr3(two,a->dim);
-
-    //big_int_div2_for_pow(sent2,dvdr,curr_word);=
-    int curr_word=(sent2->number[0] & (1+a->dim));
+    int curr_word=(sent2->number[0] & ( (1<<a->dim)-1 ) );
     big_int_bin_shft_r2(sent2,a->dim);
 
-
     while(processed_words<max_num_words) {
-        node *curr_nd=a->current_state->transitions->head;
+        node *curr_nd=a_current_state->transitions->head;
         if(verbose==1) {
             printf("------------------------\n");
             printf("not processed part of sentence:");
             big_int_print(sent2);
             printf("current word:");
             printf("%d\n",curr_word);
-            printf("current state:%d\n",a->current_state->index);
+            printf("current state:%d\n",a_current_state->index);
         }
         while (curr_nd != NULL) {
             if (curr_word == curr_nd->val->transition_trigger) {
@@ -178,32 +178,21 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
                     printf("transition from state_%d to state_%d by trigger ",
                            curr_nd->val->state_from->index,
                            curr_nd->val->state_to->index);
-//                    big_int_print(curr_nd->val->transition_trigger);
                     printf("%b\n",curr_nd->val->transition_trigger);
                     printf("current state:%d\n",curr_nd->val->state_to->index);
+
                 }
-                a->current_state = curr_nd->val->state_to;
+                a_current_state = curr_nd->val->state_to;
                 break;
             }
             curr_nd = curr_nd->next;
         }
-
-//        big_int_div2_for_pow(sent2,dvdr,curr_word);
-//        big_int_bin_shft_r2(sent2,a->dim);
-
-        curr_word=(sent2->number[0] & (1+a->dim));
+        curr_word=(sent2->number[0] & ( (1<<a->dim)-1 ) );
         big_int_bin_shft_r2(sent2,a->dim);
-
         processed_words++;
-
-
     }
-
-    big_int_free2(2,&sent2,&curr_word);
-
-    int accepted=a->current_state->accept_state;
-    a->current_state=a->initial_state;
-    return accepted;
+    big_int_free2(1,&sent2);
+    return a_current_state->accept_state;
 }
 
 

@@ -3,11 +3,12 @@
 	node [fontname="Helvetica,Arial,sans-serif"]
 	edge [fontname="Helvetica,Arial,sans-serif"]
 	rankdir=LR;
-	node [shape = doublecircle ]; 1 2 4;
+	node [shape = doublecircle ]; 2 4;
 	node [shape = circle];
-	0 -> 1 [label =" 10 "]; 
-	0 -> 1 [label =" 11 "]; 
-	1 -> 2 [label =" 11 "]; 
-	2 -> 3 [label =" 11 "]; 
-	2 -> 4 [label =" 10 "]; 
+	0 -> 1 [label =" 1010 "]; 
+	0 -> 1 [label =" 1111 "]; 
+	1 -> 2 [label =" 101 "]; 
+	1 -> 1 [label =" 1000 "]; 
+	2 -> 3 [label =" 101 "]; 
+	2 -> 4 [label =" 1000 "]; 
 }   
