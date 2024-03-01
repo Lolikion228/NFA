@@ -30,7 +30,7 @@ int main(){
     NFA_add_state(nfa, NFA_state_init(nfa,1));
     NFA_add_state(nfa, NFA_state_init(nfa,1));
 
-   //comment 1
+
     NFA_add_transition(nfa,0,1, tr2);
     NFA_add_transition(nfa,0,0, tr1);
     NFA_add_transition(nfa,0,2, tr1);
