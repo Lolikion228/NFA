@@ -1,0 +1,29 @@
+<changelist name="Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1" date="1709249703159" recycled="true" deleted="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 01.03.24 2:34 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="cmake-build-debug/CMakeFiles/NFA.dir/main.c.o" />
+    <option name="AFTER_PATH" value="cmake-build-debug/CMakeFiles/NFA.dir/main.c.o" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1/main.c.o" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="cmake-build-debug/CMakeFiles/NFA.dir/big_int/big_int.c.o" />
+    <option name="AFTER_PATH" value="cmake-build-debug/CMakeFiles/NFA.dir/big_int/big_int.c.o" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1/big_int.c.o" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="cmake-build-debug/NFA" />
+    <option name="AFTER_PATH" value="cmake-build-debug/NFA" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1/NFA" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="cmake-build-debug/.ninja_deps" />
+    <option name="AFTER_PATH" value="cmake-build-debug/.ninja_deps" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1/.ninja_deps" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="cmake-build-debug/CMakeFiles/NFA.dir/nfa.c.o" />
+    <option name="AFTER_PATH" value="cmake-build-debug/CMakeFiles/NFA.dir/nfa.c.o" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_01_03_24_2_34_[Changes]1/nfa.c.o" />
+  </binary>
+</changelist>

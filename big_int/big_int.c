@@ -99,6 +99,12 @@ void big_int_fprint(const big_int *n,FILE *f) {
         }
         if (i)printf(" ");//REDO
     }
+    //bitwise printing
+//    big_
+//    for (int i = n->bit_len - 1; i > -1; i--) {
+//
+//    }
+
 }
 
 void big_int_print2(const unsigned int n0, ...) {
