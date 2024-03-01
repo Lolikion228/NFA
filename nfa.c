@@ -65,6 +65,7 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,big_int* trigger){
     node *curr=(a->states[state_from])->transitions->head;
     node *tmp=NULL;
     while(curr){
+
         if(curr->val->state_from->index==state_from
         && curr->val->state_to->index==state_to
         && big_int_equal(curr->val->transition_trigger,trigger)
