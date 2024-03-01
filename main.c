@@ -39,7 +39,7 @@ int main(){
 
     NFA_add_transition(nfa,2,4, tr1);
 
-    //new comment in br2
+
     NFA_to_dot(nfa);
 
     printf("ACCEPTED=%d",NFA_check(nfa,sent,0));
