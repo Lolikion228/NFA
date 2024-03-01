@@ -257,8 +257,8 @@ void NFA_to_dot(NFA *a){
             fprintf(f,"\t%d -> %d [label =\" ",
                     curr->val->state_from->index,
                     curr->val->state_to->index);
-//            big_int_fprint(curr->val->transition_trigger,f);
-            fprintf(f,"%b",curr->val->transition_trigger);
+
+            fprintf(f,"%b" ,curr->val->transition_trigger);
             fprintf(f," \"]; \n");
             curr=curr->next;
         }
@@ -270,8 +270,21 @@ void NFA_to_dot(NFA *a){
 }
 
 
+int * NFA_check_many(NFA *a, big_int **sentences, int len, int verbose){
+    int *res=(int *)calloc( len,sizeof(int));
+    for(int i=0;i<len;i++){
+        if(verbose){
+            printf("Sentence_%d\n",i);
+            printf("////////////////////////////////////////////////\n");
+        }
+        res[i]= NFA_check(a,sentences[i],verbose);\
+        if(verbose){
+            printf("\n\n");
+        }
+    }
 
-
+    return res;
+}
 
 
 

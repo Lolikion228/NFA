@@ -89,23 +89,7 @@ void big_int_print(const big_int *n) {
     printf("\n");
 }
 
-void big_int_fprint(const big_int *n,FILE *f) {
-    for (int i = n->length - 1; i > -1; i--) {
-        int x = n->number[i];
-        int bit = 128;
-        for (int j = 7; j > -1; j--) {
-            fprintf(f,"%i", (x & bit) != 0);
-            bit >>= 1;
-        }
-        if (i)printf(" ");//REDO
-    }
-    //bitwise printing
-//    big_
-//    for (int i = n->bit_len - 1; i > -1; i--) {
-//
-//    }
 
-}
 
 void big_int_print2(const unsigned int n0, ...) {
     va_list ptr;

@@ -54,6 +54,8 @@ void NFA_transition_free(NFA_transition *tr);
 
 int NFA_check(NFA *a,big_int *sentence,int verbose);
 
+int * NFA_check_many(NFA *a, big_int **sentences, int len,int verbose);
+
 void NFA_print(NFA* a);
 
 void NFA_free(NFA *a);
