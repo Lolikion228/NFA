@@ -91,13 +91,13 @@ void NFA_add_transition(NFA *a, int state_from, int state_to, int trigger){
     else{
         while(curr->next){
             if(is_transitions_equal(transition,curr->val)){
-                NFA_transition_free(transition);
+                free(transition);
                 return;
             }
             curr=curr->next;
         }
         if(is_transitions_equal(transition,curr->val)){
-            NFA_transition_free(transition);
+            free(transition);
             return;
         }
         curr->next = node_init(transition);
@@ -117,12 +117,12 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
         ){
             if(tmp){
                 tmp->next=curr->next;
-                NFA_transition_free(curr->val);
+                free(curr->val);
                 free(curr);
             }
             else{
                 (a->states[state_from])->transitions->head=curr->next;
-                NFA_transition_free(curr->val);
+                free(curr->val);
                 free(curr);
             }
             a->states[state_from]->transitions_cnt--;
@@ -133,10 +133,6 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
     }
 }
 
-
-void NFA_transition_free(NFA_transition *tr){
-    free(tr);
-}
 
 
 int NFA_check(NFA *a,big_int *sentence,int verbose){
@@ -272,7 +268,7 @@ int * NFA_check_many(NFA *a, big_int **sentences, int len, int verbose){
             printf("Sentence_%d\n",i);
             printf("////////////////////////////////////////////////\n");
         }
-        res[i]= NFA_check(a,sentences[i],verbose);\
+        res[i]= NFA_check(a,sentences[i],verbose);
         if(verbose){
             printf("\n\n");
         }
