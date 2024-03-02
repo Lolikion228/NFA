@@ -13,12 +13,10 @@ typedef struct NFA_state NFA_state;
 typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
 
-//typedef char dim_type;
-
 
 typedef struct NFA_state{
     int index;
-    int accept_state;
+    int is_final;
     struct list *transitions;
     int transitions_cnt;
 } NFA_state;
@@ -34,13 +32,12 @@ typedef struct NFA_transition {
 typedef struct NFA{
     NFA_state **states;
     int states_cnt;
-    int dim; //<=255!!!!
+    int dim; // <= 8!!!!
     NFA_state *initial_state;
 } NFA;
 
-NFA *NFA_init(int dim);
 
-NFA_state *NFA_state_init(NFA *a,int is_final);
+NFA *NFA_init(int dim);
 
 void NFA_add_state(NFA *a,int is_final);
 
@@ -60,7 +57,14 @@ void NFA_free(NFA *a);
 
 void NFA_to_dot(NFA *a);
 
+/*
+dim
+states_cnt [state[i] is_final]
+transitions_cnt
+trigger_value state_from_ix state_to_ix
+ */
 void NFA_to_file(NFA *a);
 
 NFA *NFA_from_file(char* file_pth);
+
 #endif //NFA_NFA_H

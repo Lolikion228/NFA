@@ -8,14 +8,17 @@
 #include "big_int/big_int.h"
 
 
+
+
 //add multidim; remove curr_state
+//read write to file
+//cleaning
 
-
-//read write to file walnut
 
 //multiple states
-//create strict goals
-//clean code
+//clean code and git
+//nfa->dim <= 8!!!!
+//remove cmake_build_debug and .idea from git_remote
 
 
 int main(){
@@ -28,13 +31,14 @@ int main(){
     int tr3= (int)strtol("100",NULL,2);
     int tr4= (int)strtol("111",NULL,2);
 
-    big_int *sent1= big_int_get("111000");//1
-    big_int *sent2= big_int_get("011011");//0
+    big_int *sent1= big_int_get("001000");//1
+    big_int *sent2= big_int_get("111011");//0
     big_int *sent3= big_int_get("100000");//0
-    big_int**sents=(big_int **)calloc(1,sizeof(big_int*));
+    int sent_cnt=3;
+    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
     sents[0]=sent1;
-//    sents[1]=sent2;
-//    sents[2]=sent3;
+    sents[1]=sent2;
+    sents[2]=sent3;
 
     NFA *nfa=NFA_init(dim);
 
@@ -48,26 +52,36 @@ int main(){
     NFA_add_transition(nfa,1,2, tr4);
     NFA_add_transition(nfa,2,1, tr4);
 
-    NFA_to_dot(nfa);
-
-//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent1,0));
-//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent2,0));
-//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent3,0));
-
-    int*res=NFA_check_many(nfa,sents,1,0);
-
-//    for(int i=0;i<1;i++){
-//        printf("sent_%d=%d\n",i,res[i]);
-//    }
 
     NFA_to_file(nfa);
     NFA* a2=NFA_from_file("../automata.txt");
-    NFA_print(a2);
+    printf("ACCEPTED=%d\n",NFA_check(nfa,sent1,0));
+    printf("ACCEPTED=%d\n",NFA_check(nfa,sent2,0));
+    printf("ACCEPTED=%d\n",NFA_check(nfa,sent3,0));
+
+    int*res=NFA_check_many(nfa,sents,sent_cnt,0);
+
+    for(int i=0;i<sent_cnt;i++){
+        printf("sent_%d=%d\n",i,res[i]);
+    }
+
+    int*res2=NFA_check_many(a2,sents,sent_cnt,0);
+
+    for(int i=0;i<sent_cnt;i++){
+        printf("sent_%d=%d\n",i,res2[i]);
+    }
+
+
+//    NFA_print(a2);
+    NFA_to_dot(nfa);
     NFA_free(nfa);
+    NFA_free(a2);
 
     free(sents);
     free(res);
+    free(res2);
     big_int_free2(3,&sent1,&sent2,&sent3);
-
+    if(-1){
+    printf("%d\n",124);}
     return 0;
 }
