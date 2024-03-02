@@ -14,6 +14,8 @@
 //cleaning
 
 
+
+//todo goals issues in git
 //multiple states
 //clean code and git
 //nfa->dim <= 8!!!!
