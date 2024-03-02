@@ -18,10 +18,10 @@ void node_free(node *nd) {
         while (nd->next != NULL) {
             tmp = nd;
             nd = nd->next;
-            NFA_transition_free(tmp->val);
+            free(tmp->val);
             free(tmp);
         }
-        NFA_transition_free(nd->val);
+        free(nd->val);
         free(nd);
     }
 }
