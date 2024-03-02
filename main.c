@@ -7,7 +7,7 @@
 #include "nfa.h"
 #include "big_int/big_int.h"
 
-
+//tst228
 
 
 //add multidim; remove curr_state

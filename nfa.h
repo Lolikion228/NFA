@@ -2,7 +2,7 @@
 // Created by lolikion on 16.02.24.
 //
 
-
+//tst228
 #ifndef NFA_NFA_H
 #define NFA_NFA_H
 

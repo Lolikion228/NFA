@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "other/linked_list.h"
-
+//tst228
 NFA_state *NFA_state_init(NFA *a,int is_final);
 
 // NFA over \{0,1\}^{dim}
