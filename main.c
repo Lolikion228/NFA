@@ -7,7 +7,6 @@
 #include "nfa.h"
 #include "big_int/big_int.h"
 
-//tst228
 
 
 //add multidim; remove curr_state
@@ -25,7 +24,6 @@ int main(){
 
     char dim = 3;
 
-    
     int tr1= (int)strtol("000",NULL,2) ;
     int tr2= (int)strtol("011",NULL,2);
     int tr3= (int)strtol("100",NULL,2);

@@ -4,7 +4,7 @@
 #include "linked_list.h"
 #include <stdlib.h>
 #include "../nfa.h"
-//tst228
+
 node *node_init(NFA_transition *tr) {
     node *nd = (node *)malloc(sizeof(node));//not sizeof(node*)
     nd->val = tr;
