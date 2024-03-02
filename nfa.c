@@ -9,7 +9,7 @@
 
 
 // NFA over \{0,1\}^{dim}
-NFA *NFA_init(char dim){
+NFA *NFA_init(int dim){
     NFA *a = (NFA *)malloc(sizeof(NFA));
     if(!a){
         printf("memory allocation error in NFA_init_1\n");
@@ -134,9 +134,7 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
 }
 
 
-///maybe set to NULL?
 void NFA_transition_free(NFA_transition *tr){
-//    big_int_free(&tr->transition_trigger);
     free(tr);
 }
 
@@ -208,7 +206,6 @@ void NFA_print(NFA* a){
         node* curr=a->states[i]->transitions->head;
         while(curr){
             printf("to=%d; trigger=",curr->val->state_to->index);
-//            big_int_print(curr->val->transition_trigger);
             printf("%b\n",curr->val->transition_trigger);
             curr=curr->next;
         }
@@ -217,13 +214,11 @@ void NFA_print(NFA* a){
 }
 
 
-///maybe set to NULL?
 void NFA_free(NFA *a){
     for(int i=0;i<a->states_cnt;i++){
         NFA_state_free(a->states[i]);
     }
     free(a->states);
-//    big_int_free(&a->dim);
     free(a);
 
 }
@@ -286,14 +281,77 @@ int * NFA_check_many(NFA *a, big_int **sentences, int len, int verbose){
     return res;
 }
 
+/*
+dim
+final_states_cnt Final states ix-s separated with spaces
+transitions_cnt
+trigger_value state_from_ix state_to_ix
+ */
+void NFA_to_file(NFA *a){
+    FILE *f= fopen("../automata.txt","w");
+    fprintf(f,"%d\n",a->dim);
+
+    fprintf(f,"%d ",a->states_cnt);
+
+    for(int j=0; j<a->states_cnt; j++){
+        fprintf(f,"%d ",a->states[j]->accept_state);
+    }
+    fprintf(f,"\n");
+
+    int cnt_tr=0;
+    for(int j=0; j<a->states_cnt; j++){
+        cnt_tr+=a->states[j]->transitions_cnt;
+    }
+    fprintf(f,"%d\n",cnt_tr);
+    for(int j=0; j<a->states_cnt; j++){
+        node *curr_nd=a->states[j]->transitions->head;
+        while(curr_nd){
+            fprintf(f,"%d %d %d\n",curr_nd->val->transition_trigger, curr_nd->val->state_from->index,curr_nd->val->state_to->index);
+            curr_nd=curr_nd->next;
+        }
+    }
 
 
+    fclose(f);
+}
 
 
+NFA *NFA_from_file(char* file_pth){
+    FILE *f= fopen(file_pth,"r");
+
+    int dim;
+    fscanf(f,"%d\n",&dim);
+
+    NFA *a= NFA_init(dim);
+
+    int cnt_st;
+    fscanf(f,"%d",&cnt_st);
 
 
+    int final[cnt_st];
 
+    for(int i=0;i<cnt_st;i++){
+        fscanf(f,"%d",&final[i]);
+    }
 
+    for(int i=1;i<cnt_st;i++){
+        NFA_add_state(a,final[i]);
+    }
+
+    int cnt_tr=0;
+    fscanf(f,"%d\n",&cnt_tr);
+
+    for(int i=0; i<cnt_tr; i++){
+        int trigger,from,to;
+        fscanf(f,"%d",&trigger);
+        fscanf(f,"%d",&from);
+        fscanf(f,"%d\n",&to);
+        NFA_add_transition(a,from,to,trigger);
+    }
+
+    fclose(f);
+    return a;
+}
 
 
 

@@ -34,11 +34,11 @@ typedef struct NFA_transition {
 typedef struct NFA{
     NFA_state **states;
     int states_cnt;
-    char dim; //<=255!!!!
+    int dim; //<=255!!!!
     NFA_state *initial_state;
 } NFA;
 
-NFA *NFA_init(char dim);
+NFA *NFA_init(int dim);
 
 NFA_state *NFA_state_init(NFA *a,int is_final);
 
@@ -62,4 +62,7 @@ void NFA_free(NFA *a);
 
 void NFA_to_dot(NFA *a);
 
+void NFA_to_file(NFA *a);
+
+NFA *NFA_from_file(char* file_pth);
 #endif //NFA_NFA_H

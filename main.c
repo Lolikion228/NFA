@@ -8,8 +8,15 @@
 #include "big_int/big_int.h"
 
 
+//add multidim; remove curr_state
+
+
+//read write to file walnut
 
 //multiple states
+//create strict goals
+//clean code
+
 
 int main(){
 
@@ -24,17 +31,16 @@ int main(){
     big_int *sent1= big_int_get("111000");//1
     big_int *sent2= big_int_get("011011");//0
     big_int *sent3= big_int_get("100000");//0
-
-    big_int**sents=(big_int **)calloc(3,sizeof(big_int*));
+    big_int**sents=(big_int **)calloc(1,sizeof(big_int*));
     sents[0]=sent1;
-    sents[1]=sent2;
-    sents[2]=sent3;
+//    sents[1]=sent2;
+//    sents[2]=sent3;
 
     NFA *nfa=NFA_init(dim);
 
     NFA_add_state(nfa, 0);
     NFA_add_state(nfa, 1);
-    NFA_add_state(nfa, 0);
+    NFA_add_state(nfa, 1);
 
     NFA_add_transition(nfa,0,1, tr1);
     NFA_add_transition(nfa,0,1, tr2);
@@ -48,12 +54,15 @@ int main(){
 //    printf("ACCEPTED=%d\n",NFA_check(nfa,sent2,0));
 //    printf("ACCEPTED=%d\n",NFA_check(nfa,sent3,0));
 
-    int*res=NFA_check_many(nfa,sents,3,1);
+    int*res=NFA_check_many(nfa,sents,1,0);
 
-    for(int i=0;i<3;i++){
-        printf("sent_%d=%d\n",i,res[i]);
-    }
+//    for(int i=0;i<1;i++){
+//        printf("sent_%d=%d\n",i,res[i]);
+//    }
 
+    NFA_to_file(nfa);
+    NFA* a2=NFA_from_file("../automata.txt");
+    NFA_print(a2);
     NFA_free(nfa);
 
     free(sents);
