@@ -147,6 +147,7 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
     }
 
     if( ((sent2->bit_len)%a->dim) ){
+
         (sent2->bit_len) += a->dim- ((sent2->bit_len)%a->dim) ;
     }
 
@@ -154,8 +155,11 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
     long processed_words= 0;
 
 
-    //rework for dim>=9
-    int curr_word=(sent2->number[0] & ( (1<<a->dim)-1 ) );
+    int curr_wrd=0;
+    for(int i=0; i <= (a->dim)/9; i++ ){
+        curr_wrd+= (sent2->number[i] & (   (((1<<a->dim)-1)>>8*i)))<< 8*i ;
+    }
+
     big_int_bin_shft_r2(sent2,a->dim);
 
     while(processed_words<max_num_words) {
@@ -165,11 +169,11 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
             printf("not processed part of sentence:");
             big_int_print(sent2);
             printf("current word:");
-            printf("%d\n",curr_word);
+            printf("%d\n",curr_wrd);
             printf("current state:%d\n",a_current_state->index);
         }
         while (curr_nd != NULL) {
-            if (curr_word == curr_nd->val->transition_trigger) {
+            if (curr_wrd == curr_nd->val->transition_trigger) {
                 if(verbose==1){
                     printf("transition from state_%d to state_%d by trigger ",
                            curr_nd->val->state_from->index,
@@ -183,9 +187,12 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
             }
             curr_nd = curr_nd->next;
         }
-        //rework for dim>=9
-        curr_word=(sent2->number[0] & ( (1<<a->dim)-1 ) );
+        curr_wrd=0;
+        for(int i=0; i <= (a->dim)/9; i++ ){
+            curr_wrd+=(sent2->number[i] & (   (((1<<a->dim)-1)>>8*i)))<< 8*i ;
+        }
         big_int_bin_shft_r2(sent2,a->dim);
+
         processed_words++;
     }
     big_int_free2(1,&sent2);

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
-project(DFA)
+project(NFA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -O3 -lm")
