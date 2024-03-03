@@ -7,7 +7,7 @@
 #include "nfa.h"
 #include "big_int/big_int.h"
 
-//new feature in main branch
+//new feature in experiments branch
 
 //add multidim; remove curr_state
 //read write to file
