@@ -6,7 +6,7 @@
 #ifndef NFA_NFA_H
 #define NFA_NFA_H
 
-#include "big_int/big_int.h"
+#include "other/big_int.h"
 #include "other/linked_list.h"
 
 typedef struct NFA_state NFA_state;

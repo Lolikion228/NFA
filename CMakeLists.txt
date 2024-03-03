@@ -6,7 +6,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -O3 -lm")
 
 add_executable(NFA
         nfa.h
-        big_int/big_int.c
+        other/big_int.c
         main.c
         nfa.c
         other/linked_list.h

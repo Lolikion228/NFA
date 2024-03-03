@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nfa.h"
-#include "big_int/big_int.h"
+#include "other/big_int.h"
 
 
 
