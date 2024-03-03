@@ -232,7 +232,9 @@ void big_int_bin_shft_r2(big_int *n, int cnt) {
         free(n->number);
         n->sign = '+';
         n->length = 1;
-        n->number = (unsigned char *)  calloc(1, 1);
+        n->number = (unsigned char *)  calloc(1, sizeof(unsigned char));
+//        n->number = (unsigned char *)  realloc(n->number, sizeof(unsigned char));
+//        n->number[0]=0;
     } else {
         if (x) {
             n->length -= x;

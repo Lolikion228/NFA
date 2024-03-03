@@ -134,7 +134,6 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
 }
 
 
-
 int NFA_check(NFA *a,big_int *sentence,int verbose){
 
     big_int *sent2= big_int_copy(sentence);
@@ -147,31 +146,32 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
     }
 
     if( ((sent2->bit_len)%a->dim) ){
-
         (sent2->bit_len) += a->dim- ((sent2->bit_len)%a->dim) ;
     }
 
     long max_num_words= (sent2->bit_len)/a->dim;
-    long processed_words= 0;
 
+    long processed_words= 0;
 
     int curr_wrd=0;
     for(int i=0; i <= (a->dim)/9; i++ ){
-        curr_wrd+= (sent2->number[i] & (   (((1<<a->dim)-1)>>8*i)))<< 8*i ;
+        curr_wrd+= (   (sent2->number[i]<< 8*i) & ( ((1<<a->dim)-1) ) ) ;
     }
 
     big_int_bin_shft_r2(sent2,a->dim);
 
-    while(processed_words<max_num_words) {
+    while(1) {
+
         node *curr_nd=a_current_state->transitions->head;
         if(verbose==1) {
             printf("------------------------\n");
             printf("not processed part of sentence:");
             big_int_print(sent2);
             printf("current word:");
-            printf("%d\n",curr_wrd);
+            printf("%b\n",curr_wrd);
             printf("current state:%d\n",a_current_state->index);
         }
+
         while (curr_nd != NULL) {
             if (curr_wrd == curr_nd->val->transition_trigger) {
                 if(verbose==1){
@@ -187,14 +187,18 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
             }
             curr_nd = curr_nd->next;
         }
-        curr_wrd=0;
-        for(int i=0; i <= (a->dim)/9; i++ ){
-            curr_wrd+=(sent2->number[i] & (   (((1<<a->dim)-1)>>8*i)))<< 8*i ;
-        }
-        big_int_bin_shft_r2(sent2,a->dim);
 
         processed_words++;
+        curr_wrd=0;
+        if(processed_words==max_num_words){
+            break;
+        }
+        for(int i=0; i <= (a->dim)/9 ; i++ ){
+            curr_wrd+= (  ( ((1<<a->dim)-1) ) & (sent2->number[i]<< 8*i)   );
+        }
+        big_int_bin_shft_r2(sent2,a->dim);
     }
+
     big_int_free2(1,&sent2);
     return a_current_state->is_final;
 }
