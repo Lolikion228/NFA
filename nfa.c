@@ -215,25 +215,18 @@ void print_array(int a[],int len){
 }
 
 
-int NFA_check2(NFA *a,big_int *sentence,int verbose){
+int NFA_check2(NFA *a,big_int *sentence){
 
     big_int *sent2= big_int_copy(sentence);
 
     int more_than_zero=0;
 
-
     int all_states[a->states_cnt];
-
     for(int i=0;i<a->states_cnt;i++){
         all_states[i]=0;
     }
     all_states[0]=1;
 
-
-    if(verbose==1){
-        printf("sentence: ");
-        big_int_print(sent2);
-    }
 
     if( ((sent2->bit_len)%a->dim) ){
         big_int_print(sentence);

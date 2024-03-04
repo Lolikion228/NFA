@@ -50,7 +50,7 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
 int NFA_check(NFA *a,big_int *sentence,int verbose);
 
-int NFA_check2(NFA *a,big_int *sentence,int verbose);
+int NFA_check2(NFA *a,big_int *sentence);
 
 int *NFA_check_many(NFA *a, big_int **sentences, int len,int verbose);
 
