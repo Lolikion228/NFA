@@ -16,6 +16,7 @@ NFA *NFA_init(int dim){
         printf("memory allocation error in NFA_init_1\n");
         exit(1);
     }
+
     a->states_cnt=1;
     a->dim = dim;
     a->initial_state=NFA_state_init(a,0);
@@ -146,7 +147,9 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
     }
 
     if( ((sent2->bit_len)%a->dim) ){
-        (sent2->bit_len) += a->dim- ((sent2->bit_len)%a->dim) ;
+        big_int_print(sentence);
+        printf("bit_len is not multiple of a->dim\n");
+        exit(1);
     }
 
     long max_num_words= (sent2->bit_len)/a->dim;
@@ -201,6 +204,97 @@ int NFA_check(NFA *a,big_int *sentence,int verbose){
 
     big_int_free2(1,&sent2);
     return a_current_state->is_final;
+}
+
+void print_array(int a[],int len){
+    printf("[");
+    for(int i=0; i<len; i++){
+        printf(" %d",a[i]);
+    }
+    printf(" ]\n");
+}
+
+
+int NFA_check2(NFA *a,big_int *sentence,int verbose){
+
+    big_int *sent2= big_int_copy(sentence);
+
+    int more_than_zero=0;
+
+
+    int all_states[a->states_cnt];
+
+    for(int i=0;i<a->states_cnt;i++){
+        all_states[i]=0;
+    }
+    all_states[0]=1;
+
+
+    if(verbose==1){
+        printf("sentence: ");
+        big_int_print(sent2);
+    }
+
+    if( ((sent2->bit_len)%a->dim) ){
+        big_int_print(sentence);
+        printf("bit_len is not multiple of a->dim\n");
+        exit(1);
+    }
+
+    long max_num_words= (sent2->bit_len)/a->dim;
+
+    long processed_words= 0;
+
+    int curr_wrd=0;
+    for(int i=0; i <= (a->dim)/9; i++ ){
+        curr_wrd+= (   (sent2->number[i]<< 8*i) & ( ((1<<a->dim)-1) ) ) ;
+    }
+
+    big_int_bin_shft_r2(sent2,a->dim);
+
+    while(1) {
+        more_than_zero=0;
+        int all_states2[a->states_cnt];
+        for(int i=0;i<a->states_cnt;i++){
+            all_states2[i]=0;
+        }
+//        printf("curr wrd=%b\n",curr_wrd);
+        for(int i=0;i<a->states_cnt;i++) {
+            if(all_states[i]==1) {
+                node *curr_tr = a->states[i]->transitions->head;
+                while (curr_tr != NULL) {
+                    if (curr_wrd == curr_tr->val->transition_trigger) {
+                        all_states2[curr_tr->val->state_to->index]=1;
+                        more_than_zero=1;
+
+                    }
+                    curr_tr = curr_tr->next;
+                }
+            }
+        }
+
+
+        if(more_than_zero) {
+            for (int i = 0; i < a->states_cnt; i++) {
+                all_states[i] = all_states2[i];
+            }
+        }
+//        print_array(all_states2,a->states_cnt);
+
+        processed_words++;
+        curr_wrd=0;
+        if(processed_words==max_num_words){break;}
+        for(int i=0; i <= (a->dim)/9 ; i++ ){
+            curr_wrd+= (  ( ((1<<a->dim)-1) ) & (sent2->number[i]<< 8*i)   );
+        }
+        big_int_bin_shft_r2(sent2,a->dim);
+    }
+
+    big_int_free2(1,&sent2);
+    for(int i=0;i<a->states_cnt;i++){
+        if(all_states[i] & a->states[i]->is_final){return 1;}
+    }
+    return 0;
 }
 
 
@@ -347,10 +441,6 @@ NFA *NFA_from_file(char* file_pth){
     fclose(f);
     return a;
 }
-
-
-
-
 
 
 

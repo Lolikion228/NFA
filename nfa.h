@@ -9,6 +9,7 @@
 #include "other/big_int.h"
 #include "other/linked_list.h"
 
+
 typedef struct NFA_state NFA_state;
 typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
@@ -48,6 +49,8 @@ void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
 int NFA_check(NFA *a,big_int *sentence,int verbose);
+
+int NFA_check2(NFA *a,big_int *sentence,int verbose);
 
 int *NFA_check_many(NFA *a, big_int **sentences, int len,int verbose);
 
