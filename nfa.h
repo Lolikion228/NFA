@@ -33,7 +33,7 @@ typedef struct NFA_transition {
 typedef struct NFA{
     NFA_state **states;
     int states_cnt;
-    int dim; // <= 8!!!!
+    int dim;
     NFA_state *initial_state;
 } NFA;
 
@@ -48,17 +48,15 @@ void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
 void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
-int NFA_check(NFA *a,big_int *sentence,int verbose);
+int NFA_check(NFA *a,big_int *sentence);
 
-int NFA_check2(NFA *a,big_int *sentence);
-
-int *NFA_check_many(NFA *a, big_int **sentences, int len,int verbose);
+int *NFA_check_many(NFA *a, big_int **sentences, int len);
 
 void NFA_print(NFA* a);
 
 void NFA_free(NFA *a);
 
-void NFA_to_dot(NFA *a);
+void NFA_to_pic(NFA *a);
 
 /*
 dim
