@@ -137,11 +137,19 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
     }
 }
 
+void print_array(int a[],int len){
+    printf("[");
+    for(int i=0;i<len;i++){
+        printf(" %d",a[i]);
+    }
+    printf(" ]\n");
+}
 
 int NFA_check(NFA *a,big_int *sentence){
 
     big_int *sent2= big_int_copy(sentence);
-
+//    printf("sentence=");
+//    big_int_print(sent2);
     int is_transition=0;
 
     int curr_states[a->states_cnt];
@@ -173,12 +181,20 @@ int NFA_check(NFA *a,big_int *sentence){
         for(int i=0;i<a->states_cnt;i++){
             curr_states2[i]=0;
         }
-
+//        printf("word = %b   ",curr_wrd);
+//        print_array(curr_states,a->states_cnt);
         for(int i=0;i<a->states_cnt;i++) {
             if(curr_states[i] == 1) {
                 node *curr_tr = a->states[i]->transitions->head;
                 while (curr_tr != NULL) {
-                    if (curr_wrd == curr_tr->val->transition_trigger) {
+                    if (  curr_tr->val->transition_trigger == -1 ) {
+                        curr_states[curr_tr->val->state_to->index]=1;
+                    }
+                    curr_tr = curr_tr->next;
+                }
+                curr_tr = a->states[i]->transitions->head;
+                while (curr_tr != NULL) {
+                    if (  curr_wrd == curr_tr->val->transition_trigger  ) {
                         curr_states2[curr_tr->val->state_to->index]=1;
                         is_transition=1;
                     }
@@ -201,7 +217,7 @@ int NFA_check(NFA *a,big_int *sentence){
         }
         big_int_bin_shft_r2(sent2,a->dim);
     }
-
+//    print_array(curr_states,a->states_cnt);
     big_int_free2(1,&sent2);
     for(int i=0;i<a->states_cnt;i++){
         if(curr_states[i] & a->states[i]->is_final){return 1;}
@@ -264,8 +280,12 @@ void NFA_to_pic(NFA *a){
             fprintf(f,"\t%d -> %d [label =\" ",
                     curr->val->state_from->index,
                     curr->val->state_to->index);
-
-            fprintf(f,"%b" ,curr->val->transition_trigger);
+            if(curr->val->transition_trigger!=-1){
+                fprintf(f,"%b" ,curr->val->transition_trigger);
+            }
+            else{
+                fprintf(f,"Eps");
+            }
             fprintf(f," \"]; \n");
             curr=curr->next;
         }
