@@ -3,7 +3,6 @@
 //
 #include "linked_list.h"
 #include <stdlib.h>
-#include "../nfa.h"
 
 node *node_init(NFA_transition *tr) {
     node *nd = (node *)malloc(sizeof(node));//not sizeof(node*)
@@ -25,3 +24,4 @@ void node_free(node *nd) {
         free(nd);
     }
 }
+

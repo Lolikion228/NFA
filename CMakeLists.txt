@@ -10,7 +10,8 @@ add_executable(NFA
         main.c
         nfa.c
         other/linked_list.h
-        other/linked_list.c)
+        other/linked_list.c
+)
 
 target_link_libraries(NFA m)
 target_include_directories(NFA PUBLIC .)

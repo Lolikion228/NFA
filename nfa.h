@@ -38,6 +38,7 @@ typedef struct NFA{
 } NFA;
 
 
+
 NFA *NFA_init(int dim);
 
 void NFA_add_state(NFA *a,int is_final);
@@ -58,14 +59,17 @@ void NFA_free(NFA *a);
 
 void NFA_to_pic(NFA *a);
 
-/*
-dim
-states_cnt [state[i] is_final]
-transitions_cnt
-trigger_value state_from_ix state_to_ix
+
+/* dim
+ * states_cnt [state[i] is_final]
+ * transitions_cnt
+ * trigger_value state_from_ix state_to_ix
  */
 void NFA_to_file(NFA *a);
 
 NFA *NFA_from_file(char* file_pth);
 
+NFA *NFA_intersection(NFA *a1,NFA *a2);
+
+NFA *NFA_union(NFA *a1,NFA *a2);
 #endif //NFA_NFA_H

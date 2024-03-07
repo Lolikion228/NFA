@@ -148,8 +148,6 @@ void print_array(int a[],int len){
 int NFA_check(NFA *a,big_int *sentence){
 
     big_int *sent2= big_int_copy(sentence);
-//    printf("sentence=");
-//    big_int_print(sent2);
     int is_transition=0;
 
     int curr_states[a->states_cnt];
@@ -181,8 +179,6 @@ int NFA_check(NFA *a,big_int *sentence){
         for(int i=0;i<a->states_cnt;i++){
             curr_states2[i]=0;
         }
-//        printf("word = %b   ",curr_wrd);
-//        print_array(curr_states,a->states_cnt);
         for(int i=0;i<a->states_cnt;i++) {
             if(curr_states[i] == 1) {
                 node *curr_tr = a->states[i]->transitions->head;
@@ -217,7 +213,7 @@ int NFA_check(NFA *a,big_int *sentence){
         }
         big_int_bin_shft_r2(sent2,a->dim);
     }
-//    print_array(curr_states,a->states_cnt);
+
     big_int_free2(1,&sent2);
     for(int i=0;i<a->states_cnt;i++){
         if(curr_states[i] & a->states[i]->is_final){return 1;}
@@ -295,6 +291,7 @@ void NFA_to_pic(NFA *a){
     fprintf(f,"}   ");
     fclose(f);
     system("dot -Tpng ../fsm.gv -o ../automata1.png");
+    system("rm ../fsm.gv");
 }
 
 
@@ -365,4 +362,42 @@ NFA *NFA_from_file(char* file_pth){
 
     fclose(f);
     return a;
+}
+
+
+NFA *NFA_union(NFA *a1,NFA *a2){
+
+    NFA *res= NFA_init(a1->dim);
+
+    for(int i=0; i<a1->states_cnt; i++){
+        NFA_add_state(res,a1->states[i]->is_final);
+    }
+    for(int i=0; i<a1->states_cnt; i++){
+        node* curr_tr=a1->states[i]->transitions->head;
+        while(curr_tr){
+            NFA_add_transition(res,
+                               curr_tr->val->state_from->index+1,
+                               curr_tr->val->state_to->index+1,
+                               curr_tr->val->transition_trigger);
+            curr_tr=curr_tr->next;
+        }
+    }
+
+    for(int i=0; i<a2->states_cnt; i++){
+        NFA_add_state(res,a2->states[i]->is_final);
+    }
+    for(int i=0; i<a2->states_cnt; i++){
+        node* curr_tr=a2->states[i]->transitions->head;
+        while(curr_tr){
+            NFA_add_transition(res,
+                               curr_tr->val->state_from->index+a1->states_cnt+1,
+                               curr_tr->val->state_to->index+a1->states_cnt+1,
+                               curr_tr->val->transition_trigger);
+            curr_tr=curr_tr->next;
+        }
+    }
+
+    NFA_add_transition(res,0,1,-1);
+    NFA_add_transition(res,0,a1->states_cnt+1,-1);
+    return res;
 }

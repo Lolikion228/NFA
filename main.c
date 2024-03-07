@@ -17,12 +17,15 @@
 //multiple states
 //fix a->dim/9
 //epsilon transition
-
+//NFA union
+//remove fsm.gv
 
 
 //          todo
-//add examples and normal verbose to check 1/2
-//rework epsilon tr?
+//add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
+//rework epsilon tr????
+//NFA intersection  (watch in teams)
+//nfa_id_dfa() (watch in teams)
 
 int main(){
 
@@ -132,13 +135,71 @@ int main(){
 
 
 //ex3
-    int dim = 2;
-    int tr0= (int)strtol("00",NULL,2) ;
-    int tr1= (int)strtol("11",NULL,2);
-    big_int *sent1= big_int_get("01111010");
-    big_int *sent2= big_int_get("11110001");
+//    int dim = 2;
+//    int tr0= (int)strtol("00",NULL,2) ;
+//    int tr1= (int)strtol("11",NULL,2);
+//    big_int *sent1= big_int_get("01111010");
+//    big_int *sent2= big_int_get("11110001");
+//    big_int *sent3= big_int_get("00110000");
+//    big_int *sent4= big_int_get("101010101100");
+//    int sent_cnt=4;
+//    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
+//    sents[0]=sent1;
+//    sents[1]=sent2;
+//    sents[2]=sent3;
+//    sents[3]=sent4;
+//
+//    NFA *nfa=NFA_init(dim);
+//    NFA_add_state(nfa, 1);
+//    NFA_add_state(nfa, 0);
+//    NFA_add_state(nfa, 1);
+//    NFA_add_state(nfa, 0);
+//
+//
+//    NFA_add_transition(nfa,0,1, -1);
+//    NFA_add_transition(nfa,0,3, -1);
+//
+//    NFA_add_transition(nfa,1,2, tr0);
+//    NFA_add_transition(nfa,2,1, tr0);
+//    NFA_add_transition(nfa,3,4, tr1);
+//    NFA_add_transition(nfa,4,3, tr1);
+//
+//    NFA_add_transition(nfa,1,1, tr1);
+//    NFA_add_transition(nfa,2,2, tr1);
+//    NFA_add_transition(nfa,3,3, tr0);
+//    NFA_add_transition(nfa,4,4, tr0);
+//
+//
+//    NFA_to_file(nfa);
+//    NFA* a2=NFA_from_file("../automata.txt");
+//
+//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent1));
+//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent2));
+//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent3));
+//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent4));
+//
+////    int*res=NFA_check_many(nfa,sents,sent_cnt);
+////    int*res2=NFA_check_many(a2,sents,sent_cnt);
+//////
+////    for(int i=0;i<sent_cnt;i++){
+////        printf("by_[orig,copy]_sent_%d=[%d,%d]\n",i,res[i],res2[i]);
+////    }
+//
+////    NFA_print(nfa);
+//    NFA_to_pic(nfa);
+//    NFA_free(nfa);
+//    NFA_free(a2);
+//    free(sents);
+////    free(res);
+////    free(res2);
+//    big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
+
+
+//ex4
+    big_int *sent1= big_int_get("001101");
+    big_int *sent2= big_int_get("1101");
     big_int *sent3= big_int_get("00110000");
-    big_int *sent4= big_int_get("101010101100");
+    big_int *sent4= big_int_get("1011010001");
     int sent_cnt=4;
     big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
     sents[0]=sent1;
@@ -146,49 +207,25 @@ int main(){
     sents[2]=sent3;
     sents[3]=sent4;
 
-    NFA *nfa=NFA_init(dim);
-    NFA_add_state(nfa, 1);
-    NFA_add_state(nfa, 0);
-    NFA_add_state(nfa, 1);
-    NFA_add_state(nfa, 0);
+    NFA* a1=NFA_from_file("../automatons/cnt0_is_even.txt");
+    NFA* a2=NFA_from_file("../automatons/cnt1_is_even.txt");
+    NFA *union_= NFA_union(a1,a2);
+
+    NFA_to_pic(union_);
+    NFA_to_file(union_);
+
+    for(int i=0;i<sent_cnt;i++){
+        printf("by_[cnt0,cnt1,union]_sent_%d=[%d,%d,%d]\n",i,
+               NFA_check(a1,sents[i]),
+               NFA_check(a2,sents[i]),
+               NFA_check(union_,sents[i]));
+    }
 
 
-    NFA_add_transition(nfa,0,1, -1);
-    NFA_add_transition(nfa,0,3, -1);
-
-    NFA_add_transition(nfa,1,2, tr0);
-    NFA_add_transition(nfa,2,1, tr0);
-    NFA_add_transition(nfa,3,4, tr1);
-    NFA_add_transition(nfa,4,3, tr1);
-
-    NFA_add_transition(nfa,1,1, tr1);
-    NFA_add_transition(nfa,2,2, tr1);
-    NFA_add_transition(nfa,3,3, tr0);
-    NFA_add_transition(nfa,4,4, tr0);
-
-
-    NFA_to_file(nfa);
-    NFA* a2=NFA_from_file("../automata.txt");
-
-    printf("ACCEPTED=%d\n",NFA_check(nfa,sent1));
-    printf("ACCEPTED=%d\n",NFA_check(nfa,sent2));
-    printf("ACCEPTED=%d\n",NFA_check(nfa,sent3));
-    printf("ACCEPTED=%d\n",NFA_check(nfa,sent4));
-
-//    int*res=NFA_check_many(nfa,sents,sent_cnt);
-//    int*res2=NFA_check_many(a2,sents,sent_cnt);
-////
-//    for(int i=0;i<sent_cnt;i++){
-//        printf("by_[orig,copy]_sent_%d=[%d,%d]\n",i,res[i],res2[i]);
-//    }
-
-//    NFA_print(nfa);
-    NFA_to_pic(nfa);
-    NFA_free(nfa);
+    NFA_free(a1);
     NFA_free(a2);
+    NFA_free(union_);
     free(sents);
-//    free(res);
-//    free(res2);
     big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
     return 0;
 }
