@@ -16,16 +16,10 @@ NFA *NFA_init(int dim){
         printf("memory allocation error in NFA_init_1\n");
         exit(1);
     }
-    a->states_cnt=1;
+    a->states_cnt=0;
     a->dim = dim;
-    a->initial_state=NFA_state_init(a,0);
-    a->initial_state->index=0;
-    a->states = malloc(sizeof(NFA_state));
-    if(!a->states){
-        printf("memory allocation error in NFA_init_2\n");
-        exit(1);
-    }
-    a->states[0]=a->initial_state;
+    a->initial_state=NULL;
+    a->states = NULL;
     return a;
 }
 
@@ -51,6 +45,7 @@ NFA_state *NFA_state_init(NFA *a,int is_final){
 
 void NFA_add_state(NFA *a,int is_final){
     NFA_state *state=NFA_state_init(a,is_final);
+
     a->states=realloc(a->states,((a->states_cnt)+1)*sizeof(NFA_state));
     if(!a->states){
         printf("memory allocation error in NFA_add_state\n");
@@ -58,6 +53,9 @@ void NFA_add_state(NFA *a,int is_final){
     }
     a->states_cnt++;
     a->states[a->states_cnt-1]=state;
+    if(a->states_cnt==1){
+        a->initial_state=a->states[0];
+    }
 }
 
 
@@ -290,7 +288,7 @@ void NFA_to_pic(NFA *a){
 
     fprintf(f,"}   ");
     fclose(f);
-    system("dot -Tpng ../fsm.gv -o ../automata1.png");
+    system("dot -Tpng ../fsm.gv -o ../temp/automata.png");
     system("rm ../fsm.gv");
 }
 
@@ -305,7 +303,7 @@ int * NFA_check_many(NFA *a, big_int **sentences, int len){
 
 
 void NFA_to_file(NFA *a){
-    FILE *f= fopen("../automata.txt","w");
+    FILE *f= fopen("../temp/automata.txt","w");
     fprintf(f,"%d\n",a->dim);
     fprintf(f,"%d ",a->states_cnt);
 
@@ -339,8 +337,8 @@ NFA *NFA_from_file(char* file_pth){
     fscanf(f,"%d",&cnt_st);
 
     int final[cnt_st];
-
     for(int i=0;i<cnt_st;i++){
+
         fscanf(f,"%d",&final[i]);
     }
 
@@ -348,10 +346,9 @@ NFA *NFA_from_file(char* file_pth){
 
     NFA *a= NFA_init(dim);
 
-    for(int i=1;i<cnt_st;i++){
+    for(int i=0;i<cnt_st;i++){
         NFA_add_state(a,final[i]);
     }
-
     for(int i=0; i<cnt_tr; i++){
         int trigger,from,to;
         fscanf(f,"%d",&trigger);
@@ -359,7 +356,6 @@ NFA *NFA_from_file(char* file_pth){
         fscanf(f,"%d\n",&to);
         NFA_add_transition(a,from,to,trigger);
     }
-
     fclose(f);
     return a;
 }
@@ -368,6 +364,7 @@ NFA *NFA_from_file(char* file_pth){
 NFA *NFA_union(NFA *a1,NFA *a2){
 
     NFA *res= NFA_init(a1->dim);
+    NFA_add_state(res,0);
 
     for(int i=0; i<a1->states_cnt; i++){
         NFA_add_state(res,a1->states[i]->is_final);
@@ -399,5 +396,43 @@ NFA *NFA_union(NFA *a1,NFA *a2){
 
     NFA_add_transition(res,0,1,-1);
     NFA_add_transition(res,0,a1->states_cnt+1,-1);
+    return res;
+}
+
+
+//accurate with epsilon moves!!!
+//read guide to nfa but for now do for dfa
+NFA *NFA_intersection(NFA *a1,NFA *a2) {
+
+    NFA *res = NFA_init(a1->dim);
+
+
+    for(int i=0;i<a1->states_cnt;i++){
+        for(int j=0;j<a2->states_cnt;j++){
+            NFA_add_state(res,a1->states[i]->is_final & a2->states[j]->is_final);
+        }
+    }
+    res->initial_state=res->states[0];
+    for(int i=0;i<a1->states_cnt;i++){
+        for(int j=0;j<a2->states_cnt;j++) {
+            node *curr_tr1=a1->states[i]->transitions->head;
+            node *curr_tr2=a2->states[j]->transitions->head;
+            while(curr_tr1){
+                while(curr_tr2){
+                    if(curr_tr1->val->transition_trigger==curr_tr2->val->transition_trigger){
+                        NFA_add_transition(res,
+                                           a2->states_cnt*curr_tr1->val->state_from->index \
+                                           + curr_tr2->val->state_from->index,
+                                           a2->states_cnt*curr_tr1->val->state_to->index \
+                                           + curr_tr2->val->state_to->index, \
+                                           curr_tr1->val->transition_trigger);
+                    }
+                    curr_tr2=curr_tr2->next;
+                }
+                curr_tr2=a2->states[j]->transitions->head;
+                curr_tr1=curr_tr1->next;
+            }
+        }
+    }
     return res;
 }

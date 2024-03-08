@@ -72,4 +72,5 @@ NFA *NFA_from_file(char* file_pth);
 NFA *NFA_intersection(NFA *a1,NFA *a2);
 
 NFA *NFA_union(NFA *a1,NFA *a2);
+
 #endif //NFA_NFA_H
