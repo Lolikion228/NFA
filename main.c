@@ -17,14 +17,14 @@
 //multiple states
 //fix a->dim/9
 //epsilon transition
-//NFA union
+//NFA union/intersection
 //remove fsm.gv
 
-
+//
 //          todo
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //rework epsilon tr????
-//NFA intersection  (watch in teams)
+//add epsilon_tr for intersection
 //nfa_id_dfa() (watch in teams)
 //tests???
 
