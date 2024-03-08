@@ -37,8 +37,6 @@ typedef struct NFA{
     NFA_state *initial_state;
 } NFA;
 
-
-
 NFA *NFA_init(int dim);
 
 void NFA_add_state(NFA *a,int is_final);
@@ -49,15 +47,15 @@ void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
 void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
-int NFA_check(NFA *a,big_int *sentence);
+int NFA_check(const NFA *a,big_int *sentence);
 
-int *NFA_check_many(NFA *a, big_int **sentences, int len);
+int *NFA_check_many(const NFA *a, big_int **sentences, int len);
 
-void NFA_print(NFA* a);
+void NFA_print(const NFA* a);
 
 void NFA_free(NFA *a);
 
-void NFA_to_pic(NFA *a);
+void NFA_to_pic(const NFA *a);
 
 
 /* dim
@@ -65,12 +63,15 @@ void NFA_to_pic(NFA *a);
  * transitions_cnt
  * trigger_value state_from_ix state_to_ix
  */
-void NFA_to_file(NFA *a);
+void NFA_to_file(const NFA *a);
 
 NFA *NFA_from_file(char* file_pth);
 
-NFA *NFA_intersection(NFA *a1,NFA *a2);
+NFA *NFA_intersection(const NFA *a1,const NFA *a2);
 
-NFA *NFA_union(NFA *a1,NFA *a2);
+NFA *NFA_union(const NFA *a1,const NFA *a2);
 
+NFA* NFA_complement(const NFA *a);
+
+int NFA_is_dfa(const NFA *a);
 #endif //NFA_NFA_H

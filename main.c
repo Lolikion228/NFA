@@ -23,6 +23,7 @@
 
 
 //          todo
+//add README
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //rework epsilon tr????
 //nfa_id_dfa() (watch in teams)
@@ -198,7 +199,7 @@ int main(){
 
 //ex4
     big_int *sent1= big_int_get("001101");
-    big_int *sent2= big_int_get("1010");
+    big_int *sent2= big_int_get("010010");
     big_int *sent3= big_int_get("00110000");
     big_int *sent4= big_int_get("00001111");
     int sent_cnt=4;
@@ -214,30 +215,29 @@ int main(){
 //    NFA_print(a2);
     NFA *union_= NFA_union(a1,a2);
     NFA *intersection= NFA_intersection(a1,a2);
+    NFA *intersection_c= NFA_complement(intersection);
 
 
-//    NFA* a1= NFA_init(2);
-//    NFA_add_state(a1,0);
-//    NFA_add_transition(a1,0,0,0);
-//    NFA_add_transition(a1,1,1,0);
-//    NFA_add_transition(a1,0,1,3);
-//    NFA_add_transition(a1,1,0,3);
-//    a1->states[0]->is_final=1;
-//    NFA_to_file(union_);
-    NFA_to_pic(intersection);
-//    printf("%d\n",NFA_check(intersection,sents[1]));
+
+//    NFA_to_pic(intersection);
+//    NFA_to_pic(intersection_c);
+////    printf("%d\n",NFA_check(intersection,sents[1]));
     for(int i=0;i<sent_cnt;i++){
-        printf("by_[cnt0,cnt1,union,intersection]_sent_%d=[%d,%d,%d,%d]\n",i,
+        printf("by_[cnt0,cnt1,union,intersection,mintersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
                NFA_check(a1,sents[i]),
                NFA_check(a2,sents[i]),
                NFA_check(union_,sents[i]),
-               NFA_check(intersection,sents[i]));
+               NFA_check(intersection,sents[i]),
+               NFA_check(intersection_c,sents[i]));
+//               NFA_check(union_c,sents[i]),
+//               NFA_check(intersection_c,sents[i]));
     }
 
     NFA_free(a1);
     NFA_free(a2);
     NFA_free(union_);
     NFA_free(intersection);
+    NFA_free(intersection_c);
     free(sents);
     big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
 

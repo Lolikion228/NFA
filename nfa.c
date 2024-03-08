@@ -143,7 +143,7 @@ void print_array(int a[],int len){
     printf(" ]\n");
 }
 
-int NFA_check(NFA *a,big_int *sentence){
+int NFA_check(const NFA *a,big_int *sentence){
 
     big_int *sent2= big_int_copy(sentence);
     int is_transition=0;
@@ -220,7 +220,7 @@ int NFA_check(NFA *a,big_int *sentence){
 }
 
 
-void NFA_print(NFA* a){
+void NFA_print(const NFA* a){
     printf("automata_states:\n\n");
     printf("--------------------------------------------\n");
     for(int i=0;i<a->states_cnt;i++){
@@ -249,7 +249,7 @@ void NFA_free(NFA *a){
 }
 
 
-void NFA_to_pic(NFA *a){
+void NFA_to_pic(const NFA *a){
     FILE *f=fopen("../fsm.gv", "w");
 
     char template[]=" digraph finite_state_machine {\n"
@@ -293,7 +293,7 @@ void NFA_to_pic(NFA *a){
 }
 
 
-int * NFA_check_many(NFA *a, big_int **sentences, int len){
+int * NFA_check_many(const NFA *a, big_int **sentences, int len){
     int *res=(int *)calloc( len,sizeof(int));
     for(int i=0;i<len;i++){
         res[i]= NFA_check(a,sentences[i]);
@@ -302,7 +302,7 @@ int * NFA_check_many(NFA *a, big_int **sentences, int len){
 }
 
 
-void NFA_to_file(NFA *a){
+void NFA_to_file(const NFA *a){
     FILE *f= fopen("../temp/automata.txt","w");
     fprintf(f,"%d\n",a->dim);
     fprintf(f,"%d ",a->states_cnt);
@@ -361,7 +361,7 @@ NFA *NFA_from_file(char* file_pth){
 }
 
 
-NFA *NFA_union(NFA *a1,NFA *a2){
+NFA *NFA_union(const NFA *a1,const NFA *a2){
 
     NFA *res= NFA_init(a1->dim);
     NFA_add_state(res,0);
@@ -401,7 +401,7 @@ NFA *NFA_union(NFA *a1,NFA *a2){
 
 
 
-NFA *NFA_intersection(NFA *a1,NFA *a2) {
+NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
 
     NFA *res = NFA_init(a1->dim);
 
@@ -451,4 +451,43 @@ NFA *NFA_intersection(NFA *a1,NFA *a2) {
         }
     }
     return res;
+}
+
+
+NFA* NFA_complement(const NFA *a){
+    if(!NFA_is_dfa(a)){printf("complement only for DFA for now.\n");exit(1);}
+    NFA *res= NFA_init(a->dim);
+    for(int i=0;i<a->states_cnt;i++){
+        NFA_add_state(res,!a->states[i]->is_final);
+    }
+    for(int i=0;i<a->states_cnt;i++){
+        node *curr_tr=a->states[i]->transitions->head;
+        while(curr_tr){
+            NFA_add_transition(res,curr_tr->val->state_from->index,
+                               curr_tr->val->state_to->index,
+                               curr_tr->val->transition_trigger);
+            curr_tr=curr_tr->next;
+        }
+    }
+
+    return res;
+}
+
+
+int NFA_is_dfa(const NFA *a){
+    for(int i=0;i<a->states_cnt;i++){
+        node *curr_tr1=a->states[i]->transitions->head;
+        while(curr_tr1){
+            node *curr_tr2=curr_tr1->next;
+            while(curr_tr2){
+                if(curr_tr1->val->transition_trigger==curr_tr2->val->transition_trigger ||
+                curr_tr1->val->transition_trigger==-1 || curr_tr2->val->transition_trigger==-1 ){
+                    return 0;
+                }
+                curr_tr2=curr_tr2->next;
+            }
+            curr_tr1=curr_tr1->next;
+        }
+    }
+    return 1;
 }
