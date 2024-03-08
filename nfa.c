@@ -400,8 +400,7 @@ NFA *NFA_union(NFA *a1,NFA *a2){
 }
 
 
-//accurate with epsilon moves!!!
-//read guide to nfa but for now do for dfa
+
 NFA *NFA_intersection(NFA *a1,NFA *a2) {
 
     NFA *res = NFA_init(a1->dim);
@@ -419,13 +418,30 @@ NFA *NFA_intersection(NFA *a1,NFA *a2) {
             node *curr_tr2=a2->states[j]->transitions->head;
             while(curr_tr1){
                 while(curr_tr2){
-                    if(curr_tr1->val->transition_trigger==curr_tr2->val->transition_trigger){
+                    if(curr_tr1->val->transition_trigger==curr_tr2->val->transition_trigger && \
+                            curr_tr1->val->transition_trigger!=-1 && curr_tr2->val->transition_trigger!=-1){
                         NFA_add_transition(res,
                                            a2->states_cnt*curr_tr1->val->state_from->index \
                                            + curr_tr2->val->state_from->index,
                                            a2->states_cnt*curr_tr1->val->state_to->index \
                                            + curr_tr2->val->state_to->index, \
                                            curr_tr1->val->transition_trigger);
+                    }
+                    if(curr_tr1->val->transition_trigger==-1){
+                        NFA_add_transition(res,
+                                           a2->states_cnt*curr_tr1->val->state_from->index \
+                                           + curr_tr2->val->state_from->index,
+                                           a2->states_cnt*curr_tr1->val->state_to->index \
+                                           + curr_tr2->val->state_from->index, \
+                                           -1);
+                    }
+                    if(curr_tr2->val->transition_trigger==-1){
+                        NFA_add_transition(res,
+                                           a2->states_cnt*curr_tr1->val->state_from->index \
+                                           + curr_tr2->val->state_from->index,
+                                           a2->states_cnt*curr_tr1->val->state_from->index \
+                                           + curr_tr2->val->state_to->index, \
+                                           -1);
                     }
                     curr_tr2=curr_tr2->next;
                 }

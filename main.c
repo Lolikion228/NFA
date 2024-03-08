@@ -19,12 +19,12 @@
 //epsilon transition
 //NFA union/intersection
 //remove fsm.gv
+//add epsilon_tr for intersection
 
-//
+
 //          todo
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //rework epsilon tr????
-//add epsilon_tr for intersection
 //nfa_id_dfa() (watch in teams)
 //tests???
 
