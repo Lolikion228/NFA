@@ -469,8 +469,15 @@ int project_int(int n,int num_cord){
     return n1+(n2<<num_cord);
 }
 
+int extend_int(int n,int num_cord,int bit){
+    int n1=n&((1<<num_cord)-1);
+    int n2=n>>(num_cord);
+    return n1+(n2<<(num_cord+1))+(bit<<num_cord);
+}
+
 
 NFA *NFA_project(const NFA *a, int num_cord){
+    if(num_cord >= a->dim){printf("num_cord >= dim.\n");exit(1);}
     NFA *res= NFA_copy(a);
     res->dim--;
     for(int i=0;i<res->states_cnt;i++){
@@ -482,6 +489,33 @@ NFA *NFA_project(const NFA *a, int num_cord){
     }
     return res;
 }
+
+
+NFA *NFA_extend(const NFA *a, int num_cord){
+    if(num_cord >= a->dim){printf("num_cord >= dim.\n");exit(1);}
+    NFA *res= NFA_init(a->dim +1);
+    for(int i=0;i<a->states_cnt;i++){
+        NFA_add_state(res,a->states[i]->is_final);
+    }
+
+    for(int i=0;i<a->states_cnt;i++){
+        node *curr_tr=a->states[i]->transitions->head;
+        int cnt1=a->states[i]->transitions_cnt;
+        for(int j=0;j<cnt1;j++){
+            int old_tr=curr_tr->val->transition_trigger;
+            NFA_add_transition(res,curr_tr->val->state_from->index,
+                               curr_tr->val->state_to->index,
+                               extend_int(old_tr,num_cord,1));
+            NFA_add_transition(res,curr_tr->val->state_from->index,
+                               curr_tr->val->state_to->index,
+                               extend_int(old_tr,num_cord,0));
+            curr_tr=curr_tr->next;
+        }
+    }
+
+    return res;
+}
+
 
 NFA *NFA_copy(const NFA *a){
     NFA *res= NFA_init(a->dim);

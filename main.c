@@ -243,16 +243,17 @@ int main(){
 
 
 //ex 5
-//    NFA *a= NFA_init(8);
-//    NFA_add_state(a,0);
-//    NFA_add_state(a,1);
-//    NFA_add_transition(a,0,0,(int) strtol("10111001",NULL,2));
-//    NFA_add_transition(a,0,1,(int) strtol("10011101",NULL,2));
-//    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
-//    NFA *pr_a= NFA_project(a,5);
-//    NFA *pr_a2= NFA_project(pr_a,0);
-//    NFA_to_pic(pr_a2);
-//    NFA_free(a);
-//    NFA_free(pr_a);
+    NFA *a= NFA_init(8);
+    NFA_add_state(a,0);
+    NFA_add_state(a,1);
+    NFA_add_transition(a,0,0,(int) strtol("10111001",NULL,2));
+    NFA_add_transition(a,0,1,(int) strtol("10011101",NULL,2));
+    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
+    NFA *pr_a= NFA_project(a,5);
+    NFA *ex_a= NFA_extend(a,7);
+    NFA_to_pic(ex_a);
+    NFA_free(a);
+    NFA_free(pr_a);
+    NFA_free(ex_a);
     return 0;
 }
