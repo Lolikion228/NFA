@@ -405,7 +405,6 @@ NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
 
     NFA *res = NFA_init(a1->dim);
 
-
     for(int i=0;i<a1->states_cnt;i++){
         for(int j=0;j<a2->states_cnt;j++){
             NFA_add_state(res,a1->states[i]->is_final & a2->states[j]->is_final);
@@ -456,9 +455,38 @@ NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
 
 NFA* NFA_complement(const NFA *a){
     if(!NFA_is_dfa(a)){printf("complement only for DFA for now.\n");exit(1);}
+    NFA *res = NFA_copy(a);
+    for(int i=0;i<res->states_cnt;i++){
+        res->states[i]->is_final=!res->states[i]->is_final;
+    }
+    return res;
+}
+
+
+int project_int(int n,int num_cord){
+    int n1=n&((1<<num_cord)-1);
+    int n2=n>>(num_cord+1);
+    return n1+(n2<<num_cord);
+}
+
+
+NFA *NFA_project(const NFA *a, int num_cord){
+    NFA *res= NFA_copy(a);
+    res->dim--;
+    for(int i=0;i<res->states_cnt;i++){
+        node *curr_tr=res->states[i]->transitions->head;
+        while(curr_tr){
+            curr_tr->val->transition_trigger= project_int(curr_tr->val->transition_trigger,num_cord);
+            curr_tr=curr_tr->next;
+        }
+    }
+    return res;
+}
+
+NFA *NFA_copy(const NFA *a){
     NFA *res= NFA_init(a->dim);
     for(int i=0;i<a->states_cnt;i++){
-        NFA_add_state(res,!a->states[i]->is_final);
+        NFA_add_state(res,a->states[i]->is_final);
     }
     for(int i=0;i<a->states_cnt;i++){
         node *curr_tr=a->states[i]->transitions->head;
@@ -469,7 +497,6 @@ NFA* NFA_complement(const NFA *a){
             curr_tr=curr_tr->next;
         }
     }
-
     return res;
 }
 

@@ -74,4 +74,8 @@ NFA *NFA_union(const NFA *a1,const NFA *a2);
 NFA* NFA_complement(const NFA *a);
 
 int NFA_is_dfa(const NFA *a);
+
+NFA *NFA_copy(const NFA *a);
+
+NFA *NFA_project(const NFA *a, int num_cord);
 #endif //NFA_NFA_H
