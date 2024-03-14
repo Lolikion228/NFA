@@ -402,9 +402,7 @@ NFA *NFA_union(const NFA *a1,const NFA *a2){
 
 
 NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
-
     NFA *res = NFA_init(a1->dim);
-
     for(int i=0;i<a1->states_cnt;i++){
         for(int j=0;j<a2->states_cnt;j++){
             NFA_add_state(res,a1->states[i]->is_final & a2->states[j]->is_final);
