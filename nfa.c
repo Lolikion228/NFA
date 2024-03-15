@@ -66,7 +66,7 @@ void NFA_state_free(NFA_state *s){
 }
 
 
-int is_transitions_equal(NFA_transition *tr1,NFA_transition *tr2){
+int NFA_is_transitions_equal(NFA_transition *tr1, NFA_transition *tr2){
     if(!tr1 || !tr2){return 0;}
     return (
             (tr1->state_to->index==tr2->state_to->index) &&
@@ -93,13 +93,13 @@ void NFA_add_transition(NFA *a, int state_from, int state_to, int trigger){
     }
     else{
         while(curr->next){
-            if(is_transitions_equal(transition,curr->val)){
+            if(NFA_is_transitions_equal(transition, curr->val)){
                 free(transition);
                 return;
             }
             curr=curr->next;
         }
-        if(is_transitions_equal(transition,curr->val)){
+        if(NFA_is_transitions_equal(transition, curr->val)){
             free(transition);
             return;
         }
@@ -400,7 +400,7 @@ NFA *NFA_union(const NFA *a1,const NFA *a2){
 }
 
 
-//delete tr1!=-1 && tr2!=-1
+
 NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
 
     NFA *res = NFA_init(a1->dim);

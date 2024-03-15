@@ -211,7 +211,7 @@ int main(){
 
 
 //ex4
-    big_int *sent1= big_int_get("01");
+    big_int *sent1= big_int_get("0");
     big_int *sent2= big_int_get("001");
     big_int *sent3= big_int_get("0010");
     big_int *sent4= big_int_get("0011");
