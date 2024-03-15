@@ -400,14 +400,17 @@ NFA *NFA_union(const NFA *a1,const NFA *a2){
 }
 
 
-
+//delete tr1!=-1 && tr2!=-1
 NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
+
     NFA *res = NFA_init(a1->dim);
+
     for(int i=0;i<a1->states_cnt;i++){
         for(int j=0;j<a2->states_cnt;j++){
             NFA_add_state(res,a1->states[i]->is_final & a2->states[j]->is_final);
         }
     }
+
     res->initial_state=res->states[0];
     for(int i=0;i<a1->states_cnt;i++){
         for(int j=0;j<a2->states_cnt;j++) {
@@ -415,8 +418,8 @@ NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
             node *curr_tr2=a2->states[j]->transitions->head;
             while(curr_tr1){
                 while(curr_tr2){
-                    if(curr_tr1->val->transition_trigger==curr_tr2->val->transition_trigger && \
-                            curr_tr1->val->transition_trigger!=-1 && curr_tr2->val->transition_trigger!=-1){
+                    if(curr_tr1->val->transition_trigger==curr_tr2->val->transition_trigger)
+                    {
                         NFA_add_transition(res,
                                            a2->states_cnt*curr_tr1->val->state_from->index \
                                            + curr_tr2->val->state_from->index,
@@ -550,3 +553,18 @@ int NFA_is_dfa(const NFA *a){
     }
     return 1;
 }
+
+
+NFA *NFA_zero_star_closure(NFA *a){
+    NFA *res= NFA_copy(a);
+
+//    ??????
+//    for(int i=0; i<res->states_cnt; i++){
+//        if(res->states[i]->is_final){
+//            NFA_add_transition(res,res->states[i]->index,res->states[i]->index,0);
+//        }
+//    }
+
+    return res;
+}
+

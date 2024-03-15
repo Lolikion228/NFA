@@ -80,4 +80,6 @@ NFA *NFA_copy(const NFA *a);
 NFA *NFA_project(const NFA *a, int num_cord);
 
 NFA *NFA_extend(const NFA *a, int num_cord);
+
+NFA *NFA_zero_star_closure(NFA *a);
 #endif //NFA_NFA_H

@@ -29,7 +29,18 @@
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //rework epsilon tr????
 //tests???
-//NFA_Copy
+//AST(abstract syntax tree) [L,R,print], RPN,Shunting yard algorithm
+
+//for intersection (L1/\L2)  L1 -> 0*L1  L2 -> 0*L2  0*closed
+
+//z(op1)x(op2)y
+/*
+ * z:101001
+ * x:111100
+ * y:001110
+ * */
+//A intersection B = !(!A U !B) ???
+
 
 int main(){
 
@@ -200,10 +211,10 @@ int main(){
 
 
 //ex4
-    big_int *sent1= big_int_get("001101");
-    big_int *sent2= big_int_get("010010");
-    big_int *sent3= big_int_get("00110000");
-    big_int *sent4= big_int_get("00001111");
+    big_int *sent1= big_int_get("01");
+    big_int *sent2= big_int_get("001");
+    big_int *sent3= big_int_get("0010");
+    big_int *sent4= big_int_get("0011");
     int sent_cnt=4;
     big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
     sents[0]=sent1;
@@ -219,14 +230,12 @@ int main(){
     NFA *intersection= NFA_intersection(a1,a2);
     NFA *intersection_c= NFA_complement(intersection);
 
-
-
 //    NFA_to_pic(a1);
-//    NFA_to_pic(union_);
-    NFA_to_pic(intersection_c);
+    NFA_to_pic(union_);
+//    NFA_to_pic(intersection);
 
     for(int i=0;i<sent_cnt;i++){
-        printf("by_[cnt0,cnt1,union,intersection,mintersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
+        printf("by_[cnt0,cnt1,union,intersection,intersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
                NFA_check(a1,sents[i]),
                NFA_check(a2,sents[i]),
                NFA_check(union_,sents[i]),
