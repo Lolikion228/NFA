@@ -298,3 +298,9 @@ int main(){
     return 0;
 }
 
+/*
+ * by_[cnt0,cnt1,union,intersection,intersection_c]_sent_0=[0,1,1,0,1]
+by_[cnt0,cnt1,union,intersection,intersection_c]_sent_1=[1,0,1,0,1]
+by_[cnt0,cnt1,union,intersection,intersection_c]_sent_2=[0,0,0,0,1]
+by_[cnt0,cnt1,union,intersection,intersection_c]_sent_3=[1,1,1,1,0]
+ */
