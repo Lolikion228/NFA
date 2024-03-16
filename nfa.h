@@ -70,12 +70,10 @@ typedef struct NFA_state{
     int index;
     int is_final;
     struct list *transitions;
-    int transitions_cnt;
 } NFA_state;
 
 
 typedef struct NFA_transition {
-//    NFA_state *state_from;
     NFA_state *state_to;
     int transition_trigger;
 } NFA_transition;

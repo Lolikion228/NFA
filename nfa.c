@@ -9,6 +9,19 @@
 
 #define get_pair(a, x, y) (a->states_cnt * x + y)
 
+
+
+int NFA_transitions_cnt(NFA_state *state){
+    node *curr=state->transitions->head;
+    int cnt=0;
+    while(curr){
+        cnt++;
+        curr=curr->next;
+    }
+    return cnt;
+}
+
+
 NFA_state *NFA_state_init(NFA *a,int is_final);
 
 // NFA over \{0,1\}^{dim}
@@ -39,7 +52,7 @@ NFA_state *NFA_state_init(NFA *a,int is_final){
         exit(1);
     }
     state->transitions->head = NULL;
-    state->transitions_cnt=0;
+
     return state;
 }
 
@@ -68,7 +81,6 @@ int NFA_is_transitions_equal(NFA_transition *tr1, NFA_transition *tr2){
     if(!tr1 || !tr2){return 0;}
     return (
             (tr1->state_to->index==tr2->state_to->index) &&
-//            (tr1->state_from->index==tr2->state_from->index) &&
             (tr1->transition_trigger==tr2->transition_trigger)
             );
 }
@@ -81,7 +93,6 @@ void NFA_add_transition(NFA *a, int state_from, int state_to, int trigger){
         printf("memory allocation error in NFA_add_transition\n");
         exit(1);
     }
-//    transition->state_from=a->states[state_from];
     transition->state_to=a->states[state_to];
     transition->transition_trigger= trigger;
     node *curr=(a->states[state_from])->transitions->head;
@@ -103,7 +114,7 @@ void NFA_add_transition(NFA *a, int state_from, int state_to, int trigger){
         }
         curr->next = node_init(transition);
     }
-    a->states[state_from]->transitions_cnt++;
+
 }
 
 
@@ -111,7 +122,6 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
     node *curr=(a->states[state_from])->transitions->head;
     node *tmp=NULL;
     while(curr){
-//        if(curr->val->state_from->index==state_from
         if(
          curr->val->state_to->index==state_to
         && curr->val->transition_trigger==trigger
@@ -126,7 +136,7 @@ void NFA_remove_transition(NFA *a,int state_from,int state_to,int trigger){
                 free(curr->val);
                 free(curr);
             }
-            a->states[state_from]->transitions_cnt--;
+
             return;
         }
         tmp=curr;
@@ -225,7 +235,7 @@ void NFA_print(const NFA* a){
     for(int i=0;i<a->states_cnt;i++){
         printf("state_ix=%d; is_acceptable=%d; transitions=%d\n",
                a->states[i]->index,a->states[i]->is_final,
-               a->states[i]->transitions_cnt
+               NFA_transitions_cnt(a->states[i])
                );
         printf("   ------transitions-----\n");
         node* curr=a->states[i]->transitions->head;
@@ -313,7 +323,7 @@ void NFA_to_file(const NFA *a){
 
     int cnt_tr=0;
     for(int j=0; j<a->states_cnt; j++){
-        cnt_tr+=a->states[j]->transitions_cnt;
+        cnt_tr+= NFA_transitions_cnt(a->states[j]);
     }
     fprintf(f,"%d\n",cnt_tr);
 
@@ -499,7 +509,8 @@ NFA *NFA_extend(const NFA *a, int num_cord){
 
     for(int i=0;i<a->states_cnt;i++){
         node *curr_tr=a->states[i]->transitions->head;
-        int cnt1=a->states[i]->transitions_cnt;
+//        int cnt1=a->states[i]->transitions_cnt;
+        int cnt1= NFA_transitions_cnt(a->states[i]);
         for(int j=0;j<cnt1;j++){
             int old_tr=curr_tr->val->transition_trigger;
             NFA_add_transition(res,a->states[i]->index,
