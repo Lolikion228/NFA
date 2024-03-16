@@ -259,10 +259,11 @@ int main(){
     NFA *intersection= NFA_intersection(a1,a2);
     NFA *intersection_c= NFA_complement(intersection);
 
-//    NFA_to_pic(a1);
-    NFA_to_pic(union_);
-//    NFA_to_pic(intersection);
 
+    NFA_to_pic(a1);
+    NFA_to_pic(union_);
+    NFA_to_pic(intersection_c);
+//
     for(int i=0;i<sent_cnt;i++){
         printf("by_[cnt0,cnt1,union,intersection,intersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
                NFA_check(a1,sents[i]),
@@ -271,7 +272,7 @@ int main(){
                NFA_check(intersection,sents[i]),
                NFA_check(intersection_c,sents[i]));
     }
-
+//
     NFA_free(a1);
     NFA_free(a2);
     NFA_free(union_);
@@ -282,18 +283,19 @@ int main(){
 
 
 //ex 5
-//    NFA *a= NFA_init(8);
-//    NFA_add_state(a,0);
-//    NFA_add_state(a,1);
-//    NFA_add_transition(a,0,0,(int) strtol("10111001",NULL,2));
-//    NFA_add_transition(a,0,1,(int) strtol("10011101",NULL,2));
-//    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
-//    NFA *pr_a= NFA_project(a,5);
-//    NFA *ex_a= NFA_extend(a,7);
-//    NFA_to_pic(ex_a);
-//    NFA_free(a);
-//    NFA_free(pr_a);
-//    NFA_free(ex_a);
+    NFA *a= NFA_init(8);
+    NFA_add_state(a,0);
+    NFA_add_state(a,1);
+    NFA_add_transition(a,0,0,(int) strtol("10111001",NULL,2));
+    NFA_add_transition(a,0,1,(int) strtol("10011101",NULL,2));
+    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
+
+    NFA *pr_a= NFA_project(a,5);
+    NFA *ex_a= NFA_extend(a,7);
+    NFA_to_pic(ex_a);
+    NFA_free(a);
+    NFA_free(pr_a);
+    NFA_free(ex_a);
 
     return 0;
 }

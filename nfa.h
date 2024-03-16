@@ -7,14 +7,12 @@
 #define NFA_NFA_H
 
 #include "other/big_int.h"
-#include "other/linked_list.h"
+
 
 
 typedef struct NFA_state NFA_state;
 typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
-
-
 
 //---------------------------- 15/03 ------------------------
 //
@@ -28,8 +26,6 @@ typedef struct NFA NFA;
 //    int index;
 //    int * int transitions[2];
 //} NFA_state_pretty;
-//
-//
 //
 //typedef struct NFA_pretty{
 //    NFA_state *states;
@@ -69,13 +65,14 @@ typedef struct NFA NFA;
 typedef struct NFA_state{
     int index;
     int is_final;
-    struct list *transitions;
+    NFA_transition *transitions;
 } NFA_state;
 
 
 typedef struct NFA_transition {
     NFA_state *state_to;
     int transition_trigger;
+    NFA_transition *next;
 } NFA_transition;
 
 
