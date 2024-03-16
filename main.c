@@ -240,7 +240,7 @@ int main(){
 ////    free(res2);
 //    big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
 
-
+//new
 //ex4
     big_int *sent1= big_int_get("0");
     big_int *sent2= big_int_get("001");
