@@ -7,6 +7,8 @@
 #include <string.h>
 #include "other/linked_list.h"
 
+#define get_pair(a, x, y) (a->states_cnt * x + y)
+
 NFA_state *NFA_state_init(NFA *a,int is_final);
 
 // NFA over \{0,1\}^{dim}
@@ -18,7 +20,6 @@ NFA *NFA_init(int dim){
     }
     a->states_cnt=0;
     a->dim = dim;
-    a->initial_state=NULL;
     a->states = NULL;
     return a;
 }
@@ -53,9 +54,6 @@ void NFA_add_state(NFA *a,int is_final){
     }
     a->states_cnt++;
     a->states[a->states_cnt-1]=state;
-    if(a->states_cnt==1){
-        a->initial_state=a->states[0];
-    }
 }
 
 
@@ -400,7 +398,6 @@ NFA *NFA_union(const NFA *a1,const NFA *a2){
 }
 
 
-
 NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
 
     NFA *res = NFA_init(a1->dim);
@@ -411,7 +408,7 @@ NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
         }
     }
 
-    res->initial_state=res->states[0];
+
     for(int i=0;i<a1->states_cnt;i++){
         for(int j=0;j<a2->states_cnt;j++) {
             node *curr_tr1=a1->states[i]->transitions->head;

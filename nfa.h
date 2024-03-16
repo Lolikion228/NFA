@@ -15,6 +15,57 @@ typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
 
 
+
+//---------------------------- 15/03 ------------------------
+//
+//struct NFA_transition{
+//    int digit;
+//    int index;
+//
+//};
+//
+//typedef struct NFA_state_pretty{
+//    int index;
+//    int * int transitions[2];
+//} NFA_state_pretty;
+//
+//
+//
+//typedef struct NFA_pretty{
+//    NFA_state *states;
+//    int states_cnt;
+//    int dim;
+//    int *initial;
+//    int *final;
+//} NFA_pretty;
+
+//----------------------------------------------------------
+
+////---------------------------- 15/03 ------------------------
+//typedef struct NFA_state_pretty{
+//    int index;
+//    struct list *transitions;
+//} NFA_state_pretty;
+//
+//typedef struct NFA_states_list{
+//    NFA_state_pretty* head;
+//} NFA_states_list;
+//
+//typedef struct NFA_transition2 {
+//    int state_index;
+//    int transition_trigger;
+//} NFA_transition2;
+//
+//typedef struct NFA_pretty{
+//    NFA_state *states;
+//    int states_cnt;
+//    int dim;
+//    NFA_states_list *initial;
+//    NFA_states_list *final;
+//} NFA_pretty;
+//
+////----------------------------------------------------------
+
 typedef struct NFA_state{
     int index;
     int is_final;
@@ -34,7 +85,6 @@ typedef struct NFA{
     NFA_state **states;
     int states_cnt;
     int dim;
-    NFA_state *initial_state;
 } NFA;
 
 NFA *NFA_init(int dim);

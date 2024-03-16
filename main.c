@@ -42,6 +42,37 @@
 //A intersection B = !(!A U !B) ???
 
 
+
+/*
+ * typedef struct NFA_state{
+    int index;
+    int is_final;
+    NFA_transition *transitions;
+} NFA_state;
+
+typedef struct NFA_transition {
+    NFA_state *state_to;
+    int transition_trigger;
+    NFA_transition *next;
+} NFA_transition;
+
+typedef struct NFA{
+    NFA_state *states;
+    int states_cnt;
+    int dim;
+    NFA_state *initial_state;
+} NFA;*/
+
+
+
+
+
+
+
+
+
+
+
 int main(){
 
 
@@ -224,8 +255,6 @@ int main(){
 
     NFA* a1=NFA_from_file("../automatons/cnt0_is_even.txt");
     NFA* a2=NFA_from_file("../automatons/cnt1_is_even.txt");
-//    NFA_print(a1);
-//    NFA_print(a2);
     NFA *union_= NFA_union(a1,a2);
     NFA *intersection= NFA_intersection(a1,a2);
     NFA *intersection_c= NFA_complement(intersection);
@@ -261,9 +290,11 @@ int main(){
 //    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
 //    NFA *pr_a= NFA_project(a,5);
 //    NFA *ex_a= NFA_extend(a,7);
-//    NFA_to_pic(ex_a);
+//    NFA_to_pic(a);
 //    NFA_free(a);
 //    NFA_free(pr_a);
 //    NFA_free(ex_a);
+
     return 0;
 }
+
