@@ -33,23 +33,19 @@ NFA *NFA_init(int dim){
 }
 
 
-NFA_state *NFA_state_init(NFA *a,int is_final){
+void NFA_add_state(NFA *a,int is_final){
+
+//    NFA_state *state=NFA_state_init(a,is_final);
     NFA_state *state = (NFA_state *)malloc(sizeof(NFA_state));
     if(!state){
         printf("memory allocation error in state_init1\n");
         exit(1);
     }
+
     state->index=a->states_cnt;
     state->is_final=is_final;
-
     state->transitions = NULL;
 
-    return state;
-}
-
-
-void NFA_add_state(NFA *a,int is_final){
-    NFA_state *state=NFA_state_init(a,is_final);
 
     a->states=realloc(a->states,((a->states_cnt)+1)*sizeof(NFA_state));
     if(!a->states){
@@ -419,7 +415,6 @@ NFA *NFA_intersection(const NFA *a1,const NFA *a2) {
         }
     }
 
-
     for(int i=0;i<a1->states_cnt;i++){
         for(int j=0;j<a2->states_cnt;j++) {
             NFA_transition *curr_tr1=a1->states[i]->transitions;
@@ -506,10 +501,12 @@ NFA *NFA_extend(const NFA *a, int num_cord){
         int cnt1= NFA_transitions_cnt(a->states[i]);
         for(int j=0;j<cnt1;j++){
             int old_tr=curr_tr->transition_trigger;
-            NFA_add_transition(res,a->states[i]->index,
+            NFA_add_transition(res,
+                               a->states[i]->index,
                                curr_tr->state_to_ix,
                                extend_int(old_tr,num_cord,1));
-            NFA_add_transition(res,a->states[i]->index,
+            NFA_add_transition(res,
+                               a->states[i]->index,
                                curr_tr->state_to_ix,
                                extend_int(old_tr,num_cord,0));
             curr_tr=curr_tr->next;
