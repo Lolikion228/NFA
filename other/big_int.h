@@ -8,7 +8,7 @@
 #define UNTITLED_BIG_INT_H
 
 typedef struct big_int {
-    long bit_len;
+    int bit_len;
     unsigned char *number;
     unsigned int length;
     char sign;

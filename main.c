@@ -25,6 +25,7 @@
 
 
 //          todo
+//rework NFA_check(check_many???) flatten->columns (dim=n -> input={big_int}**n)
 //add README
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //add 3|x 2|x x+y=z x=y automata
@@ -62,108 +63,98 @@ typedef struct NFA{
 } NFA;*/
 
 int main(){
-//ex1
-//    int dim = 10;
-//    int tr5= (int)strtol("1000000011",NULL,2);//dim=10
-//    int tr6= (int)strtol("1100000011",NULL,2);
-//    int tr7= (int)strtol("1110000011",NULL,2);
-//    int tr8= (int)strtol("1111000011",NULL,2);
-//    big_int *sent1= big_int_get("11100000111100000011110000001110000000111000000011");
-//    big_int *sent2= big_int_get("11110000111000000011100000001111000000111000000011");
-//    int sent_cnt=2;
+
+
+//ex4
+//    big_int *sent1= big_int_get("0");
+//    big_int *sent2= big_int_get("001");
+//    big_int *sent3= big_int_get("1110001100");
+//    big_int *sent4= big_int_get("0011");
+//    int sent_cnt=4;
 //    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
 //    sents[0]=sent1;
 //    sents[1]=sent2;
+//    sents[2]=sent3;
+//    sents[3]=sent4;
 //
-//    NFA *nfa=NFA_init(dim);
-//    NFA_add_state(nfa,1);
-//    NFA_add_state(nfa,0);
-//    NFA_add_state(nfa,1);
-//    NFA_add_transition(nfa,0,1,tr5);
-//    NFA_add_transition(nfa,1,1,tr5);
-//    NFA_add_transition(nfa,1,0,tr8);
-//    NFA_add_transition(nfa,1,2,tr6);
-//    NFA_add_transition(nfa,2,2,tr6);
-//    NFA_add_transition(nfa,2,3,tr7);
-//    NFA_add_transition(nfa,2,1,tr5);
-//    NFA_to_file(nfa);
-//    NFA* a2=NFA_from_file("../automata.txt");
+//    NFA* a1=NFA_from_file("../automatons/cnt0_is_even.txt");
+//    NFA* a2=NFA_from_file("../automatons/cnt1_is_even.txt");
+//    NFA *union_= NFA_union(a1,a2);
+//    NFA *intersection= NFA_intersection(a1,a2);
+//    NFA *intersection_c= NFA_complement(intersection);
 //
-//    int*res=NFA_check_many(nfa,sents,sent_cnt,0);
-//    int*res2=NFA_check_many(a2,sents,sent_cnt,0);
+//
+//    NFA_to_pic(a2);
+//    NFA_to_pic(union_);
+//    NFA_to_pic(intersection_c);
+////    printf("res=%d\n", NFA_check(a2,&sents[0]));
 //    for(int i=0;i<sent_cnt;i++){
-//        printf("by_[orig,copy]_sent_%d=[%d,%d]\n",i,res[i],res2[i]);
+//        printf("by_[cnt0,cnt1,union,intersection,intersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
+//               NFA_check(a1,&sents[i]),
+//               NFA_check(a2,&sents[i]),
+//               NFA_check(union_,&sents[i]),
+//               NFA_check(intersection,&sents[i]),
+//               NFA_check(intersection_c,&sents[i]));
 //    }
 //
-//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent1));
-//    printf("ACCEPTED=%d\n",NFA_check(nfa,sent2));
-//
-//
-////    NFA_print(nfa);
-////    NFA_to_dot(nfa);
-//
-//    NFA_free(nfa);
+//    NFA_free(a1);
 //    NFA_free(a2);
+////    NFA_free(union_);
+////    NFA_free(intersection);
+////    NFA_free(intersection_c);
 //    free(sents);
-//    free(res);
-//    free(res2);
-//    big_int_free2(2,&sent1,&sent2);
-
-//ex4
-    big_int *sent1= big_int_get("0");
-    big_int *sent2= big_int_get("001");
-    big_int *sent3= big_int_get("0010");
-    big_int *sent4= big_int_get("0011");
-    int sent_cnt=4;
-    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
-    sents[0]=sent1;
-    sents[1]=sent2;
-    sents[2]=sent3;
-    sents[3]=sent4;
-
-    NFA* a1=NFA_from_file("../automatons/cnt0_is_even.txt");
-    NFA* a2=NFA_from_file("../automatons/cnt1_is_even.txt");
-    NFA *union_= NFA_union(a1,a2);
-    NFA *intersection= NFA_intersection(a1,a2);
-    NFA *intersection_c= NFA_complement(intersection);
-
-
-    NFA_to_pic(a1);
-    NFA_to_pic(union_);
-    NFA_to_pic(intersection_c);
-//
-    for(int i=0;i<sent_cnt;i++){
-        printf("by_[cnt0,cnt1,union,intersection,intersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
-               NFA_check(a1,sents[i]),
-               NFA_check(a2,sents[i]),
-               NFA_check(union_,sents[i]),
-               NFA_check(intersection,sents[i]),
-               NFA_check(intersection_c,sents[i]));
-    }
-//
-    NFA_free(a1);
-    NFA_free(a2);
-    NFA_free(union_);
-    NFA_free(intersection);
-    NFA_free(intersection_c);
-    free(sents);
-    big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
+//    big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
 
 
 //ex 5
-    NFA *a= NFA_init(8);
-    NFA_add_state(a,0);
-    NFA_add_state(a,1);
-    NFA_add_transition(a,0,0,(int) strtol("10111001",NULL,2));
-    NFA_add_transition(a,0,1,(int) strtol("10011101",NULL,2));
-    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
+//    NFA *a= NFA_init(8);
+//    NFA_add_state(a,0);
+//    NFA_add_state(a,1);
+//    NFA_add_transition(a,0,0,(int) strtol("10111001",NULL,2));
+//    NFA_add_transition(a,0,1,(int) strtol("10011101",NULL,2));
+//    NFA_add_transition(a,1,1,(int) strtol("10111001",NULL,2));
+//
+//    NFA *pr_a= NFA_project(a,5);
+//    NFA *ex_a= NFA_extend(a,7);
+////    NFA_to_pic(pr_a);
+//    NFA_free(a);
+//    NFA_free(pr_a);
+//    NFA_free(ex_a);
 
-    NFA *pr_a= NFA_project(a,5);
-    NFA *ex_a= NFA_extend(a,7);
-//    NFA_to_pic(pr_a);
+//ex6
+//    NFA *a= NFA_init(4);
+//    big_int *sent1= big_int_get(       "001");
+//    big_int *sent2= big_int_get(    "110111");
+//    big_int *sent3= big_int_get( "100101011");
+//    big_int *sent4= big_int_get( "111111111");
+//    int sent_cnt=4;
+//    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
+//    sents[0]=sent1;
+//    sents[1]=sent2;
+//    sents[2]=sent3;
+//    sents[3]=sent4;
+//    NFA_check(a,sents);
+//    NFA_free(a);
+//    free(sents);
+//    big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
+
+
+//ex7
+    NFA* a= NFA_from_file("../automatons/x_eq_y.txt");
+    big_int *sent1= big_int_get(    "0111");
+    big_int *sent2= big_int_get(  "00101");
+
+    int sent_cnt=2;
+    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
+    sents[0]=sent1;
+    sents[1]=sent2;
+
+    printf("res= %d\n",NFA_check(a,sents));
+//    NFA_print(a);
+    NFA_to_pic(a);
     NFA_free(a);
-    NFA_free(pr_a);
-    NFA_free(ex_a);
+    free(sents);
+    big_int_free2(2,&sent1,&sent2);
 
     return 0;
 }

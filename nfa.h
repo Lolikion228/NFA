@@ -68,9 +68,9 @@ void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
 void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
-int NFA_check(const NFA *a,big_int *sentence);
+int NFA_check(const NFA *a,  big_int **sentences);
 
-int *NFA_check_many(const NFA *a, big_int **sentences, int len);
+//int *NFA_check_many(const NFA *a, big_int **sentences, int len);
 
 void NFA_print(const NFA* a);
 
