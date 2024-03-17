@@ -2,40 +2,16 @@
 // Created by lolikion on 16.02.24.
 //
 
-
 #ifndef NFA_NFA_H
 #define NFA_NFA_H
 
 #include "other/big_int.h"
 
 
-
 typedef struct NFA_state NFA_state;
 typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
 
-//---------------------------- 15/03 ------------------------
-//
-//struct NFA_transition{
-//    int digit;
-//    int index;
-//
-//};
-//
-//typedef struct NFA_state_pretty{
-//    int index;
-//    int * int transitions[2];
-//} NFA_state_pretty;
-//
-//typedef struct NFA_pretty{
-//    NFA_state *states;
-//    int states_cnt;
-//    int dim;
-//    int *initial;
-//    int *final;
-//} NFA_pretty;
-
-//----------------------------------------------------------
 
 ////---------------------------- 15/03 ------------------------
 //typedef struct NFA_state_pretty{
@@ -62,6 +38,7 @@ typedef struct NFA NFA;
 //
 ////----------------------------------------------------------
 
+
 typedef struct NFA_state{
     int index;
     int is_final;
@@ -82,11 +59,10 @@ typedef struct NFA{
     int dim;
 } NFA;
 
+
 NFA *NFA_init(int dim);
 
 void NFA_add_state(NFA *a,int is_final);
-
-void NFA_state_free(NFA_state *s);
 
 void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
@@ -101,7 +77,6 @@ void NFA_print(const NFA* a);
 void NFA_free(NFA *a);
 
 void NFA_to_pic(const NFA *a);
-
 
 /* dim
  * states_cnt [state[i] is_final]
