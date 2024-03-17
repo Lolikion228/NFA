@@ -25,12 +25,13 @@
 
 
 //          todo
+//**states to *states!!!!!!
 //add README
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //rework epsilon tr????
 //tests???
 //AST(abstract syntax tree) [L,R,print], RPN,Shunting yard algorithm
-
+//add int *initial states
 //for intersection (L1/\L2)  L1 -> 0*L1  L2 -> 0*L2  0*closed
 
 //z(op1)x(op2)y
@@ -292,7 +293,7 @@ int main(){
 
     NFA *pr_a= NFA_project(a,5);
     NFA *ex_a= NFA_extend(a,7);
-    NFA_to_pic(ex_a);
+    NFA_to_pic(pr_a);
     NFA_free(a);
     NFA_free(pr_a);
     NFA_free(ex_a);

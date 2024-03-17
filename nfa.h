@@ -70,7 +70,7 @@ typedef struct NFA_state{
 
 
 typedef struct NFA_transition {
-    NFA_state *state_to;
+    int state_to_ix;
     int transition_trigger;
     NFA_transition *next;
 } NFA_transition;
