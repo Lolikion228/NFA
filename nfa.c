@@ -140,79 +140,6 @@ void print_array(int a[], int len){
 }
 
 
-//int NFA_check(const NFA *a, big_int *sentence){
-//
-//    big_int *sent2 = big_int_copy(sentence);
-//    int is_transition = 0;
-//
-//    int curr_states[a->states_cnt];
-//    for(int i=0; i<a->states_cnt; i++){
-//        curr_states[i] = 0;
-//    }
-//    curr_states[0] = 1;
-//
-//    if( (sent2->bit_len % a->dim) ){
-//        big_int_print(sentence);
-//        printf("bit_len is not multiple of a->dim\n");
-//        exit(1);
-//    }
-//
-//    long max_num_words = sent2->bit_len / a->dim;
-//    long processed_words = 0;
-//
-//    int curr_wrd = 0;
-//    for(int i=0; i <= (a->dim >> 3)  - ( (a->dim & 7) == 0 ); i++ ){
-//        curr_wrd +=  (sent2->number[i] << 8*i) & ( ((1<<a->dim)-1) );
-//    }
-//    big_int_bin_shft_r2(sent2,a->dim);
-//
-//    while(1) {
-//        is_transition = 0;
-//        int curr_states2[a->states_cnt];
-//        for(int i=0; i<a->states_cnt; i++){
-//            curr_states2[i] = 0;
-//        }
-//        for(int i=0; i<a->states_cnt; i++) {
-//            if(curr_states[i] == 1) {
-//                NFA_transition *curr_tr = a->states[i]->transitions;
-//                while (curr_tr != NULL) {
-//                    if (  curr_tr->transition_trigger == -1 ) {
-//                        curr_states[curr_tr->state_to_ix] = 1;
-//                    }
-//                    curr_tr = curr_tr->next;
-//                }
-//                curr_tr = a->states[i]->transitions;
-//                while (curr_tr != NULL) {
-//                    if (  curr_wrd == curr_tr->transition_trigger  ) {
-//                        curr_states2[curr_tr->state_to_ix] = 1;
-//                        is_transition = 1;
-//                    }
-//                    curr_tr = curr_tr->next;
-//                }
-//            }
-//        }
-//
-//        if(is_transition) {
-//            for (int i=0; i<a->states_cnt; i++) {
-//                curr_states[i] = curr_states2[i];
-//            }
-//        }
-//
-//        processed_words++;
-//        curr_wrd = 0;
-//        if(processed_words == max_num_words){break;}
-//        for(int i=0; i <= (a->dim >> 3)  - ( (a->dim & 7) == 0 ); i++ ){
-//            curr_wrd+=  ( ((1<<a->dim)-1) ) & (sent2->number[i]<< 8*i);
-//        }
-//        big_int_bin_shft_r2(sent2,a->dim);
-//    }
-//
-//    big_int_free2(1, &sent2);
-//    for(int i=0; i<a->states_cnt; i++){
-//        if(curr_states[i] & a->states[i]->is_final){return 1;}
-//    }
-//    return 0;
-//}
 int NFA_check(const NFA *a, big_int **sentences){
 
     big_int **sents2 = (big_int **)malloc(a->dim * sizeof(big_int*));
@@ -234,11 +161,10 @@ int NFA_check(const NFA *a, big_int **sentences){
 
 
     int max_num_words = max_len;
-    printf("max_len=%d\n",max_num_words);
     int processed_words = 0;
 
     int curr_wrd = 0;
-    int bit_cnt=0;
+    int bit_cnt = 0;
 
    for(int j=0; j<a->dim; j++){
        curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
@@ -246,7 +172,6 @@ int NFA_check(const NFA *a, big_int **sentences){
        big_int_bin_shft_r(sents2[j]);
    }
 
-    printf("curr_wrd = %b\n",curr_wrd);
     while(1) {
         is_transition = 0;
         int curr_states2[a->states_cnt];
@@ -284,14 +209,13 @@ int NFA_check(const NFA *a, big_int **sentences){
         if(processed_words == max_num_words){break;}
 
         curr_wrd = 0;
-        bit_cnt=0;
+        bit_cnt = 0;
         for(int j=0; j<a->dim; j++){
-            curr_wrd+= (sents2[j]->number[0] & 1) << bit_cnt;
+            curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
             bit_cnt++;
             big_int_bin_shft_r(sents2[j]);
         }
 
-        printf("curr_wrd = %b\n",curr_wrd);
     }
 
     for(int i=0; i<a->dim; i++){

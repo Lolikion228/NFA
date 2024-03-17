@@ -11,7 +11,20 @@
 #define MAX_BINARY_LENGTH 160000
 #define const1 4
 
+char* int_to_binary_string(int number) {
+    char* buffer = (char*)malloc(sizeof(char) * (sizeof(int) * 8) + 1);
 
+    int index = sizeof(int) * 8 - 1;
+
+    for (int i = index; i >= 0; i--) {
+        buffer[i] = (number & 1) ? '1' : '0';
+        number >>= 1;
+    }
+
+    buffer[index + 1] = '\0';
+
+    return buffer;
+}
 
 big_int *big_int_get(const char *bin_number) {
     big_int *res = (big_int *) malloc(sizeof(big_int));

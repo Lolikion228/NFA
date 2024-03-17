@@ -62,49 +62,8 @@ typedef struct NFA{
     NFA_state *initial_state;
 } NFA;*/
 
+
 int main(){
-
-
-//ex4
-//    big_int *sent1= big_int_get("0");
-//    big_int *sent2= big_int_get("001");
-//    big_int *sent3= big_int_get("1110001100");
-//    big_int *sent4= big_int_get("0011");
-//    int sent_cnt=4;
-//    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
-//    sents[0]=sent1;
-//    sents[1]=sent2;
-//    sents[2]=sent3;
-//    sents[3]=sent4;
-//
-//    NFA* a1=NFA_from_file("../automatons/cnt0_is_even.txt");
-//    NFA* a2=NFA_from_file("../automatons/cnt1_is_even.txt");
-//    NFA *union_= NFA_union(a1,a2);
-//    NFA *intersection= NFA_intersection(a1,a2);
-//    NFA *intersection_c= NFA_complement(intersection);
-//
-//
-//    NFA_to_pic(a2);
-//    NFA_to_pic(union_);
-//    NFA_to_pic(intersection_c);
-////    printf("res=%d\n", NFA_check(a2,&sents[0]));
-//    for(int i=0;i<sent_cnt;i++){
-//        printf("by_[cnt0,cnt1,union,intersection,intersection_c]_sent_%d=[%d,%d,%d,%d,%d]\n",i,
-//               NFA_check(a1,&sents[i]),
-//               NFA_check(a2,&sents[i]),
-//               NFA_check(union_,&sents[i]),
-//               NFA_check(intersection,&sents[i]),
-//               NFA_check(intersection_c,&sents[i]));
-//    }
-//
-//    NFA_free(a1);
-//    NFA_free(a2);
-////    NFA_free(union_);
-////    NFA_free(intersection);
-////    NFA_free(intersection_c);
-//    free(sents);
-//    big_int_free2(4,&sent1,&sent2,&sent3,&sent4);
-
 
 //ex 5
 //    NFA *a= NFA_init(8);
@@ -140,23 +99,64 @@ int main(){
 
 
 //ex7
-    NFA* a= NFA_from_file("../automatons/x_eq_y.txt");
-    big_int *sent1= big_int_get(    "0111");
-    big_int *sent2= big_int_get(  "00101");
+//    NFA* a= NFA_from_file("../automatons/x_eq_y.txt");
+//    big_int *sent1= big_int_get(    "0000010111");
+//    big_int *sent2= big_int_get(  "0010111");
+//
+//    int sent_cnt=2;
+//    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
+//    sents[0]=sent1;
+//    sents[1]=sent2;
+//
+//    printf("res= %d\n",NFA_check(a,sents));
+//    NFA_to_pic(a);
+//    NFA_free(a);
+//    free(sents);
+//    big_int_free2(2,&sent1,&sent2);
 
-    int sent_cnt=2;
+
+
+
+//ex7
+    NFA* a2 = NFA_from_file("../automatons/2|x.txt");
+    NFA* a3 = NFA_from_file("../automatons/3|x.txt");
+    NFA *a_in = NFA_intersection(a2,a3);
+    NFA *a_un = NFA_union(a2,a3);
+
+    big_int *sent1= big_int_get(    "00001011");
+    int sent_cnt=1;
     big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
     sents[0]=sent1;
-    sents[1]=sent2;
 
-    printf("res= %d\n",NFA_check(a,sents));
-//    NFA_print(a);
-    NFA_to_pic(a);
-    NFA_free(a);
+
+    for(int i=0; i<3000; i++){
+        char *str=int_to_binary_string(i);
+        big_int * num=big_int_get(str);
+        int res2 = NFA_check(a2, &num);
+        int res3 = NFA_check(a3, &num);
+        int res_in = NFA_check(a_in, &num);
+        int res_un = NFA_check(a_un, &num);
+
+        if((i%3==0 && i%2==0) != res_in){
+            printf("err\n");
+            break;
+        }
+
+
+        big_int_free(&num);
+        free(str);
+    }
+
+
+    NFA_to_pic(a3);
+    NFA_free(a_in);
+    NFA_free(a_un);
+    NFA_free(a2);
+    NFA_free(a3);
     free(sents);
-    big_int_free2(2,&sent1,&sent2);
-
+    big_int_free2(1,&sent1);
     return 0;
+
 }
 
 /*

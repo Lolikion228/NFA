@@ -68,6 +68,7 @@ void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
 void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
+// 0=lsd 1=msd
 int NFA_check(const NFA *a,  big_int **sentences);
 
 //int *NFA_check_many(const NFA *a, big_int **sentences, int len);
@@ -83,6 +84,8 @@ void NFA_to_pic(const NFA *a);
  * transitions_cnt
  * trigger_value state_from_ix state_to_ix
  */
+
+
 void NFA_to_file(const NFA *a);
 
 NFA *NFA_from_file(char* file_pth);
