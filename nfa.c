@@ -152,6 +152,7 @@ int NFA_check(const NFA *a, big_int **sentences){
         sents2[i] = big_int_copy(sentences[i]);
     }
     int bit_ix = max_len - 1;
+//    printf("bit_ix=%d\n",bit_ix);
 
     int curr_states[a->states_cnt];
     for(int i=0; i<a->states_cnt; i++){
@@ -159,7 +160,7 @@ int NFA_check(const NFA *a, big_int **sentences){
     }
     curr_states[0] = 1;
 
-
+//    printf("bit_ix=%d\n",bit_ix);
     if(a->order == 0) {
         for (int j = 0; j < a->dim; j++) {
             curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
@@ -169,6 +170,15 @@ int NFA_check(const NFA *a, big_int **sentences){
     }
     else{
         for (int j = 0; j < a->dim; j++) {
+//            printf("%d %d\n",j,bit_ix/8);
+//            if(bit_ix/8>sents2[j]->length){
+//                printf("err\n");
+//                printf("bit_ix=%d\n",bit_ix/8);
+//                printf("byte_len=%d\n",sents2[j]->length);
+//                printf("err\n");
+//                big_int_print(sents2[j]);
+//                exit(1);
+//            }
             curr_wrd += ( ( sents2[j]->number[bit_ix/8] & ( 1 << (bit_ix & 7) ) ) != 0) << bit_cnt;
             bit_cnt++;
         }
@@ -221,6 +231,7 @@ int NFA_check(const NFA *a, big_int **sentences){
         }
         else{
             for (int j = 0; j < a->dim; j++) {
+//                printf("%d %d\n",j,bit_ix/8);
                 curr_wrd += ( ( sents2[j]->number[bit_ix/8] & ( 1 << (bit_ix & 7) ) ) != 0) << bit_cnt;
                 bit_cnt++;
             }
@@ -558,4 +569,31 @@ int NFA_is_dfa(const NFA *a){
     }
     return 1;
 }
+
+NFA *NFA_is_mult_of_pow2(int pow){
+    NFA *a = NFA_init(1,0);
+    for(int i=0; i<=pow; i++){
+        NFA_add_state(a,0);
+    }
+    a->states[pow]->is_final = 1;
+    NFA_add_state(a,0);
+    NFA_add_state(a,1);
+
+    for(int i=0; i<pow; i++){
+        NFA_add_transition(a,i,i+1,0);
+        NFA_add_transition(a,i,pow+1,1);
+    }
+
+    NFA_add_transition(a,pow+1,pow+1,0);
+    NFA_add_transition(a,pow+1,pow+1,1);
+    NFA_add_transition(a,pow,pow,0);
+    NFA_add_transition(a,pow,pow,1);
+
+    NFA_add_transition(a,0,pow+2,0);
+    NFA_add_transition(a,pow+2,pow+2,0);
+    NFA_add_transition(a,pow+2,pow+1,1);
+
+    return a;
+}
+
 

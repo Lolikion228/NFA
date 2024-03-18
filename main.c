@@ -25,8 +25,7 @@
 
 
 //          todo
-//make lsd\msd mechanics
-//add n|x.txt?
+//bug with bit_ix
 //add README
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //add 3|x 2|x x+y=z x=y automata
@@ -120,29 +119,33 @@ int main(){
 
 //ex7
     NFA* a2 = NFA_from_file("../automatons/lsd/2|x.txt");
+
     NFA* a3 = NFA_from_file("../automatons/lsd/3|x.txt");
     NFA* a5 = NFA_from_file("../automatons/msd/5|x.txt");
-    NFA *a_in = NFA_intersection(a2,a3);
+    NFA *a1024 = NFA_is_mult_of_pow2(10);
+     NFA *a_in = NFA_intersection(a1024,a3);
     NFA *a_un = NFA_union(a2,a3);
 
-    big_int *sent1= big_int_get(    "00001011");
-    int sent_cnt=1;
-    big_int**sents=(big_int **)calloc(sent_cnt,sizeof(big_int*));
+    big_int *sent1= big_int_get(    "0");
+    big_int**sents=(big_int **)calloc(1,sizeof(big_int*));
     sents[0]=sent1;
-
-
-    for(int i=0; i<30000; i++){
+//    printf("%d\n",NFA_check(a1024,sents));
+    NFA_to_pic(a1024);
+    for(int i=0; i<1; i++){
         char *str=int_to_binary_string(i);
         big_int * num=big_int_get(str);
-        int res2 = NFA_check(a2, &num);
-        int res3 = NFA_check(a3, &num);
-        int res5 = NFA_check(a5, &num);
-        int res_in = NFA_check(a_in, &num);
-        int res_un = NFA_check(a_un, &num);
+        sents[0]=num;
+//        int res2 = NFA_check(a2, sents);
+//        int res3 = NFA_check(a3, sents);
+//        int res5 = NFA_check(a5, sents);
+        int res1024 = NFA_check(a1024, sents);
+//        printf("%d %d\n",i,res1024);
+//        int res_in = NFA_check(a_in, sents);
+//        int res_un = NFA_check(a_un, sents);
 
-        if((i%5==0) != res5){
+        if((i%1024==0) != res1024){
             printf("err\n");
-            break;
+            exit(1);
         }
 
 
@@ -151,10 +154,12 @@ int main(){
     }
 
 
-    NFA_to_pic(a5);
+
     NFA_free(a_in);
     NFA_free(a_un);
     NFA_free(a2);
+    NFA_free(a5);
+    NFA_free(a1024);
     NFA_free(a3);
     free(sents);
     big_int_free2(1,&sent1);

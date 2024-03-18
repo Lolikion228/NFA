@@ -105,4 +105,5 @@ NFA *NFA_project(const NFA *a, int num_cord);
 
 NFA *NFA_extend(const NFA *a, int num_cord);
 
+NFA *NFA_is_mult_of_pow2(int pow);
 #endif //NFA_NFA_H
