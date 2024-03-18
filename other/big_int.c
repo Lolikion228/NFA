@@ -11,30 +11,34 @@
 #define MAX_BINARY_LENGTH 160000
 #define const1 4
 
-char* int_to_binary_string(int number) {
-    char* buffer = (char*)malloc(sizeof(char) * (sizeof(int) * 8) + 1);
+//char* int_to_binary_string(int number) {
+//    char* buffer = (char*)malloc(sizeof(char) * (sizeof(int) * 8) + 1);
+//
+//    int index = sizeof(int) * 8 - 1;
+//
+//    for (int i = index; i >= 0; i--) {
+//        buffer[i] = (number & 1) ? '1' : '0';
+//        number >>= 1;
+//    }
+//
+//    buffer[index + 1] = '\0';
+//
+//    return buffer;
+//}
 
-    int index = sizeof(int) * 8 - 1;
 
-    for (int i = index; i >= 0; i--) {
-        buffer[i] = (number & 1) ? '1' : '0';
-        number >>= 1;
-    }
-
-    buffer[index + 1] = '\0';
-
-    return buffer;
-}
 
 big_int *big_int_get(const char *bin_number) {
     big_int *res = (big_int *) malloc(sizeof(big_int));
     int bit_len = strlen(bin_number), sign = 0;
+
     res->bit_len=bit_len;
     if (bin_number[0] == '-') {
         sign = 1;
         res->sign = '-';
     } else res->sign = '+';
     res->length = (bit_len + 7 - sign) >> 3;
+
     res->number = (unsigned char *) calloc(res->length, sizeof(res->number[0]));
     if (res->number == NULL) {
         printf("memory error in big_int_get\n");
@@ -45,6 +49,42 @@ big_int *big_int_get(const char *bin_number) {
         res->number[i / 8] += (bin_number[bit_len - i - 1] - '0') << (i % 8);
     }
     big_int_dlz(res);
+    return res;
+}
+
+
+big_int *big_int_from_int(int n) {
+    int num_bits = sizeof(int) * 8;
+    char *string = malloc(num_bits + 1);
+    if (!string) {
+        return NULL;
+    }
+    for (int i = num_bits - 1; i >= 0; i--) {
+        string[i] = (n & 1) + '0';
+        n >>= 1;
+    }
+    string[num_bits] = '\0';
+
+    big_int *res = (big_int *) malloc(sizeof(big_int));
+    int bit_len = strlen(string), sign = 0;
+
+    res->bit_len=bit_len;
+    if (string[0] == '-') {
+        sign = 1;
+        res->sign = '-';
+    } else res->sign = '+';
+    res->length = (bit_len + 7 - sign) >> 3;
+
+    res->number = (unsigned char *) calloc(res->length, sizeof(res->number[0]));
+    if (res->number == NULL) {
+        printf("memory error in big_int_get\n");
+        return NULL;
+    }
+    int i;
+    for (i = 0; i < bit_len - sign; i++) {
+        res->number[i / 8] += (string[bit_len - i - 1] - '0') << (i % 8);
+    }
+    free(string);
     return res;
 }
 

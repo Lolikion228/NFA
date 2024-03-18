@@ -14,7 +14,8 @@ typedef struct big_int {
     char sign;
 } big_int;
 
-char* int_to_binary_string(int number);
+big_int *big_int_from_int(int n);
+
 
 big_int *big_int_get(const char *bin_number);
 

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "nfa.h"
 #include "other/big_int.h"
-
+#include "string.h"
 
 //       done
 //add multidim; remove curr_state
@@ -122,35 +122,34 @@ int main(){
 
     NFA* a3 = NFA_from_file("../automatons/lsd/3|x.txt");
     NFA* a5 = NFA_from_file("../automatons/msd/5|x.txt");
-    NFA *a1024 = NFA_is_mult_of_pow2(10);
-     NFA *a_in = NFA_intersection(a1024,a3);
+    NFA *a512 = NFA_is_mult_of_pow2(9);
+     NFA *a_in = NFA_intersection(a512,a3);
     NFA *a_un = NFA_union(a2,a3);
 
-    big_int *sent1= big_int_get(    "0");
+//    big_int *sent1= big_int_get(    "1111111111111111111111111111111111111111100");
     big_int**sents=(big_int **)calloc(1,sizeof(big_int*));
-    sents[0]=sent1;
-//    printf("%d\n",NFA_check(a1024,sents));
-    NFA_to_pic(a1024);
-    for(int i=0; i<1; i++){
-        char *str=int_to_binary_string(i);
-        big_int * num=big_int_get(str);
+//    sents[0]=sent1;
+//    printf("%d\n",NFA_check(a5,sents));
+    NFA_to_pic(a_in);
+    for(int i=0; i<20000; i++){
+
+        big_int * num= big_int_from_int(i);
         sents[0]=num;
 //        int res2 = NFA_check(a2, sents);
 //        int res3 = NFA_check(a3, sents);
 //        int res5 = NFA_check(a5, sents);
-        int res1024 = NFA_check(a1024, sents);
-//        printf("%d %d\n",i,res1024);
-//        int res_in = NFA_check(a_in, sents);
+//        int res1024 = NFA_check(a1024, sents);
+        int res_in = NFA_check(a_in, sents);
 //        int res_un = NFA_check(a_un, sents);
 
-        if((i%1024==0) != res1024){
+        if((i%1536==0) != res_in){
             printf("err\n");
             exit(1);
         }
 
 
         big_int_free(&num);
-        free(str);
+
     }
 
 
@@ -159,10 +158,10 @@ int main(){
     NFA_free(a_un);
     NFA_free(a2);
     NFA_free(a5);
-    NFA_free(a1024);
+    NFA_free(a512);
     NFA_free(a3);
     free(sents);
-    big_int_free2(1,&sent1);
+//    big_int_free2(1,&sent1);
 
 //ex8
 //    NFA *a = NFA_init(4,1);
