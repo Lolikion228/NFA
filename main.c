@@ -25,7 +25,8 @@
 
 
 //          todo
-//rework NFA_check(check_many???) flatten->columns (dim=n -> input={big_int}**n)
+//make lsd\msd mechanics
+//add n|x.txt?
 //add README
 //add examples FROM FILES WITH NFA_TO_FILE and normal verbose to check
 //add 3|x 2|x x+y=z x=y automata
@@ -118,8 +119,9 @@ int main(){
 
 
 //ex7
-    NFA* a2 = NFA_from_file("../automatons/2|x.txt");
-    NFA* a3 = NFA_from_file("../automatons/3|x.txt");
+    NFA* a2 = NFA_from_file("../automatons/lsd/2|x.txt");
+    NFA* a3 = NFA_from_file("../automatons/lsd/3|x.txt");
+    NFA* a5 = NFA_from_file("../automatons/msd/5|x.txt");
     NFA *a_in = NFA_intersection(a2,a3);
     NFA *a_un = NFA_union(a2,a3);
 
@@ -129,15 +131,16 @@ int main(){
     sents[0]=sent1;
 
 
-    for(int i=0; i<3000; i++){
+    for(int i=0; i<30000; i++){
         char *str=int_to_binary_string(i);
         big_int * num=big_int_get(str);
         int res2 = NFA_check(a2, &num);
         int res3 = NFA_check(a3, &num);
+        int res5 = NFA_check(a5, &num);
         int res_in = NFA_check(a_in, &num);
         int res_un = NFA_check(a_un, &num);
 
-        if((i%3==0 && i%2==0) != res_in){
+        if((i%5==0) != res5){
             printf("err\n");
             break;
         }
@@ -148,13 +151,27 @@ int main(){
     }
 
 
-    NFA_to_pic(a3);
+    NFA_to_pic(a5);
     NFA_free(a_in);
     NFA_free(a_un);
     NFA_free(a2);
     NFA_free(a3);
     free(sents);
     big_int_free2(1,&sent1);
+
+//ex8
+//    NFA *a = NFA_init(4,1);
+//    big_int **sents= malloc(4*sizeof(big_int *));
+//    big_int *word1 = big_int_get("111001");
+//    big_int *word2 = big_int_get("001111");
+//    big_int *word3 = big_int_get("000001");
+//    big_int *word4 = big_int_get("100000");
+//    sents[0]=word1;
+//    sents[1]=word2;
+//    sents[2]=word3;
+//    sents[3]=word4;
+//    NFA_check(a,sents);
+//    NFA_free(a);
     return 0;
 
 }
