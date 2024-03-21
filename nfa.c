@@ -152,7 +152,6 @@ int NFA_check(const NFA *a, big_int **sentences){
         sents2[i] = big_int_copy(sentences[i]);
     }
     int bit_ix = max_len - 1;
-//    printf("bit_ix=%d\n",bit_ix);
 
     int curr_states[a->states_cnt];
     for(int i=0; i<a->states_cnt; i++){
@@ -160,7 +159,6 @@ int NFA_check(const NFA *a, big_int **sentences){
     }
     curr_states[0] = 1;
 
-//    printf("bit_ix=%d\n",bit_ix);
     if(a->order == 0) {
         for (int j = 0; j < a->dim; j++) {
             curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
@@ -170,21 +168,12 @@ int NFA_check(const NFA *a, big_int **sentences){
     }
     else{
         for (int j = 0; j < a->dim; j++) {
-//            printf("%d %d\n",j,bit_ix/8);
-//            if(bit_ix/8>sents2[j]->length){
-//                printf("err\n");
-//                printf("bit_ix=%d\n",bit_ix/8);
-//                printf("byte_len=%d\n",sents2[j]->length);
-//                printf("err\n");
-//                big_int_print(sents2[j]);
-//                exit(1);
-//            }
             curr_wrd += ( ( sents2[j]->number[bit_ix/8] & ( 1 << (bit_ix & 7) ) ) != 0) << bit_cnt;
             bit_cnt++;
         }
     }
     bit_ix--;
-
+//    printf("curr_wrd=%b\n",curr_wrd);
     while(1) {
         is_transition = 0;
         int curr_states2[a->states_cnt];
@@ -231,13 +220,13 @@ int NFA_check(const NFA *a, big_int **sentences){
         }
         else{
             for (int j = 0; j < a->dim; j++) {
-//                printf("%d %d\n",j,bit_ix/8);
                 curr_wrd += ( ( sents2[j]->number[bit_ix/8] & ( 1 << (bit_ix & 7) ) ) != 0) << bit_cnt;
                 bit_cnt++;
             }
         }
         bit_ix--;
 
+//        printf("curr_wrd=%b\n",curr_wrd);
     }
 
     for(int i=0; i<a->dim; i++){
