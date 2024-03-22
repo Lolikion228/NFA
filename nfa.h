@@ -53,13 +53,13 @@ typedef struct NFA_transition {
 } NFA_transition;
 
 
-
 typedef struct NFA{
     NFA_state **states;
     int order;
     int states_cnt;
     int dim;
 } NFA;
+
 
 //order: 0=lsd 1=msd
 NFA *NFA_init(int dim, int order);

@@ -18,7 +18,6 @@ int NFA_transitions_cnt(NFA_state *state){
 }
 
 
-
 NFA *NFA_init(int dim, int order){
     NFA *a = (NFA *)malloc(sizeof(NFA));
     if(!a){
@@ -45,13 +44,13 @@ void NFA_add_state(NFA *a, int is_final){
     state->transitions = NULL;
 
 
-    a->states=realloc(a->states,((a->states_cnt)+1)*sizeof(NFA_state) );
+    a->states = realloc(a->states,((a->states_cnt)+1)*sizeof(NFA_state) );
     if(!a->states){
         printf("memory allocation error in NFA_add_state\n");
         exit(1);
     }
     a->states_cnt++;
-    a->states[a->states_cnt-1]=state;
+    a->states[a->states_cnt-1] = state;
 }
 
 
@@ -159,6 +158,7 @@ int NFA_check(const NFA *a, big_int **sentences){
     }
     curr_states[0] = 1;
 
+
     if(a->order == 0) {
         for (int j = 0; j < a->dim; j++) {
             curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
@@ -174,14 +174,18 @@ int NFA_check(const NFA *a, big_int **sentences){
     }
     bit_ix--;
 //    printf("curr_wrd=%b\n",curr_wrd);
+
     while(1) {
         is_transition = 0;
         int curr_states2[a->states_cnt];
         for(int i=0; i<a->states_cnt; i++){
             curr_states2[i] = 0;
         }
+
         for(int i=0; i<a->states_cnt; i++) {
+
             if(curr_states[i] == 1) {
+
                 NFA_transition *curr_tr = a->states[i]->transitions;
                 while (curr_tr != NULL) {
                     if (  curr_tr->transition_trigger == -1 ) {
@@ -189,6 +193,7 @@ int NFA_check(const NFA *a, big_int **sentences){
                     }
                     curr_tr = curr_tr->next;
                 }
+
                 curr_tr = a->states[i]->transitions;
                 while (curr_tr != NULL) {
                     if (  curr_wrd == curr_tr->transition_trigger  ) {
@@ -197,7 +202,9 @@ int NFA_check(const NFA *a, big_int **sentences){
                     }
                     curr_tr = curr_tr->next;
                 }
+
             }
+
         }
 
         if(is_transition) {
