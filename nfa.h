@@ -16,6 +16,7 @@ typedef struct NFA NFA;
 typedef struct NFA_state{
     int index;
     int is_final;
+    int is_starting;
     NFA_transition *transitions;
 } NFA_state;
 
@@ -38,7 +39,7 @@ typedef struct NFA{
 //order: 0=lsd 1=msd
 NFA *NFA_init(int dim, int order);
 
-void NFA_add_state(NFA *a,int is_final);
+void NFA_add_state(NFA *a,int is_final, int is_starting);
 
 void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
@@ -57,6 +58,7 @@ void NFA_to_pic(const NFA *a);
 /* order
  * dim
  * states_cnt [state[i] is_final]
+ * [state[i] is_starting]
  * transitions_cnt
  * trigger_value state_from_ix state_to_ix
  */

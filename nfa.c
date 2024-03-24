@@ -32,7 +32,7 @@ NFA *NFA_init(int dim, int order){
 }
 
 
-void NFA_add_state(NFA *a, int is_final){
+void NFA_add_state(NFA *a, int is_final, int is_starting){
 
     NFA_state *state = (NFA_state *)malloc(sizeof(NFA_state));
     if(!state){
@@ -41,16 +41,19 @@ void NFA_add_state(NFA *a, int is_final){
     }
     state->index       = a->states_cnt;
     state->is_final    =      is_final;
+    state->is_starting =   is_starting;
     state->transitions =          NULL;
 
 
     a->states = realloc(a->states,((a->states_cnt)+1) * sizeof(NFA_state) );
+
     if(!a->states){
         printf("memory allocation error in NFA_add_state\n");
         exit(1);
     }
     a->states_cnt++;
     a->states[a->states_cnt - 1] = state;
+
 }
 
 
@@ -154,9 +157,9 @@ int NFA_check(const NFA *a, big_int **sentences){
 
     int curr_states[a->states_cnt];
     for(int i=0; i<a->states_cnt; i++){
-        curr_states[i] = 0;
+        curr_states[i] = a->states[i]->is_starting;
     }
-    curr_states[0] = 1;
+
 
     while(1) {
         curr_wrd = 0;
@@ -308,6 +311,11 @@ void NFA_to_file(const NFA *a){
     }
     fprintf(f,"\n");
 
+    for(int j=0; j<a->states_cnt; j++){
+        fprintf(f,"%d ", a->states[j]->is_starting);
+    }
+    fprintf(f,"\n");
+
     int cnt_tr = 0;
     for(int j=0; j<a->states_cnt; j++){
         cnt_tr += NFA_transitions_cnt(a->states[j]);
@@ -334,8 +342,13 @@ NFA *NFA_from_file(char* file_pth){
     fscanf(f,"%d", &cnt_st);
 
     int final[cnt_st];
+    int starting[cnt_st];
     for(int i=0; i<cnt_st; i++){
         fscanf(f,"%d", &final[i]);
+    }
+
+    for(int i=0; i<cnt_st; i++){
+        fscanf(f,"%d", &starting[i]);
     }
 
     fscanf(f,"%d\n", &cnt_tr);
@@ -343,7 +356,7 @@ NFA *NFA_from_file(char* file_pth){
     NFA *a = NFA_init(dim,order);
 
     for(int i=0; i<cnt_st; i++){
-        NFA_add_state(a,final[i]);
+        NFA_add_state(a,final[i],starting[i]);
     }
     for(int i=0; i<cnt_tr; i++){
         int trigger, from, to;
@@ -360,10 +373,10 @@ NFA *NFA_from_file(char* file_pth){
 NFA *NFA_union(const NFA *a1, const NFA *a2){
     if(a1->order != a2->order){ printf("a1 order != a2 order");exit(1); }
     NFA *res = NFA_init(a1->dim,a1->order);
-    NFA_add_state(res,0);
+    NFA_add_state(res,0,1);
 
     for(int i=0; i<a1->states_cnt; i++){
-        NFA_add_state(res, a1->states[i]->is_final);
+        NFA_add_state(res, a1->states[i]->is_final,0);
     }
     for(int i=0; i<a1->states_cnt; i++){
         NFA_transition* curr_tr = a1->states[i]->transitions;
@@ -377,7 +390,7 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
     }
 
     for(int i=0; i<a2->states_cnt; i++){
-        NFA_add_state(res, a2->states[i]->is_final);
+        NFA_add_state(res, a2->states[i]->is_final,0);
     }
     for(int i=0; i<a2->states_cnt; i++){
         NFA_transition* curr_tr = a2->states[i]->transitions;
@@ -403,7 +416,9 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 
     for(int i=0; i<a1->states_cnt; i++){
         for(int j=0; j<a2->states_cnt; j++){
-            NFA_add_state(res,a1->states[i]->is_final & a2->states[j]->is_final);
+            NFA_add_state(res,
+                          a1->states[i]->is_final & a2->states[j]->is_final,
+                          a1->states[i]->is_starting & a2->states[j]->is_starting);
         }
     }
 
@@ -486,7 +501,7 @@ NFA *NFA_extend(const NFA *a, int num_cord){
 //    if(num_cord >= a->dim){printf("num_cord >= dim.\n"); exit(1);}
     NFA *res = NFA_init(a->dim + 1, a->order);
     for(int i=0; i<a->states_cnt; i++){
-        NFA_add_state(res, a->states[i]->is_final);
+        NFA_add_state(res, a->states[i]->is_final,a->states[i]->is_starting);
     }
 
     for(int i=0; i<a->states_cnt; i++){
@@ -512,7 +527,7 @@ NFA *NFA_extend(const NFA *a, int num_cord){
 NFA *NFA_copy(const NFA *a){
     NFA *res = NFA_init(a->dim,a->order);
     for(int i=0; i<a->states_cnt; i++){
-        NFA_add_state(res, a->states[i]->is_final);
+        NFA_add_state(res, a->states[i]->is_final,a->states[i]->is_starting);
     }
     for(int i=0; i<a->states_cnt; i++){
         NFA_transition *curr_tr = a->states[i]->transitions;
@@ -549,11 +564,11 @@ int NFA_is_dfa(const NFA *a){
 NFA *NFA_is_mult_of_pow2(int pow){
     NFA *a = NFA_init(1,0);
     for(int i=0; i<=pow; i++){
-        NFA_add_state(a,0);
+        NFA_add_state(a,0,0);
     }
     a->states[pow]->is_final = 1;
-    NFA_add_state(a,0);
-    NFA_add_state(a,1);
+    NFA_add_state(a,0,0);
+    NFA_add_state(a,1,0);
 
     for(int i=0; i<pow; i++){
         NFA_add_transition(a,i,i+1,0);
@@ -569,6 +584,7 @@ NFA *NFA_is_mult_of_pow2(int pow){
     NFA_add_transition(a,pow+2,pow+2,0);
     NFA_add_transition(a,pow+2,pow+1,1);
 
+    a->states[0]->is_starting=1;
     return a;
 }
 
@@ -582,7 +598,7 @@ NFA *NFA_const(int n){
     num->bit_len = bit_cnt;
 
     for(int i=0; i <= bit_cnt+1; i++){
-        NFA_add_state(a,0);
+        NFA_add_state(a,0,0);
     }
 
     for(int i=0; i <= bit_cnt-1; i++){
@@ -596,7 +612,7 @@ NFA *NFA_const(int n){
     NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 0);
     NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 1);
     a->states[bit_cnt]->is_final=1;
-
+    a->states[0]->is_starting=1;
     big_int_free(&num);
     return a;
 }
