@@ -79,15 +79,15 @@ void NFA_free(NFA *a);
 
 void NFA_to_pic(const NFA *a);
 
+
 /* order
  * dim
  * states_cnt [state[i] is_final]
  * transitions_cnt
  * trigger_value state_from_ix state_to_ix
  */
-
-
 void NFA_to_file(const NFA *a);
+
 
 NFA *NFA_from_file(char* file_pth);
 
@@ -106,4 +106,5 @@ NFA *NFA_project(const NFA *a, int num_cord);
 NFA *NFA_extend(const NFA *a, int num_cord);
 
 NFA *NFA_is_mult_of_pow2(int pow);
+
 #endif //NFA_NFA_H
