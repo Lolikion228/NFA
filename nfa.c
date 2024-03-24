@@ -573,3 +573,31 @@ NFA *NFA_is_mult_of_pow2(int pow){
 }
 
 
+NFA *NFA_const(int n){
+    NFA *a = NFA_init(1,0);
+
+    big_int *num = big_int_from_int(n);
+    int bit_cnt=0, n2=n;
+    while (n2){n2 >>= 1; bit_cnt++;}
+    num->bit_len = bit_cnt;
+
+    for(int i=0; i <= bit_cnt+1; i++){
+        NFA_add_state(a,0);
+    }
+
+    for(int i=0; i <= bit_cnt-1; i++){
+        NFA_add_transition(a, i, i+1, n&1    );
+        NFA_add_transition(a, i, bit_cnt+1, !(n&1) );
+        n>>=1;
+    }
+
+    NFA_add_transition(a, bit_cnt, bit_cnt, 0);
+    NFA_add_transition(a, bit_cnt, bit_cnt+1, 1);
+    NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 0);
+    NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 1);
+    a->states[bit_cnt]->is_final=1;
+
+    big_int_free(&num);
+    return a;
+}
+

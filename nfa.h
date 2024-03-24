@@ -13,32 +13,6 @@ typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
 
 
-////---------------------------- 15/03 ------------------------
-//typedef struct NFA_state_pretty{
-//    int index;
-//    struct list *transitions;
-//} NFA_state_pretty;
-//
-//typedef struct NFA_states_list{
-//    NFA_state_pretty* head;
-//} NFA_states_list;
-//
-//typedef struct NFA_transition2 {
-//    int state_index;
-//    int transition_trigger;
-//} NFA_transition2;
-//
-//typedef struct NFA_pretty{
-//    NFA_state *states;
-//    int states_cnt;
-//    int dim;
-//    NFA_states_list *initial;
-//    NFA_states_list *final;
-//} NFA_pretty;
-//
-////----------------------------------------------------------
-
-
 typedef struct NFA_state{
     int index;
     int is_final;
@@ -107,4 +81,5 @@ NFA *NFA_extend(const NFA *a, int num_cord);
 
 NFA *NFA_is_mult_of_pow2(int pow);
 
+NFA *NFA_const(int n);
 #endif //NFA_NFA_H
