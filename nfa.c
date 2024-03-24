@@ -148,7 +148,7 @@ int NFA_check(const NFA *a, big_int **sentences){
         if(sentences[i]->bit_len >= max_len){
             max_len = sentences[i]->bit_len;
         }
-        sents2[a->dim-1-i] = big_int_copy(sentences[i]);
+        sents2[i] = big_int_copy(sentences[i]);
     }
     int bit_ix = max_len - 1;
 
