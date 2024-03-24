@@ -30,14 +30,14 @@ typedef struct NFA_transition {
 
 typedef struct NFA{
     NFA_state **states;
-    int order;
+    int encoding;
     int states_cnt;
     int dim;
 } NFA;
 
 
 //order: 0=lsd 1=msd
-NFA *NFA_init(int dim, int order);
+NFA *NFA_init(int dim, int encoding);
 
 void NFA_add_state(NFA *a,int is_final, int is_starting);
 
@@ -55,7 +55,7 @@ void NFA_free(NFA *a);
 void NFA_to_pic(const NFA *a);
 
 
-/* order
+/* encoding
  * dim
  * states_cnt [state[i] is_final]
  * [state[i] is_starting]
@@ -84,4 +84,8 @@ NFA *NFA_extend(const NFA *a, int num_cord);
 NFA *NFA_is_mult_of_pow2(int pow);
 
 NFA *NFA_const(int n);
+
+
+//fix
+NFA *NFA_reverse(NFA *a);
 #endif //NFA_NFA_H

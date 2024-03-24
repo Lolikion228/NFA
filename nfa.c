@@ -18,13 +18,13 @@ int NFA_transitions_cnt(NFA_state *state){
 }
 
 
-NFA *NFA_init(int dim, int order){
+NFA *NFA_init(int dim, int encoding){
     NFA *a = (NFA *)malloc(sizeof(NFA));
     if(!a){
         printf("memory allocation error in NFA_init_1\n");
         exit(1);
     }
-    a->order      = order;
+    a->encoding      = encoding;
     a->states_cnt =     0;
     a->dim        =   dim;
     a->states     =  NULL;
@@ -164,7 +164,7 @@ int NFA_check(const NFA *a, big_int **sentences){
     while(1) {
         curr_wrd = 0;
         bit_cnt = 0;
-        if(a->order == 0) {
+        if(a->encoding == 0) {
             for (int j = 0; j < a->dim; j++) {
                 curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
                 bit_cnt++;
@@ -302,7 +302,7 @@ void NFA_to_pic(const NFA *a){
 
 void NFA_to_file(const NFA *a){
     FILE *f = fopen("../temp/automata.txt","w");
-    fprintf(f,"%d\n", a->order);
+    fprintf(f,"%d\n", a->encoding);
     fprintf(f,"%d\n", a->dim);
     fprintf(f,"%d ", a->states_cnt);
 
@@ -335,9 +335,9 @@ void NFA_to_file(const NFA *a){
 
 NFA *NFA_from_file(char* file_pth){
     FILE *f = fopen(file_pth,"r");
-    int dim, cnt_st, cnt_tr, order;
+    int dim, cnt_st, cnt_tr, encoding;
 
-    fscanf(f,"%d\n", &order);
+    fscanf(f,"%d\n", &encoding);
     fscanf(f,"%d\n", &dim);
     fscanf(f,"%d", &cnt_st);
 
@@ -353,7 +353,7 @@ NFA *NFA_from_file(char* file_pth){
 
     fscanf(f,"%d\n", &cnt_tr);
 
-    NFA *a = NFA_init(dim,order);
+    NFA *a = NFA_init(dim, encoding);
 
     for(int i=0; i<cnt_st; i++){
         NFA_add_state(a,final[i],starting[i]);
@@ -371,8 +371,8 @@ NFA *NFA_from_file(char* file_pth){
 
 
 NFA *NFA_union(const NFA *a1, const NFA *a2){
-    if(a1->order != a2->order){ printf("a1 order != a2 order");exit(1); }
-    NFA *res = NFA_init(a1->dim,a1->order);
+    if(a1->encoding != a2->encoding){ printf("a1 encoding != a2 encoding");exit(1); }
+    NFA *res = NFA_init(a1->dim,a1->encoding);
     NFA_add_state(res,0,1);
 
     for(int i=0; i<a1->states_cnt; i++){
@@ -411,8 +411,8 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
 
 NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 //  ix_uni(ix_a1,ix_a2) = a2->states_cnt * ix_a1 + ix_a2
-    if(a1->order != a2->order){printf("a1 order != a2 order");exit(1);}
-    NFA *res = NFA_init(a1->dim,a1->order);
+    if(a1->encoding != a2->encoding){printf("a1 encoding != a2 encoding");exit(1);}
+    NFA *res = NFA_init(a1->dim,a1->encoding);
 
     for(int i=0; i<a1->states_cnt; i++){
         for(int j=0; j<a2->states_cnt; j++){
@@ -499,7 +499,7 @@ NFA *NFA_project(const NFA *a, int num_cord){
 
 NFA *NFA_extend(const NFA *a, int num_cord){
 //    if(num_cord >= a->dim){printf("num_cord >= dim.\n"); exit(1);}
-    NFA *res = NFA_init(a->dim + 1, a->order);
+    NFA *res = NFA_init(a->dim + 1, a->encoding);
     for(int i=0; i<a->states_cnt; i++){
         NFA_add_state(res, a->states[i]->is_final,a->states[i]->is_starting);
     }
@@ -525,7 +525,7 @@ NFA *NFA_extend(const NFA *a, int num_cord){
 
 
 NFA *NFA_copy(const NFA *a){
-    NFA *res = NFA_init(a->dim,a->order);
+    NFA *res = NFA_init(a->dim,a->encoding);
     for(int i=0; i<a->states_cnt; i++){
         NFA_add_state(res, a->states[i]->is_final,a->states[i]->is_starting);
     }
@@ -584,7 +584,7 @@ NFA *NFA_is_mult_of_pow2(int pow){
     NFA_add_transition(a,pow+2,pow+2,0);
     NFA_add_transition(a,pow+2,pow+1,1);
 
-    a->states[0]->is_starting=1;
+    a->states[0]->is_starting = 1;
     return a;
 }
 
@@ -593,8 +593,8 @@ NFA *NFA_const(int n){
     NFA *a = NFA_init(1,0);
 
     big_int *num = big_int_from_int(n);
-    int bit_cnt=0, n2=n;
-    while (n2){n2 >>= 1; bit_cnt++;}
+    int bit_cnt = 0, n2 = n;
+    while (n2) {n2 >>= 1; bit_cnt++;}
     num->bit_len = bit_cnt;
 
     for(int i=0; i <= bit_cnt+1; i++){
@@ -604,16 +604,44 @@ NFA *NFA_const(int n){
     for(int i=0; i <= bit_cnt-1; i++){
         NFA_add_transition(a, i, i+1, n&1    );
         NFA_add_transition(a, i, bit_cnt+1, !(n&1) );
-        n>>=1;
+        n >>= 1;
     }
 
     NFA_add_transition(a, bit_cnt, bit_cnt, 0);
     NFA_add_transition(a, bit_cnt, bit_cnt+1, 1);
     NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 0);
     NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 1);
-    a->states[bit_cnt]->is_final=1;
-    a->states[0]->is_starting=1;
+    a->states[bit_cnt]->is_final = 1;
+    a->states[0]->is_starting = 1;
     big_int_free(&num);
     return a;
 }
+
+
+
+
+//problem with leading zeroes lquo/rquo
+NFA *NFA_reverse(NFA *a){
+    NFA *res = NFA_init(a->dim, !a->encoding);
+    for(int i=0; i<a->states_cnt; i++){
+        NFA_add_state(res, !a->states[i]->is_final, !a->states[i]->is_starting);
+    }
+
+    for(int i=0; i<a->states_cnt; i++){
+        NFA_transition *curr_tr = a->states[i]->transitions;
+        while(curr_tr){
+            NFA_add_transition(res,
+                               curr_tr->state_to_ix,
+                               a->states[i]->index,
+                               curr_tr->transition_trigger);
+            curr_tr = curr_tr->next;
+        }
+    }
+    return res;
+}
+
+
+
+
+
 
