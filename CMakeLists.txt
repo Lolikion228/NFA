@@ -11,6 +11,8 @@ add_executable(NFA
         nfa.c
         other/linked_list.h
         other/linked_list.c
+        other/good_stuff.h
+        other/good_stuff.c
 )
 
 target_link_libraries(NFA m)
