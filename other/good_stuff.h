@@ -8,4 +8,6 @@
 
 int *zeros(int n);
 
+void print_array(int a[], int len);
+
 #endif //NFA_GOOD_STUFF_H
