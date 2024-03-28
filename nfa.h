@@ -90,4 +90,6 @@ NFA *NFA_const(int n);
 NFA *NFA_reverse(NFA *a);
 
 NFA *NFA_rightquo(const NFA *a1,const NFA *a2);
+
+NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
 #endif //NFA_NFA_H
