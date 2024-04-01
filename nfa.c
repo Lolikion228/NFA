@@ -7,6 +7,7 @@
 #include <string.h>
 #include "other/good_stuff.h"
 
+
 int NFA_transitions_cnt(NFA_state *state){
     NFA_transition *curr = state->transitions;
     int cnt = 0;

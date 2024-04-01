@@ -8,6 +8,7 @@
 #include "other/big_int.h"
 
 
+
 typedef struct NFA_state NFA_state;
 typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
