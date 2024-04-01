@@ -30,14 +30,13 @@ typedef struct NFA_transition {
 
 typedef struct NFA{
     NFA_state **states;
-    int encoding;
     int states_cnt;
     int dim;
 } NFA;
 
 
 //order: 0=lsd 1=msd
-NFA *NFA_init(int dim, int encoding);
+NFA *NFA_init(int dim);
 
 void NFA_add_state(NFA *a,int is_final, int is_starting);
 
@@ -54,8 +53,9 @@ void NFA_free(NFA *a);
 
 void NFA_to_pic(const NFA *a);
 
+int NFA_check2(const NFA *a, const int *sentences);
 
-/* encoding
+/*
  * dim
  * states_cnt [state[i] is_final]
  * [state[i] is_starting]
@@ -87,7 +87,7 @@ NFA *NFA_const(int n);
 
 
 //fix
-NFA *NFA_reverse(NFA *a);
+//NFA *NFA_reverse(NFA *a);
 
 NFA *NFA_rightquo(const NFA *a1,const NFA *a2);
 

@@ -9,10 +9,12 @@ add_executable(NFA
         other/big_int.c
         main.c
         nfa.c
-        other/linked_list.h
-        other/linked_list.c
         other/good_stuff.h
         other/good_stuff.c
+        other/Stack.h
+        other/Stack.c
+        other/logic.h
+        other/logic.c
 )
 
 target_link_libraries(NFA m)
