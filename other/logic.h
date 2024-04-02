@@ -2,6 +2,7 @@
 // Created by lolikion on 01.04.24.
 //
 
+
 #ifndef NFA_LOGIC_H
 #define NFA_LOGIC_H
 #include "nfa.h"
