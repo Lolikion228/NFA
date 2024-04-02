@@ -4,22 +4,21 @@
 
 #ifndef NFA_STACK_H
 #define NFA_STACK_H
-
+#include "logic.h"
 
 typedef struct Stack Stack;
 
 typedef struct Stack{
-    void **data;
-    int type;
+    Operator *data;
     int size;
 }Stack;
 
 
-Stack *Stack_init(int type);
+Stack *Stack_init();
 
-void Stack_push(Stack *stack, void *element);
+void Stack_push(Stack *stack, Operator element);
 
-void *Stack_pop(Stack *stack);
+Operator Stack_pop(Stack *stack);
 
 void Stack_free(Stack *stack);
 
