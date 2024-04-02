@@ -17,6 +17,6 @@ Operator op_init(int id);
 
 //NFA *parser(char *formula);
 
-void parser(char *formula);
+void RPN_print(char *formula);
 
 #endif //NFA_LOGIC_H

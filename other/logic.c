@@ -100,7 +100,7 @@ void op_print(int id){
 //    return a_stack->data[0];
 //}
 
-void parser(char *formula){
+void RPN_print(char *formula){
     Stack *op_stack = Stack_init();
 //    Stack *a_stack = Stack_init(1);
     Operator op;
@@ -193,3 +193,28 @@ void parser(char *formula){
 
     Stack_free(op_stack);
 }
+
+/*
+ * while there are tokens to be read:
+    read a token
+    if the token is:
+    - a function:
+        push it onto the operator stack
+    - an operator o1:
+        while (
+            there is an operator o2 at the top of the operator stack which is not a left parenthesis,
+            and o2 has greater precedence than o1
+        ):
+            pop o2 from the operator stack into the output queue
+        push o1 onto the operator stack
+    - a left parenthesis (i.e. "("):
+        push it onto the operator stack
+    - a right parenthesis (i.e. ")"):
+        while the operator at the top of the operator stack is not a left parenthesis:
+            pop the operator from the operator stack into the output queue
+        pop the left parenthesis from the operator stack and discard it
+        if there is a function token at the top of the operator stack, then:
+            pop the function from the operator stack into the output queue
+while there are tokens on the operator stack:
+    pop the operator from the operator stack onto the output queue
+ * */
