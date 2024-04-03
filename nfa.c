@@ -135,7 +135,7 @@ void NFA_remove_transition(NFA *a, int state_from, int state_to, int trigger){
 
 
 int NFA_check(const NFA *a, const int *sentences){
-    int *sents2 = (int *)malloc(a->dim * sizeof(int));
+    int *sents2 = malloc(a->dim * sizeof(int));
     int max_len = sizeof(int)*8, is_transition = 0, processed_words = 0, curr_wrd = 0, bit_cnt = 0;
 
     for(int i=0; i<a->dim; i++){
@@ -157,8 +157,6 @@ int NFA_check(const NFA *a, const int *sentences){
             sents2[j] = sents2[j]>>1;
         }
 
-
-//        printf("curr_wrd=%b\n",curr_wrd);
 
         is_transition = 0;
         int curr_states2[a->states_cnt];
@@ -194,7 +192,6 @@ int NFA_check(const NFA *a, const int *sentences){
                 curr_states[i] = curr_states2[i];
             }
         }
-
         processed_words++;
         if(processed_words == max_len){break;}
     }
@@ -399,8 +396,8 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
     for(int i=0; i<a1->states_cnt; i++){
         for(int j=0; j<a2->states_cnt; j++){
             NFA_add_state(res,
-                          a1->states[i]->is_final & a2->states[j]->is_final,
-                          a1->states[i]->is_starting & a2->states[j]->is_starting);
+                          a1->states[i]->is_final && a2->states[j]->is_final,
+                          a1->states[i]->is_starting && a2->states[j]->is_starting);
         }
     }
 
@@ -493,22 +490,13 @@ NFA *NFA_extend(const NFA *a, int num_cord){
 
 NFA *NFA_project(const NFA *a, int num_cord){
     if(num_cord >= a->dim){printf("out of dim exception\n"); exit(1);}
-    NFA *res = NFA_init(a->dim - 1);
-
-    for(int i=0; i<a->states_cnt; i++){
-        NFA_add_state(res, a->states[i]->is_final, a->states[i]->is_starting);
-    }
-
-    for(int i=0; i<a->states_cnt; i++){
-        int tr_cnt = NFA_transitions_cnt(a->states[i]);
-        NFA_transition *curr_tr = a->states[i]->transitions;
-        for(int j=0; j<tr_cnt; j++){
-            int old_tr = curr_tr->transition_trigger;
-            NFA_add_transition(res,
-                               a->states[i]->index,
-                               curr_tr->state_to_ix,
-                               project_int(old_tr,num_cord) );
-            curr_tr = curr_tr->next;
+    NFA *res = NFA_copy(a);
+    res->dim = res->dim -1;
+    for(int i=0; i<res->states_cnt; i++){
+        NFA_transition *curr_tr=res->states[i]->transitions;
+        while(curr_tr){
+            curr_tr->transition_trigger = project_int(curr_tr->transition_trigger, num_cord);
+            curr_tr=curr_tr->next;
         }
     }
     return res;
@@ -612,7 +600,7 @@ NFA *NFA_const(int n){
 
 
 //eps tr???
-NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
+NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
     NFA *res = NFA_copy(a1);
     for(int i=0; i<res->states_cnt; i++){
@@ -673,7 +661,7 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
 
 
 //eps tr?????
-NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
+NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
     NFA *res = NFA_copy(a1);
     for(int i=0; i<res->states_cnt; i++){
