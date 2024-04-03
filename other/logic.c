@@ -95,148 +95,60 @@ void op_print(int id){
 }
 
 
+void parser_helper(Operator op, Stack2 *a_stack){
+    if(op.id==2){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        NFA *tmp2 = Stack2_pop(a_stack);
+        Stack2_push(a_stack, NFA_union(tmp1,tmp2));
+        NFA_free(tmp1);
+        NFA_free(tmp2);
+    }
+    if(op.id==3){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        NFA *tmp2 = Stack2_pop(a_stack);
+        Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
+        NFA_free(tmp1);
+        NFA_free(tmp2);
+    }
+    if(op.id==4){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        Stack2_push(a_stack, NFA_complement(tmp1));
+        NFA_free(tmp1);
+    }
+}
+
+
 NFA *Parser(char *formula){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
-    Operator op;
-    Operator curr;
-    Operator curr2;
+    Operator op, curr;
+
     for(int i = 0; i < strlen(formula); ++i){
+        int op_id = -1;
         switch( formula[i] ){
 
             case '(':
-                op = op_init(0);
-                Stack_push(op_stack,op);
+                Stack_push(op_stack,op_init(0));
                 break;
 
             case ')':
-                curr = op_stack->data[op_stack->size-1];
+                curr = Stack_pop(op_stack);
                 while( curr.id != 0 ){
-                    curr2 = Stack_pop(op_stack);
-                    if(curr2.id==2){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_union(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==3){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==4){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_complement(tmp1));
-                        NFA_free(tmp1);
-                    }
-                    curr = op_stack->data[op_stack->size-1];
+                    parser_helper(curr,a_stack);
+                    curr = Stack_pop(op_stack);
                 }
-//                op_print(curr.id);
-                Stack_pop(op_stack);
-//                if(op_stack->size != 0){
-//                    curr = op_stack->data[op_stack->size-1];
-//                    if( (curr.id == 5) || (curr.id == 6) || (curr.id == 7) ){
-//                        op_print(curr.id);
-//                        Stack_pop(op_stack);
-//                    }
-//                }
-//                op_print(op.id);
                 break;
 
             case '|':
-                op = op_init(2);
-                if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                while( (op_stack->size != 0) && ( curr.priority != -1 ) && ( curr.priority > op.priority ) ){
-//                    op_print(curr.id);
-                    curr2 = Stack_pop(op_stack);
-                    if(curr2.id==2){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_union(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==3){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==4){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_complement(tmp1));
-                        NFA_free(tmp1);
-
-                    }
-                    if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                }
-                Stack_push(op_stack,op);
+                op_id = 2;
                 break;
 
             case '&':
-                op = op_init(3);
-                if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                while( (op_stack->size != 0) && ( curr.priority != -1 ) && ( curr.priority > op.priority ) ){
-//                    op_print(curr.id);
-                    curr2 = Stack_pop(op_stack);
-                    if(curr2.id==2){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_union(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==3){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==4){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_complement(tmp1));
-                        NFA_free(tmp1);
-
-                    }
-                    if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                }
-                Stack_push(op_stack,op);
+                op_id = 3;
                 break;
 
             case '!':
-                op = op_init(4);
-                if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                while( (op_stack->size != 0) && ( curr.priority != -1 ) && ( curr.priority > op.priority ) ){
-//                    op_print(curr.id);
-                    curr2 = Stack_pop(op_stack);
-                    if(curr2.id==2){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_union(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==3){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        NFA *tmp2 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
-                        NFA_free(tmp1);
-                        NFA_free(tmp2);
-                    }
-                    if(curr2.id==4){
-                        NFA *tmp1 = Stack2_pop(a_stack);
-                        Stack2_push(a_stack, NFA_complement(tmp1));
-                        NFA_free(tmp1);
-
-                    }
-                    if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                }
-                Stack_push(op_stack,op);
+                op_id = 4;
                 break;
 
             case '$':
@@ -247,41 +159,32 @@ NFA *Parser(char *formula){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
                 }
                 if(formula[i+4]=='z'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
+                    Stack2_push(a_stack, NFA_from_file("../automatons/zeroes.txt"));
                 }
                 break;
 
             default:
                 break;
         }
+
+        if(op_id != -1){
+            op = op_init(op_id);
+            while( (op_stack->size != 0) && ( Stack_top(op_stack).priority > op.priority ) ){
+                curr = Stack_pop(op_stack);
+                parser_helper(curr,a_stack);
+            }
+            Stack_push(op_stack,op);
+        }
+
     }
 
     while(op_stack->size != 0){
-        curr2 = Stack_pop(op_stack);
-        if(curr2.id==2){
-            NFA *tmp1 = Stack2_pop(a_stack);
-            NFA *tmp2 = Stack2_pop(a_stack);
-            Stack2_push(a_stack, NFA_union(tmp1,tmp2));
-            NFA_free(tmp1);
-            NFA_free(tmp2);
-        }
-        if(curr2.id==3){
-            NFA *tmp1 = Stack2_pop(a_stack);
-            NFA *tmp2 = Stack2_pop(a_stack);
-            Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
-            NFA_free(tmp1);
-            NFA_free(tmp2);
-        }
-        if(curr2.id==4){
-            NFA *tmp1 = Stack2_pop(a_stack);
-            Stack2_push(a_stack, NFA_complement(tmp1));
-            NFA_free(tmp1);
-        }
-//        op_print(curr.id);
+        curr = Stack_pop(op_stack);
+        parser_helper(curr,a_stack);
     }
 
+    NFA *res = Stack2_pop(a_stack);
     Stack_free(op_stack);
-    NFA *res = a_stack->data[0];
     Stack2_free(a_stack);
     return res;
 }
@@ -320,13 +223,13 @@ void RPN_print(char *formula){
                 break;
 
             case '$':
-                if(formula[i+4]=='2'){
+                if(formula[i+4] == '2'){
                     op_print(5);
                 }
-                if(formula[i+4]=='3'){
+                if(formula[i+4] == '3'){
                     op_print(6);
                 }
-                if(formula[i+4]=='z'){
+                if(formula[i+4] == 'z'){
                     op_print(7);
                 }
                 break;
