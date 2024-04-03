@@ -134,92 +134,7 @@ void NFA_remove_transition(NFA *a, int state_from, int state_to, int trigger){
 }
 
 
-
-
-
-int NFA_check(const NFA *a, big_int **sentences){
-    big_int **sents2 = (big_int **)malloc(a->dim * sizeof(big_int*));
-    int max_len = 0, is_transition = 0, processed_words = 0, curr_wrd = 0, bit_cnt = 0;
-
-    for(int i=0; i<a->dim; i++){
-        if(sentences[i]->bit_len >= max_len){
-            max_len = sentences[i]->bit_len;
-        }
-        sents2[i] = big_int_copy(sentences[i]);
-    }
-//    int bit_ix = max_len - 1;
-
-    int curr_states[a->states_cnt];
-    for(int i=0; i<a->states_cnt; i++){
-        curr_states[i] = a->states[i]->is_starting;
-    }
-
-
-
-    while(1) {
-        curr_wrd = 0;
-        bit_cnt = 0;
-
-        for (int j = 0; j < a->dim; j++) {
-            curr_wrd += (sents2[j]->number[0] & 1) << bit_cnt;
-            bit_cnt++;
-            big_int_bin_shft_r(sents2[j]);
-        }
-
-//        bit_ix--;
-        printf("curr_wrd=%b\n",curr_wrd);
-
-        is_transition = 0;
-        int curr_states2[a->states_cnt];
-        for(int i=0; i<a->states_cnt; i++){
-            curr_states2[i] = 0;
-        }
-
-        for(int i=0; i<a->states_cnt; i++) {
-            if(curr_states[i] == 1) {
-
-                NFA_transition *curr_tr = a->states[i]->transitions;
-                while (curr_tr != NULL) {
-                    if (  curr_tr->transition_trigger == -1 ) {
-                        curr_states[curr_tr->state_to_ix] = 1;
-                    }
-                    curr_tr = curr_tr->next;
-                }
-
-                curr_tr = a->states[i]->transitions;
-                while (curr_tr != NULL) {
-                    if (  curr_wrd == curr_tr->transition_trigger  ) {
-                        curr_states2[curr_tr->state_to_ix] = 1;
-                        is_transition = 1;
-                    }
-                    curr_tr = curr_tr->next;
-                }
-
-            }
-        }
-
-        if(is_transition) {
-            for (int i=0; i<a->states_cnt; i++) {
-                curr_states[i] = curr_states2[i];
-            }
-        }
-
-        processed_words++;
-        if(processed_words == max_len){break;}
-    }
-
-    for(int i=0; i<a->dim; i++){
-        big_int_free( &sents2[i]);
-    }
-    free(sents2);
-
-    for(int i=0; i<a->states_cnt; i++){
-        if(curr_states[i] & a->states[i]->is_final){return 1;}
-    }
-    return 0;
-}
-
-int NFA_check2(const NFA *a, const int *sentences){
+int NFA_check(const NFA *a, const int *sentences){
     int *sents2 = (int *)malloc(a->dim * sizeof(int));
     int max_len = sizeof(int)*8, is_transition = 0, processed_words = 0, curr_wrd = 0, bit_cnt = 0;
 
@@ -478,7 +393,6 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
 
 NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 //  ix_uni(ix_a1,ix_a2) = a2->states_cnt * ix_a1 + ix_a2
-//    printf("%d %d\n",a1->dim , a2->dim);
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
     NFA *res = NFA_init(a1->dim);
 
@@ -536,10 +450,6 @@ NFA* NFA_complement(const NFA *a){
 }
 
 
-
-
-
-
 NFA *NFA_swap_digits(const NFA *a, int n1, int n2){
     if(n1 >= a->dim || n2 >= a->dim) {printf("out of dim exception.\n");exit(1);}
     NFA *res = NFA_copy(a);
@@ -580,48 +490,13 @@ NFA *NFA_extend(const NFA *a, int num_cord){
 }
 
 
-//eps tr?????
-int *NFA_project_helper(const NFA *a){
-    int *is_reachable_by_zero = malloc(a->states_cnt*sizeof(int));
-    int curr[a->states_cnt];
-    for(int i=0; i<a->states_cnt; i++){
-        curr[i]=a->states[i]->is_starting;
-    }
-
-    while(1){
-        int no_tr=1;
-        for(int i=0; i<a->states_cnt; i++){
-            if(curr[i]){
-                NFA_transition *curr_tr=a->states[i]->transitions;
-                while(curr_tr){
-                    if(curr_tr->transition_trigger==0){
-                        if(!is_reachable_by_zero[curr_tr->state_to_ix]){no_tr=0;}
-                        curr[curr_tr->state_to_ix]=1;
-                        is_reachable_by_zero[curr_tr->state_to_ix]=1;
-                    }
-                    curr_tr=curr_tr->next;
-                }
-            }
-        }
-        if(no_tr){break;}
-    }
-    for(int i=0; i<a->states_cnt;i++){
-        is_reachable_by_zero[i]+=a->states[i]->is_starting;
-    }
-    return is_reachable_by_zero;
-}
-
-
-
 
 NFA *NFA_project(const NFA *a, int num_cord){
     if(num_cord >= a->dim){printf("out of dim exception\n"); exit(1);}
     NFA *res = NFA_init(a->dim - 1);
 
     for(int i=0; i<a->states_cnt; i++){
-        NFA_add_state(res,
-                      a->states[i]->is_final ,
-                      a->states[i]->is_starting);
+        NFA_add_state(res, a->states[i]->is_final, a->states[i]->is_starting);
     }
 
     for(int i=0; i<a->states_cnt; i++){
@@ -705,6 +580,7 @@ NFA *NFA_is_mult_of_pow2(int pow){
 }
 
 
+///FIX
 NFA *NFA_const(int n){
     NFA *a = NFA_init(1);
 
@@ -856,6 +732,11 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
 
     return res;
 }
+
+
+
+
+
 
 
 

@@ -8,7 +8,6 @@
 #include "other/big_int.h"
 
 
-
 typedef struct NFA_state NFA_state;
 typedef struct NFA_transition NFA_transition;
 typedef struct NFA NFA;
@@ -36,7 +35,7 @@ typedef struct NFA{
 } NFA;
 
 
-//order: 0=lsd 1=msd
+
 NFA *NFA_init(int dim);
 
 void NFA_add_state(NFA *a,int is_final, int is_starting);
@@ -45,16 +44,13 @@ void NFA_add_transition(NFA *a,int state_from,int state_to, int trigger);
 
 void NFA_remove_transition(NFA *a,int state_from,int state_to, int trigger);
 
-// 0=lsd 1=msd
-int NFA_check(const NFA *a,  big_int **sentences);
-
 void NFA_print(const NFA* a);
 
 void NFA_free(NFA *a);
 
 void NFA_to_pic(const NFA *a);
 
-int NFA_check2(const NFA *a, const int *sentences);
+int NFA_check(const NFA *a, const int *sentences);
 
 /*
  * dim
@@ -64,7 +60,6 @@ int NFA_check2(const NFA *a, const int *sentences);
  * trigger_value state_from_ix state_to_ix
  */
 void NFA_to_file(const NFA *a);
-
 
 NFA *NFA_from_file(char* file_pth);
 
@@ -84,13 +79,16 @@ NFA *NFA_extend(const NFA *a, int num_cord);
 
 NFA *NFA_is_mult_of_pow2(int pow);
 
+//fix
 NFA *NFA_const(int n);
 
 
 //fix
 //NFA *NFA_reverse(NFA *a);
 
+//fix
 NFA *NFA_rightquo(const NFA *a1,const NFA *a2);
 
+//fix
 NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
 #endif //NFA_NFA_H
