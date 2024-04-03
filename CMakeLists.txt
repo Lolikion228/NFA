@@ -15,6 +15,8 @@ add_executable(NFA
         other/Stack.c
         other/logic.h
         other/logic.c
+        other/Stack2.h
+        other/Stack2.c
 )
 
 target_link_libraries(NFA m)
