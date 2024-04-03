@@ -159,7 +159,7 @@ NFA *Parser(char *formula){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
                 }
                 if(formula[i+4]=='z'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/zeroes.txt"));
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
                 }
                 break;
 
