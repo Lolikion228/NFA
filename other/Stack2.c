@@ -27,6 +27,9 @@ void Stack2_push(Stack2 *stack, NFA* element){
 
 }
 
+NFA *Stack2_top(Stack2 *stack){
+    return stack->data[stack->size-1];
+}
 
 NFA* Stack2_pop(Stack2 *stack){
     NFA* res = stack->data[--stack->size];
