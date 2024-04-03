@@ -21,16 +21,16 @@ void Stack_free(Stack *stack){
 }
 
 
-void Stack_push(Stack *stack, Operator element){
-    stack->data = realloc(stack->data,(++stack->size)*(sizeof(Operator)));
+void Stack_push(Stack *stack, el_type element){
+    stack->data = realloc(stack->data,(++stack->size)*(sizeof(el_type)));
     stack->data[stack->size - 1] = element;
 
 }
 
 
 Operator Stack_pop(Stack *stack){
-    Operator res = stack->data[--stack->size];
-    stack->data = realloc(stack->data, (stack->size)*sizeof(Operator));
+    el_type res = stack->data[--stack->size];
+    stack->data = realloc(stack->data, (stack->size)*sizeof(el_type));
     return res;
 
 }
