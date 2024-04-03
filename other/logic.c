@@ -87,6 +87,12 @@ void op_print(int id){
         case 7:
             printf("is_zero(x) ");
             break;
+        case 8:
+            printf("div8(x) ");
+            break;
+        case 9:
+            printf("div4(x) ");
+            break;
         default:
             printf("wrong op_id\n");
             exit(1);
@@ -157,6 +163,12 @@ NFA *Parser(char *formula){
                 }
                 if(formula[i+4]=='3'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
+                }
+                if(formula[i+4]=='4'){
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
+                }
+                if(formula[i+4]=='8'){
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
                 }
                 if(formula[i+4]=='z'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
@@ -229,9 +241,16 @@ void RPN_print(char *formula){
                 if(formula[i+4] == '3'){
                     op_print(6);
                 }
+                if(formula[i+4] == '8'){
+                    op_print(8);
+                }
+                if(formula[i+4] == '4'){
+                    op_print(9);
+                }
                 if(formula[i+4] == 'z'){
                     op_print(7);
                 }
+
                 break;
 
             default:
