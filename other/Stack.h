@@ -5,23 +5,24 @@
 #ifndef NFA_STACK_H
 #define NFA_STACK_H
 #include "logic.h"
-typedef Operator el_type;
+
 
 typedef struct Stack Stack;
 
 typedef struct Stack{
-    el_type *data;
+    Operator *data;
     int size;
 }Stack;
 
 
 Stack *Stack_init();
 
-void Stack_push(Stack *stack, el_type element);
+void Stack_push(Stack *stack, Operator element);
 
-el_type Stack_pop(Stack *stack);
+Operator Stack_pop(Stack *stack);
 
 void Stack_free(Stack *stack);
 
+Operator Stack_top(Stack *stack);
 
 #endif //NFA_STACK_H
