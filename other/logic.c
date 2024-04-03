@@ -289,87 +289,57 @@ NFA *Parser(char *formula){
 
 void RPN_print(char *formula){
     Stack *op_stack = Stack_init();
-//    Stack *a_stack = Stack_init(1);
-    Operator op;
-    Operator curr;
+    Operator op,curr;
+
     for(int i = 0; i < strlen(formula); ++i){
+        int op_id = -1;
         switch( formula[i] ){
 
             case '(':
-                op = op_init(0);
-                Stack_push(op_stack,op);
+                Stack_push(op_stack,op_init(0));
                 break;
 
             case ')':
-                op = op_init(1);
-                curr = op_stack->data[op_stack->size-1];
+                curr = Stack_pop(op_stack);
                 while( curr.id != 0 ){
                     op_print(curr.id);
-                    Stack_pop(op_stack);
-                    curr = op_stack->data[op_stack->size-1];
+                    curr = Stack_pop(op_stack);
                 }
-//                op_print(curr.id);
-                Stack_pop(op_stack);
-                if(op_stack->size != 0){
-                    curr = op_stack->data[op_stack->size-1];
-                    if( (curr.id == 5) || (curr.id == 6) || (curr.id == 7) ){
-                        op_print(curr.id);
-                        Stack_pop(op_stack);
-                    }
-                }
-//                op_print(op.id);
                 break;
 
             case '|':
-                op = op_init(2);
-                if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                while( (op_stack->size != 0) && ( curr.priority != -1 ) && ( curr.priority > op.priority ) ){
-                    op_print(curr.id);
-                    Stack_pop(op_stack);
-                    if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                }
-                Stack_push(op_stack,op);
+                op_id = 2;
                 break;
 
             case '&':
-                op = op_init(3);
-                if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                while( (op_stack->size != 0) && ( curr.priority != -1 ) && ( curr.priority > op.priority ) ){
-                    op_print(curr.id);
-                    Stack_pop(op_stack);
-                    if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                }
-                Stack_push(op_stack,op);
+                op_id = 3;
                 break;
 
             case '!':
-                op = op_init(4);
-                if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                while( (op_stack->size != 0) && ( curr.priority != -1 ) && ( curr.priority > op.priority ) ){
-                    op_print(curr.id);
-                    Stack_pop(op_stack);
-                    if(op_stack->size!=0){curr = op_stack->data[op_stack->size-1];}
-                }
-                Stack_push(op_stack,op);
+                op_id = 4;
                 break;
 
             case '$':
                 if(formula[i+4]=='2'){
-                    op = op_init(5);
-                    op_print(op.id);
+                    op_print(5);
                 }
                 if(formula[i+4]=='3'){
-                    op = op_init(6);
-                    op_print(op.id);
+                    op_print(6);
                 }
                 if(formula[i+4]=='z'){
-                    op = op_init(7);
-                    op_print(op.id);
+                    op_print(7);
                 }
                 break;
 
             default:
                 break;
+        }
+        if(op_id != -1){
+            op = op_init(op_id);
+            while( (op_stack->size != 0) && ( Stack_top(op_stack).priority > op.priority ) ){
+                op_print(Stack_pop(op_stack).id);
+            }
+            Stack_push(op_stack,op);
         }
     }
 
@@ -381,6 +351,7 @@ void RPN_print(char *formula){
     Stack_free(op_stack);
     printf("\n");
 }
+
 
 /*
  * while there are tokens to be read:
