@@ -178,7 +178,7 @@ int NFA_check(const NFA *a, const int *sentences){
 
                 curr_tr = a->states[i]->transitions;
                 while (curr_tr != NULL) {
-                    if (  curr_wrd == curr_tr->transition_trigger  ) {
+                    if (  curr_wrd == curr_tr->transition_trigger ) {
                         curr_states2[curr_tr->state_to_ix] = 1;
                         is_transition = 1;
                     }
