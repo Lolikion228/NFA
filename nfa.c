@@ -462,7 +462,7 @@ NFA *NFA_swap_digits(const NFA *a, int n1, int n2){
 }
 
 NFA *NFA_extend(const NFA *a, int num_cord){
-    if(num_cord > a->dim){printf("num_cord >= dim.\n"); exit(1);}
+    if(num_cord > a->dim){printf("num_cord > dim.\n"); exit(1);}
     NFA *res = NFA_init(a->dim + 1);
     for(int i=0; i<a->states_cnt; i++){
         NFA_add_state(res, a->states[i]->is_final,a->states[i]->is_starting);
@@ -748,56 +748,60 @@ NFA *NFA_n_eq(int n){
 NFA *NFA_n_sum(int n){
     if(n<2){printf("nfa_n_eq");exit(1);}
 
-    NFA *sum = NFA_from_file("../automatons/lsd/sum.txt");
-    sum = NFA_swap_digits(sum,0,2);
-    sum = NFA_extend(sum,3);
-    sum = NFA_extend(sum,4);
-
     NFA *sum2 = NFA_from_file("../automatons/lsd/sum.txt");
+    NFA *zer =NFA_from_file("../automatons/lsd/zeros.txt");
+    NFA *sum_sw = NFA_from_file("../automatons/lsd/sum.txt");
+
+
     sum2 = NFA_extend(sum2,1);
-    sum2 = NFA_extend(sum2,1);
 
-    NFA *res = NFA_intersection(sum,sum2);
-    res = NFA_project(res,0);
+    for(int num=0; num<n-2; ++num){
+        sum_sw = NFA_swap_digits(sum_sw,0,2+num);
+        sum_sw = NFA_extend(sum_sw,3+num);
+        sum_sw = NFA_extend(sum_sw,3+num+1);
+        sum2 = NFA_extend(sum2,1);
+        sum_sw = NFA_intersection(sum_sw,sum2);
+        sum_sw = NFA_project(sum_sw,0);
+    }
 
-    return res;
-
-//    NFA *eq = NFA_from_file("../automatons/lsd/x_eq_y.txt");
-//    NFA *tmp;
+    NFA_free(sum2);
+    NFA_free(zer);
+    return sum_sw;
 
 }
 
 
-NFA *NFA_div_n(int n){
-    if(n == 0){printf("0|x???");exit(1);}
-    Stack2 *stack = Stack2_init();
-    int num = 0, cnt = 0;
-
-    while(n){
-        if( n & 1 ){
-            cnt++;
-            Stack2_push(stack, NFA_is_mult_of_pow2(num));
-        }
-        n >>= 1;
-        num++;
-    }
-
-    if(cnt == 1){
-        NFA *res = Stack2_pop(stack);
-        Stack2_free(stack);
-        return res;
-    }
-    else{
-        NFA *eq = NFA_n_eq(cnt);
-        NFA *sm = NFA_n_sum(cnt);
-
-        Stack2_free(stack);
-        return eq;
-    }
-
-
-
-}
+//NFA *NFA_div_n(int n){
+//    int n1=n;
+//    if(n == 0){printf("0|x???");exit(1);}
+//    Stack2 *stack = Stack2_init();
+//    int num = 0, cnt = 0;
+//
+//    while(n){
+//        if( n & 1 ){
+//            cnt++;
+//            Stack2_push(stack, NFA_is_mult_of_pow2(num));
+//        }
+//        n >>= 1;
+//        num++;
+//    }
+//
+//    if(cnt == 1){
+//        NFA *res = Stack2_pop(stack);
+//        Stack2_free(stack);
+//        return res;
+//    }
+//    else{
+//        NFA *eq = NFA_n_eq(n1);
+//        eq = NFA_extend(eq,n1);
+//
+//        NFA *sm = NFA_n_sum(n1);
+//
+//        Stack2_free(stack);
+//        return NFA_intersection(sm,eq);
+//    }
+//
+//}
 
 
 

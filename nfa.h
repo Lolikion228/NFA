@@ -82,6 +82,9 @@ NFA *NFA_is_mult_of_pow2(int pow);
 //fix
 NFA *NFA_const(int n);
 
+NFA *NFA_swap_digits(const NFA *a, int n1, int n2);
+
+NFA *NFA_n_sum(int n);
 
 //fix
 //NFA *NFA_reverse(NFA *a);
@@ -91,4 +94,8 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2);
 
 //fix
 NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
+
+NFA *NFA_div_n(int n);
+
+NFA *NFA_n_eq(int n);
 #endif //NFA_NFA_H
