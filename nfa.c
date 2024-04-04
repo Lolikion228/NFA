@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "other/good_stuff.h"
+#include "other/Stack2.h"
 
 
 int NFA_transitions_cnt(NFA_state *state){
@@ -691,8 +692,6 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
                 }
             }
 
-
-            //????
             int all_zeros = 1, exists_path = 0;
             for(int j=0; j<tmp->states_cnt; j++){
                 if( (curr_states_new[j]) && (!curr_states[j]) ){ all_zeros = 0; }
@@ -722,7 +721,83 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
 }
 
 
+NFA *NFA_n_eq(int n){
+    if(n<2){printf("nfa_n_eq");exit(1);}
 
+    NFA *eq = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+    NFA *eq2 = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+    NFA *tmp;
+    for(int i=0; i<n-2; ++i ){
+        tmp = eq;
+        eq = NFA_extend(tmp,0);
+        NFA_free(tmp);
+
+        tmp = eq2;
+        eq2 = NFA_extend(tmp,2+i);
+        NFA_free(tmp);
+
+        tmp = eq;
+        eq = NFA_intersection(eq,eq2);
+        NFA_free(tmp);
+    }
+    NFA_free(eq2);
+
+    return eq;
+}
+
+NFA *NFA_n_sum(int n){
+    if(n<2){printf("nfa_n_eq");exit(1);}
+
+    NFA *sum = NFA_from_file("../automatons/lsd/sum.txt");
+    sum = NFA_swap_digits(sum,0,2);
+    sum = NFA_extend(sum,3);
+    sum = NFA_extend(sum,4);
+
+    NFA *sum2 = NFA_from_file("../automatons/lsd/sum.txt");
+    sum2 = NFA_extend(sum2,1);
+    sum2 = NFA_extend(sum2,1);
+
+    NFA *res = NFA_intersection(sum,sum2);
+    res = NFA_project(res,0);
+
+    return res;
+
+//    NFA *eq = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+//    NFA *tmp;
+
+}
+
+
+NFA *NFA_div_n(int n){
+    if(n == 0){printf("0|x???");exit(1);}
+    Stack2 *stack = Stack2_init();
+    int num = 0, cnt = 0;
+
+    while(n){
+        if( n & 1 ){
+            cnt++;
+            Stack2_push(stack, NFA_is_mult_of_pow2(num));
+        }
+        n >>= 1;
+        num++;
+    }
+
+    if(cnt == 1){
+        NFA *res = Stack2_pop(stack);
+        Stack2_free(stack);
+        return res;
+    }
+    else{
+        NFA *eq = NFA_n_eq(cnt);
+        NFA *sm = NFA_n_sum(cnt);
+
+        Stack2_free(stack);
+        return eq;
+    }
+
+
+
+}
 
 
 
