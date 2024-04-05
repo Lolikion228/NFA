@@ -124,14 +124,17 @@ void parser_helper(Operator op, Stack2 *a_stack){
 }
 
 
+/*
+ * also returns at least a pointer on a syntactic error
+ */
 NFA *Parser(char *formula){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
     Operator op, curr;
 
-    for(int i = 0; i < strlen(formula); ++i){
+    for(char *i = formula; *i != '\0'; ++i){
         int op_id = -1;
-        switch( formula[i] ){
+        switch(*i){
 
             case '(':
                 Stack_push(op_stack,op_init(0));
@@ -158,24 +161,25 @@ NFA *Parser(char *formula){
                 break;
 
             case '$':
-                if(formula[i+4]=='2'){
+                if(*(i+4) =='2'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/2|x.txt"));
                 }
-                if(formula[i+4]=='3'){
+                if(*(i+4) =='3'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
                 }
-                if(formula[i+4]=='4'){
+                if(*(i+4) =='4'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
                 }
-                if(formula[i+4]=='8'){
+                if(*(i+4) =='8'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
                 }
-                if(formula[i+4]=='z'){
+                if(*(i+4) =='z'){
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
                 }
                 break;
 
             default:
+                // return *i ~~~~~~~~^ to pointer on a syntax error at position i of the input string
                 break;
         }
 

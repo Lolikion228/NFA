@@ -540,8 +540,73 @@ int NFA_is_dfa(const NFA *a){
     return 1;
 }
 
+///
+/// \param coeff a coefficient for a variable y
+/// \return an automaton for (x = coeff * y)
+NFA *NFA_mult_scalar(int coeff){
+    NFA *res =  NFA_from_file("../automatons/lsd/zeros.txt");//NFA_xy_pow2(0);
+    NFA *zero =  NFA_from_file("../automatons/lsd/zeros.txt");//NFA_xy_pow2(0);
+    res->dim=2;
+    NFA *tmp1,*tmp2, *tmp3;
+    NFA *sum =  NFA_from_file("../automatons/lsd/sum.txt");//NFA_xy_pow2(0);
 
-NFA *NFA_is_mult_of_pow2(int pow){
+    for(int cnt = 0; coeff; coeff >>= 1){
+        if(coeff & 1){
+            printf("%d\n",cnt);
+            NFA *curr = NFA_xy_pow2(cnt); // 2^i * x = z
+            tmp1 = NFA_extend(res,0); // k * y = x
+            tmp2 = NFA_extend(curr,1);
+//            printf("%d %d\n",tmp1->dim, tmp2->dim);
+            tmp3 = NFA_intersection(tmp1,tmp2);
+//            printf("%d\n",tmp3->dim);
+            res = NFA_intersection(tmp3,sum);
+            res = NFA_project(res,0);
+        }
+        cnt++;
+    }
+    // x + y = z -> (2^i * y + k*y = z) <-> Eu,v (2^i * y = u /\ k*y = v /\ u + v = z)
+    return res;
+}
+
+/*
+ * y = 139 * x -> 128x = 64x+64x; 64x = 32x+32x; ... 2x = x+ x. I.e., we need O(log(139)) new automata.
+ *
+*/
+
+
+///
+/// \param pow
+/// \return an automaton for ( 2^pow * x = y)
+NFA *NFA_xy_pow2(int pow){
+    NFA *sum = NFA_from_file("../automatons/lsd/sum.txt");
+    NFA *eq = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+
+
+    NFA **pow2_NFAs = (NFA**)malloc((1+pow)*sizeof (NFA*)); // each nfa for  2^i * x = y
+    pow2_NFAs[0] = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+
+    NFA *eq_ex = NFA_extend(eq, 2);
+    NFA *res = NFA_intersection(sum, eq_ex);
+    pow2_NFAs[1] = NFA_project(res, 0); //2*x=y
+
+    NFA*tmp1,*tmp2,*tmp3;
+
+    for(int i = 2; i <= pow; ++i) {
+        tmp1 = NFA_extend(pow2_NFAs[i-1],0);
+        tmp2 = NFA_extend(pow2_NFAs[1],2);
+        tmp3 = NFA_intersection(tmp1,tmp2);
+        pow2_NFAs[i] = NFA_project(tmp3,1);
+    }
+
+    return pow2_NFAs[pow];
+}
+
+
+
+///
+/// \param pow
+/// \return an automaton for (2^pow | x)
+NFA *NFA_mult_of_pow2(int pow){
     NFA *a = NFA_init(1);
     for(int i=0; i<=pow; i++){
         NFA_add_state(a,0,0);
@@ -569,14 +634,12 @@ NFA *NFA_is_mult_of_pow2(int pow){
 }
 
 
-///FIX
+
 NFA *NFA_const(int n){
     NFA *a = NFA_init(1);
 
-    big_int *num = big_int_from_int(n);
     int bit_cnt = 0, n2 = n;
     while (n2) {n2 >>= 1; bit_cnt++;}
-    num->bit_len = bit_cnt;
 
     for(int i=0; i <= bit_cnt+1; i++){
         NFA_add_state(a,0,0);
@@ -594,7 +657,6 @@ NFA *NFA_const(int n){
     NFA_add_transition(a, bit_cnt+1, bit_cnt+1, 1);
     a->states[bit_cnt]->is_final = 1;
     a->states[0]->is_starting = 1;
-    big_int_free(&num);
     return a;
 }
 
@@ -631,7 +693,7 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
                 }
             }
 
-            //?????
+
             int all_zeros = 1, exists_path = 0;
             for(int j=0; j<tmp->states_cnt; j++){
                 if( (curr_states_new[j]) && (!curr_states[j]) ){ all_zeros = 0; }
@@ -745,6 +807,7 @@ NFA *NFA_n_eq(int n){
     return eq;
 }
 
+
 NFA *NFA_n_sum(int n){
     if(n<2){printf("nfa_n_eq");exit(1);}
 
@@ -770,6 +833,16 @@ NFA *NFA_n_sum(int n){
 
 }
 
+//NFA *NFA_div_n(int n) {
+//    NFA *a = NFA_mult_scalar(n);
+//    NFA *b = NFA_project(a,1);
+//    NFA *zero = NFA_from_file("../automatons/lsd/zeros.txt");
+//    NFA *result = NFA_leftquo(b, zero);
+//    NFA_free(a);
+//    NFA_free(b);
+//    NFA_free(zero);
+//    return result;
+//}
 
 //NFA *NFA_div_n(int n){
 //    int n1=n;
