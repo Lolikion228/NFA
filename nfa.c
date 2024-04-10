@@ -143,7 +143,6 @@ int NFA_check(const NFA *a, const int *sentences){
         sents2[i] = sentences[i];
     }
 
-
     int curr_states[a->states_cnt];
     for(int i=0; i<a->states_cnt; i++){
         curr_states[i] = a->states[i]->is_starting;
@@ -164,7 +163,7 @@ int NFA_check(const NFA *a, const int *sentences){
         for(int i=0; i<a->states_cnt; i++){
             curr_states2[i] = 0;
         }
-
+        //curr_states = eps_cl(curr_states?)
         for(int i=0; i<a->states_cnt; i++) {
             if(curr_states[i] == 1) {
 
@@ -553,14 +552,17 @@ NFA *NFA_mult_scalar(int coeff){
     for(int cnt = 0; coeff; coeff >>= 1){
         if(coeff & 1){
             printf("%d\n",cnt);
-            NFA *curr = NFA_xy_pow2(cnt); // 2^i * x = z
-            tmp1 = NFA_extend(res,0); // k * y = x
-            tmp2 = NFA_extend(curr,1);
-//            printf("%d %d\n",tmp1->dim, tmp2->dim);
+            //x,y,z
+            NFA *curr = NFA_xy_pow2(cnt); // 2^i * x = y
+            tmp1 = NFA_project(curr,0);
+            tmp1 = NFA_extend(tmp1,1);
+            tmp1 = NFA_extend(tmp1,2);
+            tmp2 = NFA_project(res,0);
+            tmp2 = NFA_extend(tmp2,1);
+            tmp2 = NFA_extend(tmp2,0);
+            printf("%d %d\n",tmp1->dim,tmp2->dim);
             tmp3 = NFA_intersection(tmp1,tmp2);
-//            printf("%d\n",tmp3->dim);
-            res = NFA_intersection(tmp3,sum);
-            res = NFA_project(res,0);
+            res  = NFA_intersection(tmp3,sum);
         }
         cnt++;
     }
@@ -832,6 +834,25 @@ NFA *NFA_n_sum(int n){
     return sum_sw;
 
 }
+
+
+int *NFA_eps_closure(NFA *a, int *states_set){
+    int *res = calloc(a->states_cnt,sizeof(int));
+    for(int i=0; i<a->states_cnt; ++i){
+        if(states_set[i]){
+            res[i] = 1;
+            NFA_transition *curr_tr = a->states[i]->transitions;
+            while(curr_tr){
+                if(curr_tr->transition_trigger == -1){ res[curr_tr->state_to_ix] = 1; }
+                curr_tr = curr_tr->next;
+            }
+        }
+    }
+    return res;
+}
+
+
+
 
 //NFA *NFA_div_n(int n) {
 //    NFA *a = NFA_mult_scalar(n);

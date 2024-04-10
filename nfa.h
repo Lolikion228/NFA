@@ -101,4 +101,6 @@ NFA *NFA_div_n(int n);
 NFA *NFA_n_eq(int n);
 
 NFA *NFA_mult_scalar(int coeff);
+
+int *NFA_eps_closure(NFA *a, int *states_set);
 #endif //NFA_NFA_H
