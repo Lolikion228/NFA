@@ -42,3 +42,12 @@ int swap_bits(int n, int n1, int n2){
     return n^x;
 
 }
+
+int bit_len(int x){
+    int cnt=0;
+    while(x){
+        x>>=1;
+        cnt++;
+    }
+    return cnt;
+}

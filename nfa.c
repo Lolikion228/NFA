@@ -81,7 +81,7 @@ int NFA_is_transitions_equal(NFA_transition *tr1, NFA_transition *tr2){
 
 
 void NFA_add_transition(NFA *a, int state_from, int state_to, int trigger){
-
+    if(trigger > (1 << a->dim) ){printf("too big num for trigger %d %d\n",a->dim,trigger);exit(1);}
     NFA_transition *transition = (NFA_transition *)malloc(sizeof(NFA_transition));
     if(!transition){
         printf("memory allocation error in NFA_add_transition\n");
@@ -135,19 +135,22 @@ void NFA_remove_transition(NFA *a, int state_from, int state_to, int trigger){
 }
 
 
+//eps tr to final states???
 int NFA_check(const NFA *a, const int *sentences){
     int *sents2 = malloc(a->dim * sizeof(int));
-    int max_len = sizeof(int)*8, is_transition = 0, processed_words = 0, curr_wrd = 0, bit_cnt = 0;
+    int max_len = -1, is_transition = 0, processed_words = 0, curr_wrd = 0, bit_cnt = 0;
 
     for(int i=0; i<a->dim; i++){
         sents2[i] = sentences[i];
+        if(bit_len(sentences[i])>max_len){
+            max_len=bit_len(sentences[i]);
+        }
     }
 
-    int curr_states[a->states_cnt];
+    int *curr_states = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; i++){
         curr_states[i] = a->states[i]->is_starting;
     }
-
     while(1) {
         curr_wrd = 0;
         bit_cnt = 0;
@@ -163,11 +166,12 @@ int NFA_check(const NFA *a, const int *sentences){
         for(int i=0; i<a->states_cnt; i++){
             curr_states2[i] = 0;
         }
-        //curr_states = eps_cl(curr_states?)
+
         for(int i=0; i<a->states_cnt; i++) {
             if(curr_states[i] == 1) {
 
                 NFA_transition *curr_tr = a->states[i]->transitions;
+
                 while (curr_tr != NULL) {
                     if (  curr_tr->transition_trigger == -1 ) {
                         curr_states[curr_tr->state_to_ix] = 1;
@@ -193,14 +197,15 @@ int NFA_check(const NFA *a, const int *sentences){
             }
         }
         processed_words++;
-        if(processed_words == max_len){break;}
+        if(processed_words >= max_len){break;}
     }
 
     free(sents2);
 
     for(int i=0; i<a->states_cnt; i++){
-        if(curr_states[i] & a->states[i]->is_final){return 1;}
+        if(curr_states[i] & a->states[i]->is_final){ free(curr_states); return 1;}
     }
+    free(curr_states);
     return 0;
 }
 
@@ -539,6 +544,8 @@ int NFA_is_dfa(const NFA *a){
     return 1;
 }
 
+
+//?
 ///
 /// \param coeff a coefficient for a variable y
 /// \return an automaton for (x = coeff * y)
@@ -575,7 +582,7 @@ NFA *NFA_mult_scalar(int coeff){
  *
 */
 
-
+//?
 ///
 /// \param pow
 /// \return an automaton for ( 2^pow * x = y)
@@ -604,7 +611,7 @@ NFA *NFA_xy_pow2(int pow){
 }
 
 
-
+//?
 ///
 /// \param pow
 /// \return an automaton for (2^pow | x)
@@ -785,6 +792,7 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
 }
 
 
+//?
 NFA *NFA_n_eq(int n){
     if(n<2){printf("nfa_n_eq");exit(1);}
 
@@ -810,6 +818,7 @@ NFA *NFA_n_eq(int n){
 }
 
 
+//?
 NFA *NFA_n_sum(int n){
     if(n<2){printf("nfa_n_eq");exit(1);}
 
@@ -836,7 +845,8 @@ NFA *NFA_n_sum(int n){
 }
 
 
-int *NFA_eps_closure(NFA *a, int *states_set){
+
+int *NFA_eps_closure(const NFA *a, int *states_set){
     int *res = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; ++i){
         if(states_set[i]){
@@ -850,6 +860,80 @@ int *NFA_eps_closure(NFA *a, int *states_set){
     }
     return res;
 }
+
+
+
+NFA *DFA_minimization(NFA *a){
+    if(!NFA_is_dfa(a)){printf("expected DFA, got NFA\n"); exit(1);}
+    NFA *res;
+    int transitions[a->states_cnt][1 << a->dim];
+
+    for(int i=0; i<a->states_cnt; i++){
+        NFA_transition *curr_tr = a->states[i]->transitions;
+        while(curr_tr){
+            transitions[i][curr_tr->transition_trigger] = curr_tr->state_to_ix;
+            curr_tr=curr_tr->next;
+        }
+    }
+
+//    printf("****** transitions *******\n");
+//    for(int i=0; i<a->states_cnt; i++){
+//        print_array(transitions[i],1 << a->dim);
+//    }
+//    printf("*******************\n");
+
+    int partition[a->states_cnt];
+    for (int i = 0; i < a->states_cnt; ++i) {
+        partition[i] = a->states[i]->is_final ? 1 : 0;
+    }
+    int comp_cnt=2;
+    int changed;
+    printf("starting\n");
+    print_array(partition,a->states_cnt);
+    do {
+        changed = 0;
+        int comp_cnt2 = comp_cnt;
+        for(int comp_num=0; comp_num<comp_cnt; ++comp_num) {
+            printf("**************  comp_num = %d  **************\n",comp_num);
+            int ix=-1;
+            for (int i = 0; i < a->states_cnt; ++i) {
+                if(partition[i] == comp_num){
+                    ix = i;
+                    break;
+                }
+            }
+
+            int any_not_eq=0;
+            for(int i=ix+1; i<a->states_cnt; ++i){
+                if(partition[i]==comp_num) {
+                    for (int k = 0; k < (1 << a->dim); ++k) {
+                        int state1 = transitions[ix][k];
+                        int state2 = transitions[i][k];
+                        if (partition[state1] != partition[state2]) {
+                            printf("%d not eq %d because:\n",ix,i);
+                            printf("    from %d by %d to %d which in %d\n",ix,k,state1,partition[state1]);
+                            printf("    from %d by %d to %d which in %d\n",i,k,state2,partition[state2]);
+                            any_not_eq = 1;
+                            partition[i] = comp_cnt2;
+                        }
+                    }
+                }
+            }
+            if(any_not_eq){++comp_cnt2;changed=1;}
+            print_array(partition,a->states_cnt);
+        }
+
+    } while (changed);
+
+//    printf("****** transitions *******\n");
+//    for(int i=0; i<a->states_cnt; i++){
+//        print_array(transitions[i],1 << a->dim);
+//    }
+//    printf("*******************\n");
+
+    return res;
+}
+
 
 
 

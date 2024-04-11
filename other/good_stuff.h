@@ -15,4 +15,6 @@ int project_int(int n, int num_cord);
 int extend_int(int n, int num_cord, int bit);
 
 int swap_bits(int n, int n1, int n2);
+
+int bit_len(int x);
 #endif //NFA_GOOD_STUFF_H
