@@ -818,7 +818,7 @@ NFA *DFA_minimization(const NFA *a){
     // tr[ix_from][trigger] -> ix_to
     int transitions[a->states_cnt][1 << a->dim];
 
-    for(int i=0; i<a->states_cnt; i++){
+    for(int i=0; i<a->states_cnt; ++i){
         NFA_transition *curr_tr = a->states[i]->transitions;
         while(curr_tr){
             transitions[i][curr_tr->transition_trigger] = curr_tr->state_to_ix;
@@ -830,82 +830,60 @@ NFA *DFA_minimization(const NFA *a){
     for (int i = 0; i < a->states_cnt; ++i) {
         partition[i] = a->states[i]->is_final ? 1 : 0;
     }
-    int comp_cnt = 2;
-    int changed;
-//    printf("starting\n");
-//    print_array(partition,a->states_cnt);
+    int components_cnt = 2, components_cnt_new, changed;
+
     do {
         changed = 0;
-        int comp_cnt2 = comp_cnt;
-        for(int comp_num=0; comp_num<comp_cnt; ++comp_num) {
-//            printf("**************  comp_num = %d  **************\n",comp_num);
+        components_cnt_new = components_cnt;
+        for(int component_ix=0; component_ix < components_cnt; ++component_ix) {
+
+            //finding first state in current component
             int ix = -1;
             for (int i = 0; i < a->states_cnt; ++i) {
-                if(partition[i] == comp_num){
+                if(partition[i] == component_ix){
                     ix = i;
                     break;
                 }
             }
 
+            //creating new component for states which are not equivalent to first state
             int any_not_eq = 0;
             for(int i=ix+1; i<a->states_cnt; ++i){
-                if(partition[i] == comp_num) {
+                if(partition[i] == component_ix) {
                     for (int k = 0; k < (1 << a->dim); ++k) {
                         int state1 = transitions[ix][k];
                         int state2 = transitions[i][k];
                         if (partition[state1] != partition[state2]) {
-//                            printf("%d not eq %d because:\n",ix,i);
-//                            printf("    from %d by %d to %d which in %d\n",ix,k,state1,partition[state1]);
-//                            printf("    from %d by %d to %d which in %d\n",i,k,state2,partition[state2]);
                             any_not_eq = 1;
-                            partition[i] = comp_cnt2;
+                            partition[i] = components_cnt_new;
                         }
                     }
                 }
             }
-            if(any_not_eq){++comp_cnt2; changed = 1;}
-//            print_array(partition,a->states_cnt);
+            if(any_not_eq){++components_cnt_new; changed = 1;}
+
         }
-        comp_cnt=comp_cnt2;
-
+        components_cnt = components_cnt_new;
     } while (changed);
-//    printf("****** final version *******\n");
-//    print_array(partition,a->states_cnt);
 
-    int representatives[comp_cnt];
-
+    //choosing one state for each set in partition
+    int representatives[components_cnt];
     for(int i=0; i<a->states_cnt; ++i){
         representatives[partition[i]] = i;
     }
 
-//    printf("****** representatives *******\n");
-//    print_array(representatives,comp_cnt);//[new_set_ix][old_state_ix]
-
-    int cmp_cnt = 0;
+    int new_starting_state_ix;
     for(int i=0; i<a->states_cnt; ++i){
-        if(partition[i] > cmp_cnt){
-            cmp_cnt = partition[i];
-        }
-    }
-    ++cmp_cnt;
-
-    int starting;
-    for(int i=0; i<a->states_cnt; ++i){
-        if(a->states[i]->is_starting){starting=partition[i]; break;}
+        if(a->states[i]->is_starting){ new_starting_state_ix = partition[i]; break;}
     }
 
+    //add states to new automata
     NFA *res = NFA_init(a->dim);
-    for(int i=0; i < cmp_cnt; ++i){
-        NFA_add_state(res,a->states[representatives[i]]->is_final,i == starting);
-//        if(a->states[representatives[i]]->is_final){
-//            printf("final = %d\n",i);
-//        }
-//        if(i==starting){
-//            printf("starting = %d\n",i);
-//        }
+    for(int i=0; i < components_cnt; ++i){
+        NFA_add_state(res,a->states[representatives[i]]->is_final, i == new_starting_state_ix);
     }
 
-
+    //add transitions to new automata
     for(int i=0; i<a->states_cnt; ++i){
         NFA_transition *tr = a->states[i]->transitions;
         while(tr){
@@ -984,7 +962,7 @@ NFA *NFA_remove_dead_states(const NFA *a){
 
     }
 
-    //copy transitions from origin to new automata
+    //copy transitions from to new automata
     for(int i=0; i<res->states_cnt; ++i){
         NFA_transition *tr = res->states[i]->transitions;
         while(tr){
