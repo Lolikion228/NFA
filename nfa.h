@@ -85,8 +85,6 @@ NFA *NFA_const(int n);
 
 NFA *NFA_swap_digits(const NFA *a, int n1, int n2);
 
-NFA *NFA_n_sum(int n);
-
 //fix
 //NFA *NFA_reverse(NFA *a);
 
@@ -98,13 +96,11 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
 
 NFA *NFA_div_n(int n);
 
-NFA *NFA_n_eq(int n);
-
 NFA *NFA_mult_scalar(int coeff);
 
 int *NFA_eps_closure(const NFA *a, int *states_set);
 
-NFA *DFA_minimization(NFA *a);
+NFA *DFA_minimization(const NFA *a);
 
-NFA *NFA_remove_dead_states(NFA *a);
+NFA *NFA_remove_dead_states(const NFA *a);
 #endif //NFA_NFA_H

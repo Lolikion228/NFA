@@ -795,60 +795,6 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
 }
 
 
-//?
-NFA *NFA_n_eq(int n){
-    if(n<2){printf("nfa_n_eq");exit(1);}
-
-    NFA *eq = NFA_from_file("../automatons/lsd/x_eq_y.txt");
-    NFA *eq2 = NFA_from_file("../automatons/lsd/x_eq_y.txt");
-    NFA *tmp;
-    for(int i=0; i<n-2; ++i ){
-        tmp = eq;
-        eq = NFA_extend(tmp,0);
-        NFA_free(tmp);
-
-        tmp = eq2;
-        eq2 = NFA_extend(tmp,2+i);
-        NFA_free(tmp);
-
-        tmp = eq;
-        eq = NFA_intersection(eq,eq2);
-        NFA_free(tmp);
-    }
-    NFA_free(eq2);
-
-    return eq;
-}
-
-
-//?
-NFA *NFA_n_sum(int n){
-    if(n<2){printf("nfa_n_eq");exit(1);}
-
-    NFA *sum2 = NFA_from_file("../automatons/lsd/sum.txt");
-    NFA *zer =NFA_from_file("../automatons/lsd/zeros.txt");
-    NFA *sum_sw = NFA_from_file("../automatons/lsd/sum.txt");
-
-
-    sum2 = NFA_extend(sum2,1);
-
-    for(int num=0; num<n-2; ++num){
-        sum_sw = NFA_swap_digits(sum_sw,0,2+num);
-        sum_sw = NFA_extend(sum_sw,3+num);
-        sum_sw = NFA_extend(sum_sw,3+num+1);
-        sum2 = NFA_extend(sum2,1);
-        sum_sw = NFA_intersection(sum_sw,sum2);
-        sum_sw = NFA_project(sum_sw,0);
-    }
-
-    NFA_free(sum2);
-    NFA_free(zer);
-    return sum_sw;
-
-}
-
-
-
 int *NFA_eps_closure(const NFA *a, int *states_set){
     int *res = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; ++i){
@@ -865,8 +811,8 @@ int *NFA_eps_closure(const NFA *a, int *states_set){
 }
 
 
-
-NFA *DFA_minimization(NFA *a){
+//fix?
+NFA *DFA_minimization(const NFA *a){
     if(!NFA_is_dfa(a)){printf("expected DFA, got NFA\n"); exit(1);}
 
     int transitions[a->states_cnt][1 << a->dim];
@@ -924,8 +870,8 @@ NFA *DFA_minimization(NFA *a){
         comp_cnt=comp_cnt2;
 
     } while (changed);
-    printf("****** final version *******\n");
-    print_array(partition,a->states_cnt);
+//    printf("****** final version *******\n");
+//    print_array(partition,a->states_cnt);
 
     int representatives[comp_cnt];
 
@@ -933,15 +879,16 @@ NFA *DFA_minimization(NFA *a){
         representatives[partition[i]]=i;
     }
 
-    printf("****** representatives *******\n");
-    print_array(representatives,comp_cnt);//[new_set_ix][old_state_ix]
+//    printf("****** representatives *******\n");
+//    print_array(representatives,comp_cnt);//[new_set_ix][old_state_ix]
 
-    int max=0;
+    int cmp_cnt=0;
     for(int i=0; i<a->states_cnt; ++i){
-        if(partition[i]>max){
-            max=partition[i];
+        if(partition[i] > cmp_cnt){
+            cmp_cnt=partition[i];
         }
     }
+    cmp_cnt++;
 
     int starting;//new_starting_state
     for(int i=0; i<a->states_cnt; ++i){
@@ -949,78 +896,38 @@ NFA *DFA_minimization(NFA *a){
     }
 
     NFA *res = NFA_init(a->dim);
-    for(int i=0; i<=max; ++i){
+    for(int i=0; i < cmp_cnt; ++i){
         NFA_add_state(res,a->states[representatives[i]]->is_final,i==starting);
-        if(a->states[representatives[i]]->is_final){
-            printf("final = %d\n",i);
-        }
-        if(i==starting){
-            printf("starting = %d\n",i);
-        }
+//        if(a->states[representatives[i]]->is_final){
+//            printf("final = %d\n",i);
+//        }
+//        if(i==starting){
+//            printf("starting = %d\n",i);
+//        }
     }
 
     //add transitions
 
+    for(int i=0; i<a->states_cnt; ++i){
+        NFA_transition *tr = a->states[i]->transitions;
+        while(tr){
+            NFA_add_transition(res,partition[i],partition[tr->state_to_ix],tr->transition_trigger);
+            tr = tr->next;
+        }
+    }
+
+
 
     //remove dead_states
+    NFA *res2 = NFA_remove_dead_states(res);
+    NFA_free(res);
 
-
-
-    return res;
+    return res2;
 }
 
 
-
-
-
-//NFA *NFA_div_n(int n) {
-//    NFA *a = NFA_mult_scalar(n);
-//    NFA *b = NFA_project(a,1);
-//    NFA *zero = NFA_from_file("../automatons/lsd/zeros.txt");
-//    NFA *result = NFA_leftquo(b, zero);
-//    NFA_free(a);
-//    NFA_free(b);
-//    NFA_free(zero);
-//    return result;
-//}
-
-//NFA *NFA_div_n(int n){
-//    int n1=n;
-//    if(n == 0){printf("0|x???");exit(1);}
-//    Stack2 *stack = Stack2_init();
-//    int num = 0, cnt = 0;
-//
-//    while(n){
-//        if( n & 1 ){
-//            cnt++;
-//            Stack2_push(stack, NFA_is_mult_of_pow2(num));
-//        }
-//        n >>= 1;
-//        num++;
-//    }
-//
-//    if(cnt == 1){
-//        NFA *res = Stack2_pop(stack);
-//        Stack2_free(stack);
-//        return res;
-//    }
-//    else{
-//        NFA *eq = NFA_n_eq(n1);
-//        eq = NFA_extend(eq,n1);
-//
-//        NFA *sm = NFA_n_sum(n1);
-//
-//        Stack2_free(stack);
-//        return NFA_intersection(sm,eq);
-//    }
-//
-//}
-
-
-
-
-
-NFA *NFA_remove_dead_states(NFA *a){
+//test
+NFA *NFA_remove_dead_states(const NFA *a){
     int *reachable = calloc(a->states_cnt,sizeof(int));
     NFA *res = NFA_copy(a);
     for(int i=0; i<a->states_cnt; ++i){
@@ -1102,5 +1009,46 @@ NFA *NFA_remove_dead_states(NFA *a){
 }
 
 
+//NFA *NFA_div_n(int n) {
+//    NFA *a = NFA_mult_scalar(n);
+//    NFA *b = NFA_project(a,1);
+//    NFA *zero = NFA_from_file("../automatons/lsd/zeros.txt");
+//    NFA *result = NFA_leftquo(b, zero);
+//    NFA_free(a);
+//    NFA_free(b);
+//    NFA_free(zero);
+//    return result;
+//}
 
+//NFA *NFA_div_n(int n){
+//    int n1=n;
+//    if(n == 0){printf("0|x???");exit(1);}
+//    Stack2 *stack = Stack2_init();
+//    int num = 0, cnt = 0;
+//
+//    while(n){
+//        if( n & 1 ){
+//            cnt++;
+//            Stack2_push(stack, NFA_is_mult_of_pow2(num));
+//        }
+//        n >>= 1;
+//        num++;
+//    }
+//
+//    if(cnt == 1){
+//        NFA *res = Stack2_pop(stack);
+//        Stack2_free(stack);
+//        return res;
+//    }
+//    else{
+//        NFA *eq = NFA_n_eq(n1);
+//        eq = NFA_extend(eq,n1);
+//
+//        NFA *sm = NFA_n_sum(n1);
+//
+//        Stack2_free(stack);
+//        return NFA_intersection(sm,eq);
+//    }
+//
+//}
 
