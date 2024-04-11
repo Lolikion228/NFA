@@ -105,4 +105,6 @@ NFA *NFA_mult_scalar(int coeff);
 int *NFA_eps_closure(const NFA *a, int *states_set);
 
 NFA *DFA_minimization(NFA *a);
+
+NFA *NFA_remove_dead_states(NFA *a);
 #endif //NFA_NFA_H

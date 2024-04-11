@@ -246,17 +246,19 @@ void NFA_to_pic(const NFA *a){
                       "\tfontname=\"Helvetica,Arial,sans-serif\"\n"
                       "\tnode [fontname=\"Helvetica,Arial,sans-serif\"]\n"
                       "\tedge [fontname=\"Helvetica,Arial,sans-serif\"]\n"
-                      "\trankdir=LR;\n"
-                      "\tnode [shape = doublecircle ];";
+                      "\trankdir=LR;\n";
 
     fprintf(f,template);
-
+    int first=1;
     for(int i=0; i<a->states_cnt; i++){
+
         if(a->states[i]->is_final == 1){
+            if(first){fprintf(f,"\tnode [shape = doublecircle ];");first=0;}
              fprintf(f," %d", i);
         }
     }
-    fprintf(f,";\n\tnode [shape = circle];\n");
+    if(!first){fprintf(f,";\n");}
+    fprintf(f,"\tnode [shape = circle];\n");
 
     for(int i=0; i<a->states_cnt; i++){
         NFA_transition *curr = a->states[i]->transitions;
@@ -671,7 +673,7 @@ NFA *NFA_const(int n){
 
 
 
-//eps tr???
+//fix
 NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
     NFA *res = NFA_copy(a1);
@@ -690,6 +692,7 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
         for(int j=0; j<tmp->states_cnt; j++){ curr_states[j] = tmp->states[j]->is_starting;}
 
         while(1){
+
             int *curr_states_new  = zeros(tmp->states_cnt);
 
             for(int j=0; j<tmp->states_cnt; j++){
@@ -732,7 +735,7 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
 }
 
 
-//eps tr?????
+//fix
 NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
     NFA *res = NFA_copy(a1);
@@ -865,7 +868,7 @@ int *NFA_eps_closure(const NFA *a, int *states_set){
 
 NFA *DFA_minimization(NFA *a){
     if(!NFA_is_dfa(a)){printf("expected DFA, got NFA\n"); exit(1);}
-    NFA *res;
+
     int transitions[a->states_cnt][1 << a->dim];
 
     for(int i=0; i<a->states_cnt; i++){
@@ -876,11 +879,7 @@ NFA *DFA_minimization(NFA *a){
         }
     }
 
-//    printf("****** transitions *******\n");
-//    for(int i=0; i<a->states_cnt; i++){
-//        print_array(transitions[i],1 << a->dim);
-//    }
-//    printf("*******************\n");
+
 
     int partition[a->states_cnt];
     for (int i = 0; i < a->states_cnt; ++i) {
@@ -888,13 +887,13 @@ NFA *DFA_minimization(NFA *a){
     }
     int comp_cnt=2;
     int changed;
-    printf("starting\n");
-    print_array(partition,a->states_cnt);
+//    printf("starting\n");
+//    print_array(partition,a->states_cnt);
     do {
         changed = 0;
         int comp_cnt2 = comp_cnt;
         for(int comp_num=0; comp_num<comp_cnt; ++comp_num) {
-            printf("**************  comp_num = %d  **************\n",comp_num);
+//            printf("**************  comp_num = %d  **************\n",comp_num);
             int ix=-1;
             for (int i = 0; i < a->states_cnt; ++i) {
                 if(partition[i] == comp_num){
@@ -910,9 +909,9 @@ NFA *DFA_minimization(NFA *a){
                         int state1 = transitions[ix][k];
                         int state2 = transitions[i][k];
                         if (partition[state1] != partition[state2]) {
-                            printf("%d not eq %d because:\n",ix,i);
-                            printf("    from %d by %d to %d which in %d\n",ix,k,state1,partition[state1]);
-                            printf("    from %d by %d to %d which in %d\n",i,k,state2,partition[state2]);
+//                            printf("%d not eq %d because:\n",ix,i);
+//                            printf("    from %d by %d to %d which in %d\n",ix,k,state1,partition[state1]);
+//                            printf("    from %d by %d to %d which in %d\n",i,k,state2,partition[state2]);
                             any_not_eq = 1;
                             partition[i] = comp_cnt2;
                         }
@@ -920,16 +919,52 @@ NFA *DFA_minimization(NFA *a){
                 }
             }
             if(any_not_eq){++comp_cnt2;changed=1;}
-            print_array(partition,a->states_cnt);
+//            print_array(partition,a->states_cnt);
         }
+        comp_cnt=comp_cnt2;
 
     } while (changed);
+    printf("****** final version *******\n");
+    print_array(partition,a->states_cnt);
 
-//    printf("****** transitions *******\n");
-//    for(int i=0; i<a->states_cnt; i++){
-//        print_array(transitions[i],1 << a->dim);
-//    }
-//    printf("*******************\n");
+    int representatives[comp_cnt];
+
+    for(int i=0; i<a->states_cnt; ++i){
+        representatives[partition[i]]=i;
+    }
+
+    printf("****** representatives *******\n");
+    print_array(representatives,comp_cnt);//[new_set_ix][old_state_ix]
+
+    int max=0;
+    for(int i=0; i<a->states_cnt; ++i){
+        if(partition[i]>max){
+            max=partition[i];
+        }
+    }
+
+    int starting;//new_starting_state
+    for(int i=0; i<a->states_cnt; ++i){
+        if(a->states[i]->is_starting){starting=partition[i];break;}
+    }
+
+    NFA *res = NFA_init(a->dim);
+    for(int i=0; i<=max; ++i){
+        NFA_add_state(res,a->states[representatives[i]]->is_final,i==starting);
+        if(a->states[representatives[i]]->is_final){
+            printf("final = %d\n",i);
+        }
+        if(i==starting){
+            printf("starting = %d\n",i);
+        }
+    }
+
+    //add transitions
+
+
+    //remove dead_states
+
+
 
     return res;
 }
@@ -984,6 +1019,87 @@ NFA *DFA_minimization(NFA *a){
 
 
 
+
+NFA *NFA_remove_dead_states(NFA *a){
+    int *reachable = calloc(a->states_cnt,sizeof(int));
+    NFA *res = NFA_copy(a);
+    for(int i=0; i<a->states_cnt; ++i){
+        reachable[i] = a->states[i]->is_starting;
+    }
+
+    while(1){
+        int new=0;
+        for(int i=0; i<a->states_cnt; ++i){
+            if(reachable[i]){
+                NFA_transition *curr_tr = a->states[i]->transitions;
+                while(curr_tr){
+                    if(reachable[curr_tr->state_to_ix]==0){new=1;}
+                    reachable[curr_tr->state_to_ix] = 1;
+                    curr_tr = curr_tr->next;
+                }
+            }
+        }
+        if(!new){break;}
+    }
+
+    for(int i=0; i<a->states_cnt; ++i){
+        NFA_transition *curr_tr = a->states[i]->transitions;
+        while(curr_tr){
+            if(!reachable[curr_tr->state_to_ix]){
+                NFA_remove_transition(res,i,curr_tr->state_to_ix,curr_tr->transition_trigger);
+            }
+            curr_tr = curr_tr->next;
+        }
+    }
+
+    for(int i=0; i<a->states_cnt; ++i){
+        if(!reachable[i]){
+            NFA_transition *tr = res->states[i]->transitions;
+            if (tr != NULL) {
+                NFA_transition *tmp = tr;
+                while (tr->next != NULL) {
+                    tmp = tr;
+                    tr = tr->next;
+                    free(tmp);
+                }
+                free(tr);
+            }
+            res->states[i]->transitions=NULL;
+        }
+    }
+
+
+    int sum_reachable=0;
+    for(int i=0; i<res->states_cnt; ++i){
+        if(reachable[i]){sum_reachable++;}
+    }
+
+    int old_new_states[res->states_cnt];
+    int new_old_states[sum_reachable];
+
+
+    NFA *res2 = NFA_init(res->dim);
+    for(int i=0; i<res->states_cnt; ++i){
+        if(reachable[i]){
+            old_new_states[i] = res2->states_cnt;
+            new_old_states[res2->states_cnt] = i;
+            NFA_add_state(res2,res->states[i]->is_final,res->states[i]->is_starting);
+        }
+    }
+
+    for(int i=0; i<res->states_cnt; ++i){
+        NFA_transition *tr = res->states[i]->transitions;
+        while(tr){
+            NFA_add_transition(res2,old_new_states[i],old_new_states[tr->state_to_ix],tr->transition_trigger);
+            tr=tr->next;
+        }
+    }
+
+    free(reachable);
+    NFA_free(res);
+    return res2;
+
+}
 
 
 
