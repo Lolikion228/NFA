@@ -795,7 +795,7 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
 }
 
 
-int *NFA_eps_closure(const NFA *a, int *states_set){
+int *NFA_eps_closure(const NFA *a, const int *states_set){
     int *res = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; ++i){
         if(states_set[i]){
@@ -815,23 +815,22 @@ int *NFA_eps_closure(const NFA *a, int *states_set){
 NFA *DFA_minimization(const NFA *a){
     if(!NFA_is_dfa(a)){printf("expected DFA, got NFA\n"); exit(1);}
 
+    // tr[ix_from][trigger] -> ix_to
     int transitions[a->states_cnt][1 << a->dim];
 
     for(int i=0; i<a->states_cnt; i++){
         NFA_transition *curr_tr = a->states[i]->transitions;
         while(curr_tr){
             transitions[i][curr_tr->transition_trigger] = curr_tr->state_to_ix;
-            curr_tr=curr_tr->next;
+            curr_tr = curr_tr->next;
         }
     }
-
-
 
     int partition[a->states_cnt];
     for (int i = 0; i < a->states_cnt; ++i) {
         partition[i] = a->states[i]->is_final ? 1 : 0;
     }
-    int comp_cnt=2;
+    int comp_cnt = 2;
     int changed;
 //    printf("starting\n");
 //    print_array(partition,a->states_cnt);
@@ -840,7 +839,7 @@ NFA *DFA_minimization(const NFA *a){
         int comp_cnt2 = comp_cnt;
         for(int comp_num=0; comp_num<comp_cnt; ++comp_num) {
 //            printf("**************  comp_num = %d  **************\n",comp_num);
-            int ix=-1;
+            int ix = -1;
             for (int i = 0; i < a->states_cnt; ++i) {
                 if(partition[i] == comp_num){
                     ix = i;
@@ -848,9 +847,9 @@ NFA *DFA_minimization(const NFA *a){
                 }
             }
 
-            int any_not_eq=0;
+            int any_not_eq = 0;
             for(int i=ix+1; i<a->states_cnt; ++i){
-                if(partition[i]==comp_num) {
+                if(partition[i] == comp_num) {
                     for (int k = 0; k < (1 << a->dim); ++k) {
                         int state1 = transitions[ix][k];
                         int state2 = transitions[i][k];
@@ -864,7 +863,7 @@ NFA *DFA_minimization(const NFA *a){
                     }
                 }
             }
-            if(any_not_eq){++comp_cnt2;changed=1;}
+            if(any_not_eq){++comp_cnt2; changed = 1;}
 //            print_array(partition,a->states_cnt);
         }
         comp_cnt=comp_cnt2;
@@ -876,28 +875,28 @@ NFA *DFA_minimization(const NFA *a){
     int representatives[comp_cnt];
 
     for(int i=0; i<a->states_cnt; ++i){
-        representatives[partition[i]]=i;
+        representatives[partition[i]] = i;
     }
 
 //    printf("****** representatives *******\n");
 //    print_array(representatives,comp_cnt);//[new_set_ix][old_state_ix]
 
-    int cmp_cnt=0;
+    int cmp_cnt = 0;
     for(int i=0; i<a->states_cnt; ++i){
         if(partition[i] > cmp_cnt){
-            cmp_cnt=partition[i];
+            cmp_cnt = partition[i];
         }
     }
-    cmp_cnt++;
+    ++cmp_cnt;
 
-    int starting;//new_starting_state
+    int starting;
     for(int i=0; i<a->states_cnt; ++i){
-        if(a->states[i]->is_starting){starting=partition[i];break;}
+        if(a->states[i]->is_starting){starting=partition[i]; break;}
     }
 
     NFA *res = NFA_init(a->dim);
     for(int i=0; i < cmp_cnt; ++i){
-        NFA_add_state(res,a->states[representatives[i]]->is_final,i==starting);
+        NFA_add_state(res,a->states[representatives[i]]->is_final,i == starting);
 //        if(a->states[representatives[i]]->is_final){
 //            printf("final = %d\n",i);
 //        }
@@ -906,7 +905,6 @@ NFA *DFA_minimization(const NFA *a){
 //        }
     }
 
-    //add transitions
 
     for(int i=0; i<a->states_cnt; ++i){
         NFA_transition *tr = a->states[i]->transitions;
@@ -916,9 +914,6 @@ NFA *DFA_minimization(const NFA *a){
         }
     }
 
-
-
-    //remove dead_states
     NFA *res2 = NFA_remove_dead_states(res);
     NFA_free(res);
 
@@ -926,21 +921,23 @@ NFA *DFA_minimization(const NFA *a){
 }
 
 
-//test
+//test?
 NFA *NFA_remove_dead_states(const NFA *a){
+
     int *reachable = calloc(a->states_cnt,sizeof(int));
     NFA *res = NFA_copy(a);
     for(int i=0; i<a->states_cnt; ++i){
         reachable[i] = a->states[i]->is_starting;
     }
 
+    //marking all reachable states
     while(1){
-        int new=0;
+        int new = 0;
         for(int i=0; i<a->states_cnt; ++i){
             if(reachable[i]){
                 NFA_transition *curr_tr = a->states[i]->transitions;
                 while(curr_tr){
-                    if(reachable[curr_tr->state_to_ix]==0){new=1;}
+                    if(reachable[curr_tr->state_to_ix] == 0){new = 1;}
                     reachable[curr_tr->state_to_ix] = 1;
                     curr_tr = curr_tr->next;
                 }
@@ -949,7 +946,13 @@ NFA *NFA_remove_dead_states(const NFA *a){
         if(!new){break;}
     }
 
+
+    int old_new_states_map[res->states_cnt];
+    NFA *res2 = NFA_init(res->dim);
+
     for(int i=0; i<a->states_cnt; ++i){
+
+        //remove transitions TO unreachable states
         NFA_transition *curr_tr = a->states[i]->transitions;
         while(curr_tr){
             if(!reachable[curr_tr->state_to_ix]){
@@ -957,9 +960,8 @@ NFA *NFA_remove_dead_states(const NFA *a){
             }
             curr_tr = curr_tr->next;
         }
-    }
 
-    for(int i=0; i<a->states_cnt; ++i){
+        //remove transitions FROM unreachable states
         if(!reachable[i]){
             NFA_transition *tr = res->states[i]->transitions;
             if (tr != NULL) {
@@ -973,39 +975,28 @@ NFA *NFA_remove_dead_states(const NFA *a){
             }
             res->states[i]->transitions=NULL;
         }
-    }
 
-
-    int sum_reachable=0;
-    for(int i=0; i<res->states_cnt; ++i){
-        if(reachable[i]){sum_reachable++;}
-    }
-
-    int old_new_states[res->states_cnt];
-    int new_old_states[sum_reachable];
-
-
-    NFA *res2 = NFA_init(res->dim);
-    for(int i=0; i<res->states_cnt; ++i){
+        //add reachable states to new automata
         if(reachable[i]){
-            old_new_states[i] = res2->states_cnt;
-            new_old_states[res2->states_cnt] = i;
-            NFA_add_state(res2,res->states[i]->is_final,res->states[i]->is_starting);
+            old_new_states_map[i] = res2->states_cnt;
+            NFA_add_state(res2, res->states[i]->is_final, res->states[i]->is_starting);
         }
+
     }
 
+    //copy transitions from origin to new automata
     for(int i=0; i<res->states_cnt; ++i){
         NFA_transition *tr = res->states[i]->transitions;
         while(tr){
-            NFA_add_transition(res2,old_new_states[i],old_new_states[tr->state_to_ix],tr->transition_trigger);
-            tr=tr->next;
+            NFA_add_transition(res2, old_new_states_map[i], old_new_states_map[tr->state_to_ix], tr->transition_trigger);
+            tr = tr->next;
         }
     }
 
     free(reachable);
     NFA_free(res);
-    return res2;
 
+    return res2;
 }
 
 
