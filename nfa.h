@@ -77,24 +77,15 @@ NFA *NFA_project(const NFA *a, int num_cord);
 
 NFA *NFA_extend(const NFA *a, int num_cord);
 
-NFA *NFA_mult_of_pow2(int pow);
-
 NFA *NFA_xy_pow2(int pow);
 
 NFA *NFA_const(int n);
 
 NFA *NFA_swap_digits(const NFA *a, int n1, int n2);
 
-//fix
-//NFA *NFA_reverse(NFA *a);
-
-//fix
 NFA *NFA_rightquo(const NFA *a1,const NFA *a2);
 
-//fix
 NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
-
-NFA *NFA_div_n(int n);
 
 NFA *NFA_mult_scalar(int coeff);
 
@@ -103,4 +94,6 @@ int *NFA_eps_closure(const NFA *a, const int *states_set);
 NFA *DFA_minimization(const NFA *a);
 
 NFA *NFA_remove_dead_states(const NFA *a);
+
+NFA *NFA_to_DFA(NFA *a);
 #endif //NFA_NFA_H

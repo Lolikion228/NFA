@@ -124,9 +124,6 @@ void parser_helper(Operator op, Stack2 *a_stack){
 }
 
 
-/*
- * also returns at least a pointer on a syntactic error
- */
 NFA *Parser(char *formula){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
@@ -161,25 +158,29 @@ NFA *Parser(char *formula){
                 break;
 
             case '$':
-                if(*(i+4) =='2'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/2|x.txt"));
-                }
-                if(*(i+4) =='3'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
-                }
-                if(*(i+4) =='4'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
-                }
-                if(*(i+4) =='8'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
-                }
-                if(*(i+4) =='z'){
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
+                switch(*(i+4)){
+                    case '2':
+                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/2|x.txt"));
+                        break;
+                    case '3':
+                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
+                        break;
+                    case'4':
+                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
+                        break;
+                    case '8':
+                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
+                        break;
+                    case 'z':
+                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
+                        break;
+                    default:
+                        printf("invalid automaton name: %s\n",i);
+                        exit(1);
                 }
                 break;
 
             default:
-                // return *i ~~~~~~~~^ to pointer on a syntax error at position i of the input string
                 break;
         }
 
