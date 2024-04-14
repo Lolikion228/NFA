@@ -96,4 +96,6 @@ NFA *DFA_minimization(const NFA *a);
 NFA *NFA_remove_dead_states(const NFA *a);
 
 NFA *NFA_to_DFA(NFA *a);
+
+void NFA_complete(NFA *a);
 #endif //NFA_NFA_H

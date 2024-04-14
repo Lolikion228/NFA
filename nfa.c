@@ -611,10 +611,11 @@ NFA *NFA_xy_pow2(int pow){
     NFA **pow2_NFAs = (NFA**)malloc((1+pow)*sizeof (NFA*)); // each nfa for  2^i * x = y
     pow2_NFAs[0] = NFA_from_file("../automatons/lsd/x_eq_y.txt");
 
-    NFA *eq_ex = NFA_extend(eq, 2);// x=y,z
-    NFA *res = NFA_intersection(sum, eq_ex); // (x=y,z) /\ (x+y=z) == ()
-    pow2_NFAs[1] = NFA_project(res, 0); //2*x=y
-
+    if(pow>0) {
+        NFA *eq_ex = NFA_extend(eq, 2);// x=y,z
+        NFA *res = NFA_intersection(sum, eq_ex); // (x=y,z) /\ (x+y=z) == ()
+        pow2_NFAs[1] = NFA_project(res, 0); //2*x=y
+    }
     NFA*tmp1,*tmp2,*tmp3;
 
     for(int i = 2; i <= pow; ++i) {
@@ -949,6 +950,23 @@ NFA *NFA_remove_dead_states(const NFA *a){
     return res2;
 }
 
+
+void NFA_complete(NFA *a){
+    for(int i=0; i<a->states_cnt; ++i){
+        int *exists = zeros(1 << a->dim);
+        NFA_transition *curr_tr = a->states[i]->transitions;
+        while(curr_tr){
+            exists[curr_tr->transition_trigger] = 1;
+            curr_tr = curr_tr->next;
+        }
+        for(int j=0; j<(1<<a->dim); ++j){
+            if(!exists[j]){
+                NFA_add_transition(a,i,i,j);
+            }
+        }
+        free(exists);
+    }
+}
 
 //NFA *NFA_to_DFA(NFA *a){
 //    NFA *res;
