@@ -89,7 +89,7 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
 
 NFA *NFA_mult_scalar(int coeff);
 
-int *NFA_eps_closure(const NFA *a, const int *states_set);
+int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger);
 
 NFA *DFA_minimization(const NFA *a);
 

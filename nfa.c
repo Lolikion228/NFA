@@ -766,15 +766,15 @@ NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
     return res;
 }
 
-//fix
-int *NFA_eps_closure(const NFA *a, const int *states_set){
+
+int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger){
     int *res = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; ++i){
         if(states_set[i]){
             res[i] = 1;
             NFA_transition *curr_tr = a->states[i]->transitions;
             while(curr_tr){
-                if(curr_tr->transition_trigger == -1){ res[curr_tr->state_to_ix] = 1; }
+                if(curr_tr->transition_trigger == trigger){ res[curr_tr->state_to_ix] = 1; }
                 curr_tr = curr_tr->next;
             }
         }
@@ -968,21 +968,82 @@ void NFA_complete(NFA *a){
     }
 }
 
-//NFA *NFA_to_DFA(NFA *a){
-//    NFA *res;
-//
-//    int *curr_states_set = calloc( a->states_cnt, sizeof(int));
-//    for(int i=0; i< a->states_cnt; ++i){
-//        curr_states_set[i] = a->states[i]->is_starting;
-//    }
-//    *curr_states_set = *NFA_eps_closure(a,curr_states_set);
-//
-//
-//
-//
-//
-//    free(curr_states_set);
-//
-//    return res;
-//}
 
+//returns 1 if equal, 0 othewise
+int arrays_are_equal(int *a1, int *a2, int len){
+    for(int i=0; i<len; ++i){
+        if(a1[i] != a2[i]){return 0;}
+    }
+    return 1;
+}
+
+
+//returns 1 if this subset already exists, 0 otherwise
+int add_subset(int *subset, int **subsets, int subsets_cnt, int subset_len){
+    for(int i=0; i<subsets_cnt; ++i){
+        if(arrays_are_equal(subset,subsets[i],subset_len)){return 1;}
+    }
+
+    subsets = realloc(subsets,(subsets_cnt+1)*sizeof(int*));
+    subsets[subsets_cnt]=subset;
+
+    return 0;
+}
+
+
+
+
+NFA *NFA_to_DFA(NFA *a){
+    int **subsets = NULL;
+    int **transitions = NULL;
+    int subsets_cnt = 0, subsets_cnt2 = 0, changed = 1,transitions_cnt = 0;
+
+    int *starting_states = zeros(a->states_cnt);
+    subsets = realloc(subsets,(subsets_cnt+1)*sizeof(int*));
+    subsets[0] = starting_states;
+    ++subsets_cnt;
+    ++subsets_cnt2;
+
+    while(changed){
+        changed = 0;
+
+        for(int i=0; i<subsets_cnt; ++i){
+            for(int j=0; j<(1<<a->dim); ++j){
+                int *reachable = NFA_reachable_by(a,subsets[i],j);
+                int already_exists = add_subset(reachable,subsets,subsets_cnt2,a->states_cnt);
+                if(!already_exists){
+                    int tr[3] = {i,subsets_cnt2,j};//ix_from, ix_to, trigger
+                    transitions = realloc(transitions,(transitions_cnt+1)*sizeof(int[3]));
+                    transitions[transitions_cnt] = tr;
+                    ++transitions_cnt;
+                    changed = 1;
+                    ++subsets_cnt2;
+                }
+                else{free(reachable);}
+            }
+        }
+        subsets_cnt = subsets_cnt2;
+
+    }
+
+
+    NFA *res = NFA_init(a->dim);
+    for(int i=0; i<subsets_cnt; ++i){
+        NFA_add_state(res,0,0);
+    }
+
+    for(int i=0; i<transitions_cnt; ++i){
+        NFA_add_transition(res,transitions[i][0],transitions[i][1],transitions[i][2]);
+    }
+
+    free(transitions);
+
+    for(int i=0; i<subsets_cnt; ++i){
+        free(subsets[i]);
+    }
+
+    free(subsets);
+
+
+    return res;
+}
