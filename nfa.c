@@ -239,7 +239,7 @@ void NFA_free(NFA *a){
 }
 
 
-void NFA_to_pic(const NFA *a){
+void NFA_to_pic(const NFA *a, int id){
     FILE *f = fopen("../fsm.gv", "w");
 
     char template[] = " digraph finite_state_machine {\n"
@@ -278,7 +278,27 @@ void NFA_to_pic(const NFA *a){
 
     fprintf(f,"}   ");
     fclose(f);
-    system("dot -Tpng ../fsm.gv -o ../temp/automata.png");
+    switch(id){
+        case 1:
+            system("dot -Tpng ../fsm.gv -o ../temp/automata1.png");
+            break;
+        case 2:
+            system("dot -Tpng ../fsm.gv -o ../temp/automata2.png");
+            break;
+        case 3:
+            system("dot -Tpng ../fsm.gv -o ../temp/automata3.png");
+            break;
+        case 4:
+            system("dot -Tpng ../fsm.gv -o ../temp/automata4.png");
+            break;
+        case 5:
+            system("dot -Tpng ../fsm.gv -o ../temp/automata5.png");
+            break;
+        default:
+            system("dot -Tpng ../fsm.gv -o ../temp/automata0.png");
+            break;
+    }
+
     system("rm ../fsm.gv");
 }
 
@@ -771,7 +791,6 @@ int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger){
     int *res = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; ++i){
         if(states_set[i]){
-            res[i] = 1;
             NFA_transition *curr_tr = a->states[i]->transitions;
             while(curr_tr){
                 if(curr_tr->transition_trigger == trigger){ res[curr_tr->state_to_ix] = 1; }
@@ -782,6 +801,20 @@ int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger){
     return res;
 }
 
+int *NFA_eps_cl(const NFA *a, const int *states_set){
+    int *res = calloc(a->states_cnt,sizeof(int));
+    for(int i=0; i<a->states_cnt; ++i){
+        if(states_set[i]){
+            res[i]=1;
+            NFA_transition *curr_tr = a->states[i]->transitions;
+            while(curr_tr){
+                if(curr_tr->transition_trigger == -1){ res[curr_tr->state_to_ix] = 1; }
+                curr_tr = curr_tr->next;
+            }
+        }
+    }
+    return res;
+}
 
 //fix?
 NFA *DFA_minimization(const NFA *a){
@@ -956,7 +989,9 @@ void NFA_complete(NFA *a){
         int *exists = zeros(1 << a->dim);
         NFA_transition *curr_tr = a->states[i]->transitions;
         while(curr_tr){
-            exists[curr_tr->transition_trigger] = 1;
+            if(curr_tr->transition_trigger!=-1){
+                exists[curr_tr->transition_trigger] = 1;
+            }
             curr_tr = curr_tr->next;
         }
         for(int j=0; j<(1<<a->dim); ++j){
@@ -979,45 +1014,78 @@ int arrays_are_equal(int *a1, int *a2, int len){
 
 
 //returns 1 if this subset already exists, 0 otherwise
-int add_subset(int *subset, int **subsets, int subsets_cnt, int subset_len){
-    for(int i=0; i<subsets_cnt; ++i){
-        if(arrays_are_equal(subset,subsets[i],subset_len)){return 1;}
+int add_subset(int *subset, int ***subsets, int *subsets_cnt, int subset_len) {
+    for (int i = 0; i < *subsets_cnt; ++i) {
+        if (arrays_are_equal(subset, (*subsets)[i], subset_len)) {
+            return 1;
+        }
     }
 
-    subsets = realloc(subsets,(subsets_cnt+1)*sizeof(int*));
-    subsets[subsets_cnt]=subset;
+    int **tmp = (int **)realloc(*subsets, (*subsets_cnt + 1) * sizeof(int *));
+    if (!tmp) {
+        printf("Memory allocation error in add_subset\n");
+        exit(1);
+    }
+
+    (*subsets) = tmp;
+    (*subsets)[*subsets_cnt] = subset;
+    (*subsets_cnt)++;
 
     return 0;
 }
 
 
-
+void print_subsets(int subsets_cnt, int subset_len, int **subsets){
+    for(int i=0; i<subsets_cnt; ++i){
+        print_array(subsets[i],subset_len);
+    }
+}
 
 NFA *NFA_to_DFA(NFA *a){
-    int **subsets = NULL;
+    int **subsets;
     int **transitions = NULL;
     int subsets_cnt = 0, subsets_cnt2 = 0, changed = 1,transitions_cnt = 0;
 
     int *starting_states = zeros(a->states_cnt);
+    for(int i=0; i<a->states_cnt; ++i){
+        starting_states[i] = a->states[i]->is_starting;
+    }
     subsets = realloc(subsets,(subsets_cnt+1)*sizeof(int*));
     subsets[0] = starting_states;
     ++subsets_cnt;
     ++subsets_cnt2;
-
+    printf("starting: ");
+    print_array(subsets[0],a->states_cnt);
     while(changed){
         changed = 0;
+        printf("******* iteration *****\n");
+        for(int i=0; i<subsets_cnt; ++i){
+            int *eps_cl = NFA_eps_cl(a,subsets[i]);
+            free(subsets[i]);
+            subsets[i] = eps_cl;
+        }
 
         for(int i=0; i<subsets_cnt; ++i){
             for(int j=0; j<(1<<a->dim); ++j){
                 int *reachable = NFA_reachable_by(a,subsets[i],j);
-                int already_exists = add_subset(reachable,subsets,subsets_cnt2,a->states_cnt);
+                int already_exists = add_subset(reachable,&subsets,&subsets_cnt2,a->states_cnt);
+                //not working transition to same set by diff triggers
                 if(!already_exists){
-                    int tr[3] = {i,subsets_cnt2,j};//ix_from, ix_to, trigger
-                    transitions = realloc(transitions,(transitions_cnt+1)*sizeof(int[3]));
-                    transitions[transitions_cnt] = tr;
-                    ++transitions_cnt;
+                    printf("/////////////////////////\n");
+                    printf("from ");
+                    print_array(subsets[i],a->states_cnt);
+                    printf("by %d\n",j);
+                    printf("to ");
+                    print_array(reachable,a->states_cnt);
+                    printf("/////////////////////////\n");
+                    int *tr = malloc(3*sizeof(int));
+                    tr[0]=i;
+                    tr[1]=subsets_cnt2-1;
+                    tr[2]=j;
+//                    printf("transition: %d %d %d\n",tr[0],tr[1],tr[2]);
+                    transitions = (int**)realloc(transitions,(++transitions_cnt)*sizeof(int*));
+                    transitions[transitions_cnt-1] = tr;
                     changed = 1;
-                    ++subsets_cnt2;
                 }
                 else{free(reachable);}
             }
@@ -1026,16 +1094,36 @@ NFA *NFA_to_DFA(NFA *a){
 
     }
 
+//    print_subsets(subsets_cnt,a->states_cnt,subsets);
+
+//    int *new_starting = NFA_eps_cl(a,starting_states);
+    int *new_final = calloc(subsets_cnt,sizeof(int));
+    for(int i=0; i<subsets_cnt; ++i){
+        for(int j=0; j<a->states_cnt; ++j){
+            if(subsets[i][j] && a->states[j]->is_final){
+                new_final[i]=1;
+                break;
+            }
+        }
+    }
+
+
+
 
     NFA *res = NFA_init(a->dim);
     for(int i=0; i<subsets_cnt; ++i){
-        NFA_add_state(res,0,0);
+        NFA_add_state(res,new_final[i],subsets[0][i]);
     }
+
+
 
     for(int i=0; i<transitions_cnt; ++i){
         NFA_add_transition(res,transitions[i][0],transitions[i][1],transitions[i][2]);
     }
 
+    for(int i=0; i<transitions_cnt; ++i){
+        free(transitions[i]);
+    }
     free(transitions);
 
     for(int i=0; i<subsets_cnt; ++i){
@@ -1043,7 +1131,7 @@ NFA *NFA_to_DFA(NFA *a){
     }
 
     free(subsets);
-
+    free(new_final);
 
     return res;
 }

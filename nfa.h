@@ -48,7 +48,7 @@ void NFA_print(const NFA* a);
 
 void NFA_free(NFA *a);
 
-void NFA_to_pic(const NFA *a);
+void NFA_to_pic(const NFA *a, int id);
 
 int NFA_check(const NFA *a, const int *sentences);
 
@@ -98,4 +98,8 @@ NFA *NFA_remove_dead_states(const NFA *a);
 NFA *NFA_to_DFA(NFA *a);
 
 void NFA_complete(NFA *a);
+
+int add_subset(int *subset, int ***subsets, int *subsets_cnt, int subset_len);
+
+int arrays_are_equal(int *a1, int *a2, int len);
 #endif //NFA_NFA_H
