@@ -1017,7 +1017,7 @@ int arrays_are_equal(int *a1, int *a2, int len){
 int add_subset(int *subset, int ***subsets, int *subsets_cnt, int subset_len) {
     for (int i = 0; i < *subsets_cnt; ++i) {
         if (arrays_are_equal(subset, (*subsets)[i], subset_len)) {
-            return 1;
+            return i;
         }
     }
 
@@ -1054,11 +1054,11 @@ NFA *NFA_to_DFA(NFA *a){
     subsets[0] = starting_states;
     ++subsets_cnt;
     ++subsets_cnt2;
-    printf("starting: ");
-    print_array(subsets[0],a->states_cnt);
+//    printf("starting: ");
+//    print_array(subsets[0],a->states_cnt);
     while(changed){
         changed = 0;
-        printf("******* iteration *****\n");
+//        printf("******* iteration *****\n");
         for(int i=0; i<subsets_cnt; ++i){
             int *eps_cl = NFA_eps_cl(a,subsets[i]);
             free(subsets[i]);
@@ -1069,34 +1069,32 @@ NFA *NFA_to_DFA(NFA *a){
             for(int j=0; j<(1<<a->dim); ++j){
                 int *reachable = NFA_reachable_by(a,subsets[i],j);
                 int already_exists = add_subset(reachable,&subsets,&subsets_cnt2,a->states_cnt);
-                //not working transition to same set by diff triggers
+
                 if(!already_exists){
-                    printf("/////////////////////////\n");
-                    printf("from ");
-                    print_array(subsets[i],a->states_cnt);
-                    printf("by %d\n",j);
-                    printf("to ");
-                    print_array(reachable,a->states_cnt);
-                    printf("/////////////////////////\n");
                     int *tr = malloc(3*sizeof(int));
                     tr[0]=i;
                     tr[1]=subsets_cnt2-1;
                     tr[2]=j;
-//                    printf("transition: %d %d %d\n",tr[0],tr[1],tr[2]);
                     transitions = (int**)realloc(transitions,(++transitions_cnt)*sizeof(int*));
                     transitions[transitions_cnt-1] = tr;
                     changed = 1;
                 }
-                else{free(reachable);}
+                else{
+                    int *tr = malloc(3*sizeof(int));
+                    tr[0]=i;
+                    tr[1]=already_exists;
+                    tr[2]=j;
+                    transitions = (int**)realloc(transitions,(++transitions_cnt)*sizeof(int*));
+                    transitions[transitions_cnt-1] = tr;
+                    free(reachable);
+                }
             }
         }
         subsets_cnt = subsets_cnt2;
 
     }
 
-//    print_subsets(subsets_cnt,a->states_cnt,subsets);
 
-//    int *new_starting = NFA_eps_cl(a,starting_states);
     int *new_final = calloc(subsets_cnt,sizeof(int));
     for(int i=0; i<subsets_cnt; ++i){
         for(int j=0; j<a->states_cnt; ++j){
