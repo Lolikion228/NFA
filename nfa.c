@@ -465,8 +465,14 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 
 
 NFA* NFA_complement(const NFA *a){
-    if(!NFA_is_dfa(a)){printf("complement only for DFA for now.\n");exit(1);}
-    NFA *res = NFA_copy(a);
+    NFA *res;
+    if(!NFA_is_dfa(a)){
+         res = NFA_to_DFA((NFA *)a);
+    }
+    else{
+        res = NFA_copy(a);
+    }
+
     for(int i=0; i<res->states_cnt; ++i){
         res->states[i]->is_final = !res->states[i]->is_final;
     }
@@ -598,7 +604,6 @@ NFA *NFA_mult_scalar(int coeff){
             res = NFA_intersection(tmp3,tmp2);
             res = NFA_project(res,1);
             res = NFA_project(res,1);
-
             NFA *tmp4 = NFA_to_DFA(res);
             res = DFA_minimization(tmp4);
             NFA_free(tmp4);
@@ -1084,11 +1089,10 @@ NFA *NFA_to_DFA(NFA *a){
     subsets[0] = starting_states;
     ++subsets_cnt;
     ++subsets_cnt2;
-//    printf("starting: ");
-//    print_array(subsets[0],a->states_cnt);
     while(changed){
+
         changed = 0;
-//        printf("******* iteration *****\n");
+
         for(int i=0; i<subsets_cnt; ++i){
             int *eps_cl = NFA_eps_cl(a,subsets[i]);
             free(subsets[i]);
@@ -1099,31 +1103,26 @@ NFA *NFA_to_DFA(NFA *a){
             for(int j=0; j<(1<<a->dim); ++j){
                 int *reachable = NFA_reachable_by(a,subsets[i],j);
                 int already_exists = add_subset(reachable,&subsets,&subsets_cnt2,a->states_cnt);
-
+                int *tr = malloc(3*sizeof(int));
+                tr[0]=i;
+                tr[2]=j;
+                transitions = (int**)realloc(transitions,(++transitions_cnt)*sizeof(int*));
+                transitions[transitions_cnt-1] = tr;
                 if(!already_exists){
-                    int *tr = malloc(3*sizeof(int));
-                    tr[0]=i;
                     tr[1]=subsets_cnt2-1;
-                    tr[2]=j;
-                    transitions = (int**)realloc(transitions,(++transitions_cnt)*sizeof(int*));
-                    transitions[transitions_cnt-1] = tr;
                     changed = 1;
                 }
                 else{
-                    int *tr = malloc(3*sizeof(int));
-                    tr[0]=i;
                     tr[1]=already_exists;
-                    tr[2]=j;
-                    transitions = (int**)realloc(transitions,(++transitions_cnt)*sizeof(int*));
-                    transitions[transitions_cnt-1] = tr;
                     free(reachable);
                 }
+                transitions[transitions_cnt-1] = tr;
             }
         }
+
         subsets_cnt = subsets_cnt2;
 
     }
-
 
     int *new_final = calloc(subsets_cnt,sizeof(int));
     for(int i=0; i<subsets_cnt; ++i){
@@ -1134,8 +1133,6 @@ NFA *NFA_to_DFA(NFA *a){
             }
         }
     }
-
-
 
 
     NFA *res = NFA_init(a->dim);

@@ -115,7 +115,6 @@ void app(){
 
         printf(">>> ");
         command = fgets(command,322,stdin);
-        printf("ur command is: %s",command);
 
         if(!strcmp(command,"exit\n")){ curr_state = exit_; }
         if(strstr(command,"def") == command){ curr_state = def; }
@@ -141,16 +140,12 @@ void app(){
                 automata[automata_cnt] = Parser(formula);
                 ++automata_cnt;
 
-                printf("name is: %s\n",automata_names[automata_cnt-1]);
-                printf("formula is: %s\n",formula);
                 free(formula);
                 break;
 
             case eval:
                 char *name_ = get_name_for_eval(command);
                 int number = get_number_for_eval(command);
-                printf("name is: %s\n",name_);
-                printf("number is: %d\n",number);
                 for(int i=0; i<automata_cnt; ++i){
                     if(!strcmp(automata_names[i],name_)){
                         printf("result = %d\n", NFA_check(automata[i],&number));
