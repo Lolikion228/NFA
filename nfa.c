@@ -579,31 +579,39 @@ NFA *NFA_mult_scalar(int coeff){
         return res2;
     }
 
-
     NFA *res0 = NFA_from_file("../automatons/lsd/zeros.txt");
     NFA *res = NFA_extend(res0,0);
     NFA_free(res0);
     NFA *sum =  NFA_from_file("../automatons/lsd/sum.txt");
-    NFA *eq =  NFA_from_file("../automatons/lsd/x_eq_y.txt");
+
+    NFA *tmp,*tmp2,*tmp3;
 
     for(int cnt = 0; coeff; coeff >>= 1){
         if(coeff & 1){
             NFA *curr = NFA_xy_pow2(cnt); // 2^cnt * x = y
             curr = NFA_extend(curr,2);
             curr = NFA_extend(curr,3);
-            NFA *tmp = NFA_extend(res,1);
+            tmp = NFA_extend(res,1);
             tmp = NFA_extend(tmp,3);
-            NFA *tmp2= NFA_extend(sum,0);
-            NFA *tmp3 = NFA_intersection(curr,tmp);
+            tmp2= NFA_extend(sum,0);
+            tmp3 = NFA_intersection(curr,tmp);
             res = NFA_intersection(tmp3,tmp2);
             res = NFA_project(res,1);
             res = NFA_project(res,1);
+
+            NFA *tmp4 = NFA_to_DFA(res);
+            res = DFA_minimization(tmp4);
+            NFA_free(tmp4);
+            NFA_free(curr);
+            NFA_free(tmp);
+            NFA_free(tmp2);
+            NFA_free(tmp3);
         }
         cnt++;
     }
 
-    free(sum);
-    free(eq);
+    NFA_free(sum);
+
 
 //    2^cnt * y = u, (v), (z)
 //    k     * y = (u), v,  (z)
@@ -635,17 +643,39 @@ NFA *NFA_xy_pow2(int pow){
         NFA *eq_ex = NFA_extend(eq, 2);// x=y,z
         NFA *res = NFA_intersection(sum, eq_ex); // (x=y,z) /\ (x+y=z) == ()
         pow2_NFAs[1] = NFA_project(res, 0); //2*x=y
+        NFA_free(eq_ex);
+        NFA_free(res);
     }
-    NFA*tmp1,*tmp2,*tmp3;
+    NFA *tmp1=NULL,*tmp2=NULL,*tmp3=NULL;
 
     for(int i = 2; i <= pow; ++i) {
         tmp1 = NFA_extend(pow2_NFAs[i-1],0);
         tmp2 = NFA_extend(pow2_NFAs[1],2);
         tmp3 = NFA_intersection(tmp1,tmp2);
-        pow2_NFAs[i] = NFA_project(tmp3,1);
+        NFA *tmp4 = NFA_to_DFA(tmp3);
+        NFA *tmp5 = DFA_minimization(tmp4);
+        pow2_NFAs[i] = NFA_project(tmp5,1);
+        NFA_free(tmp1);
+        NFA_free(tmp2);
+        NFA_free(tmp3);
+        NFA_free(tmp4);
+        NFA_free(tmp5);
     }
 
-    return pow2_NFAs[pow];
+    NFA_free(sum);
+    NFA_free(eq);
+
+    for(int i=0; i<pow; ++i){
+        NFA_free(pow2_NFAs[i]);
+    }
+    NFA *res_ = pow2_NFAs[pow];
+
+//    NFA *res2 = NFA_to_DFA(res_);
+//    NFA *res3 = DFA_minimization(res2);
+//    NFA_free(res_);
+//    NFA_free(res2);
+    free(pow2_NFAs);
+    return res_;
 }
 
 
@@ -1110,9 +1140,9 @@ NFA *NFA_to_DFA(NFA *a){
 
     NFA *res = NFA_init(a->dim);
     for(int i=0; i<subsets_cnt; ++i){
-        NFA_add_state(res,new_final[i],subsets[0][i]);
+        NFA_add_state(res,new_final[i],0);//wtf
     }
-
+    res->states[0]->is_starting = 1;
 
 
     for(int i=0; i<transitions_cnt; ++i){
@@ -1133,3 +1163,5 @@ NFA *NFA_to_DFA(NFA *a){
 
     return res;
 }
+
+
