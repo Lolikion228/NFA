@@ -160,7 +160,6 @@ int NFA_check(const NFA *a, const int *sentences){
             sents2[j] = sents2[j]>>1;
         }
 
-
         is_transition = 0;
         int curr_states2[a->states_cnt];
         for(int i=0; i<a->states_cnt; ++i){
@@ -215,8 +214,8 @@ void NFA_print(const NFA* a){
     printf("automata_states:\n\n");
     printf("--------------------------------------------\n");
     for(int i=0; i<a->states_cnt; ++i){
-        printf("state_ix=%d; is_acceptable=%d; transitions=%d\n",
-                    a->states[i]->index,a->states[i]->is_final,
+        printf("state_ix=%d; is_acceptable=%d; is_starting=%d; transitions=%d\n",
+                    a->states[i]->index,a->states[i]->is_final, a->states[i]->is_starting,
                     NFA_transitions_cnt(a->states[i]) );
         printf("   ------transitions-----\n");
         NFA_transition *curr = a->states[i]->transitions;
@@ -710,7 +709,7 @@ NFA *NFA_const(int n){
     return a;
 }
 
-
+//fix
 NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
     NFA *res = NFA_copy(a1);
@@ -726,9 +725,22 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
         NFA *tmp = NFA_intersection(res,a2);
         res->states[i]->is_starting=0;
         // Reachability Problems 2024
-        int *reachable = calloc(tmp->states_cnt, sizeof(int));
-        for(int j=0; j<tmp->states_cnt; ++j){ reachable[j] = tmp->states[j]->is_starting; }
+        int *starting = calloc(tmp->states_cnt, sizeof(int));
+        //reachable != starting make in oher way
+        for(int j=0; j<tmp->states_cnt; ++j){ starting[j] = tmp->states[j]->is_starting; }
 
+        int *reachable = calloc(tmp->states_cnt, sizeof(int));
+
+        for(int j=0; j<tmp->states_cnt; ++j){
+            if(starting[j]){
+                NFA_transition *curr_tr = tmp->states[j]->transitions;
+                while(curr_tr){
+                    reachable[curr_tr->state_to_ix] = 1;
+                    curr_tr = curr_tr->next;
+                }
+            }
+        }
+        free(starting);
         while(1){
             int new = 0;
             for(int j=0; j<tmp->states_cnt; ++j){
@@ -918,7 +930,7 @@ NFA *DFA_minimization(const NFA *a){
     for(int i=0; i<a->states_cnt; ++i){
         if(a->states[i]->is_starting){ new_starting_state_ix = partition[i]; break;}
     }
-
+    //print_array(representatives,components_cnt);
     //add states to a new automaton
     NFA *res = NFA_init(a->dim);
     for(int i=0; i < components_cnt; ++i){
@@ -1162,3 +1174,82 @@ NFA *NFA_to_DFA(NFA *a){
 }
 
 
+
+NFA *kill_zeroes(NFA *a) {
+    NFA *res = NFA_copy(a);
+    int any_final_on_zeros_at_all = 1;
+
+    while(any_final_on_zeros_at_all){
+        any_final_on_zeros_at_all = 0;
+
+        for(int i=0; i<res->states_cnt; ++i){
+
+            int any_final_on_zeros = 0;
+            int *reachable = zeros(res->states_cnt);
+            NFA_transition *curr_tr = res->states[i]->transitions;
+            while(curr_tr){
+                if(curr_tr->transition_trigger == 0){
+                    if(res->states[curr_tr->state_to_ix]->is_final){
+                        any_final_on_zeros = 1;
+                    }
+                    reachable[curr_tr->state_to_ix]=1;
+                }
+                curr_tr = curr_tr->next;
+            }
+
+            int changes = 1;
+            while(changes){
+                changes = 0;
+                for(int j=0; j<res->states_cnt; ++j){
+                    if(reachable[j]){
+                        curr_tr = res->states[j]->transitions;
+                        while(curr_tr){
+                            if(curr_tr->transition_trigger==0){
+                                if(res->states[curr_tr->state_to_ix]->is_final){
+                                    any_final_on_zeros = 1;
+                                }
+                                if(reachable[curr_tr->state_to_ix]==0){changes=1;}
+                                reachable[curr_tr->state_to_ix]=1;
+                            }
+                            curr_tr=curr_tr->next;
+                        }
+                    }
+                }
+            }
+
+            if(any_final_on_zeros){
+                any_final_on_zeros_at_all = 1;
+                res->states[i]->is_final = 1;
+                for(int j=0; j<res->states_cnt; ++j){
+                    if(reachable[j] && res->states[j]->is_final){
+                        res->states[j]->is_final = 0;
+                    }
+                }
+            }
+
+        }
+
+
+
+    }
+
+
+    for(int i=0; i<a->states_cnt; ++i){
+        if(a->states[i]->is_final) {
+            NFA_transition *curr = a->states[i]->transitions;
+            while (curr) {
+                if (curr->transition_trigger == 0) {
+                    if (curr->state_to_ix == i){
+                        res->states[i]->is_final=1;
+                    }
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+
+
+
+    return res;
+}

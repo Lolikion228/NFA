@@ -102,4 +102,6 @@ void NFA_complete(NFA *a);
 int add_subset(int *subset, int ***subsets, int *subsets_cnt, int subset_len);
 
 int arrays_are_equal(int *a1, int *a2, int len);
+
+NFA *kill_zeroes(NFA *a);
 #endif //NFA_NFA_H
