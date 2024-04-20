@@ -531,6 +531,7 @@ NFA *NFA_project(const NFA *a, int num_cord){
             curr_tr=curr_tr->next;
         }
     }
+
     return res;
 }
 
@@ -1027,6 +1028,11 @@ NFA *NFA_remove_dead_states(const NFA *a){
     free(reachable);
     NFA_free(res);
 
+
+    //если из какого-то стейта нельзя дойти до финального то удалить его?
+    //удалить стейты у которых все переходы в себя и они не финальны?
+
+
     return res2;
 }
 
@@ -1226,7 +1232,7 @@ NFA *kill_zeroes(NFA *a) {
                     }
                 }
             }
-
+            free(reachable);
         }
 
 
