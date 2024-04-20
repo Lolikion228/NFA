@@ -137,7 +137,7 @@ void app(){
                 automata_names = (char**)realloc(automata_names, (automata_cnt + 1) * (sizeof(char*)) );
                 automata = (NFA**)realloc(automata, (automata_cnt + 1) * (sizeof(NFA*)) );
                 automata_names[automata_cnt] = get_name_for_def(command);;
-                automata[automata_cnt] = Parser(formula);
+                automata[automata_cnt] = Parser(formula,automata_names,automata,automata_cnt);
                 ++automata_cnt;
 
                 free(formula);

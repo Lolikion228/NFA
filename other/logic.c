@@ -124,7 +124,21 @@ void parser_helper(Operator op, Stack2 *a_stack){
 }
 
 
-NFA *Parser(char *formula){
+char *get_name_parser(char *cmd){
+
+    char *end = cmd;
+    while( (*end) != '('){
+        ++end;
+    }
+
+    char *name = malloc(sizeof(char)*(end-cmd));
+    memcpy(name,cmd+1,end-cmd-1);
+    name[end-cmd-1]='\0';
+
+    return name;
+}
+
+NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_cnt ){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
     Operator op, curr;
@@ -158,27 +172,47 @@ NFA *Parser(char *formula){
                 break;
 
             case '$':
-                switch(*(i+4)){
-                    case '2':
-                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/2|x.txt"));
-                        break;
-                    case '3':
-                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
-                        break;
-                    case'4':
-                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
-                        break;
-                    case '8':
-                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
-                        break;
-                    case 'z':
-                        Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
-                        break;
-                    default:
-                        printf("invalid automaton name: %s\n",i);
-                        exit(1);
+                char *name = get_name_parser(i);
+                int valid_id = 0;
+                if(strstr(i+1,"div2")==i+1){
+                    valid_id=1;
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/2|x.txt"));
                 }
-                break;
+                if(strstr(i+1,"div3")==i+1){
+                    valid_id=1;
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
+                }
+                if(strstr(i+1,"div4")==i+1){
+                    valid_id=1;
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
+                }
+                if(strstr(i+1,"div8")==i+1){
+                    valid_id=1;
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
+                }
+                if(strstr(i+1,"is_zero")==i+1){
+                    valid_id=1;
+                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
+                }
+
+                if(!valid_id){
+                    if(automata_cnt!=0){
+                        for(int j=0; j<automata_cnt; ++j){
+                            if(!strcmp(name,automata_names[j])){
+                                NFA *tmp = NFA_copy(automata[j]);
+                                Stack2_push(a_stack, tmp);
+                                valid_id=1;
+                            }
+                        }
+                    }
+                }
+                if(!valid_id){
+                    printf("invalid automaton name\n");
+                    printf("%s\n",i);
+                    exit(1);
+                }
+                free(name);
+
 
             default:
                 break;

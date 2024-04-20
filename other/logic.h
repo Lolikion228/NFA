@@ -15,7 +15,7 @@ typedef struct Operator{
 
 Operator op_init(int id);
 
-NFA *Parser(char *formula);
+NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_cnt);
 
 void RPN_print(char *formula);
 
