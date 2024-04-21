@@ -406,8 +406,20 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
         }
     }
 
-    NFA_add_transition(res,0,1,-1);
-    NFA_add_transition(res,0,a1->states_cnt+1,-1);
+    //add transitions to all starting states
+
+    for(int i=0; i<a1->states_cnt; ++i){
+        if(a1->states[i]->is_starting){
+            NFA_add_transition(res,0,1+i,-1);
+        }
+    }
+    for(int i=0; i<a2->states_cnt; ++i){
+        if(a2->states[i]->is_starting){
+            NFA_add_transition(res,0,1+i+a1->states_cnt,-1);
+        }
+    }
+
+//    NFA_add_transition(res,0,a1->states_cnt+1,-1);
     return res;
 }
 
@@ -1258,4 +1270,18 @@ NFA *kill_zeroes(NFA *a) {
 
 
     return res;
+}
+
+
+NFA *NFA_div_n(int n){
+    NFA *a1 = NFA_mult_scalar(n); // a*x=y
+    NFA *a2 = NFA_project(a1,0);
+    NFA *a3 = kill_zeroes(a2);
+    NFA *a4 = NFA_to_DFA(a3);
+    NFA *a5 = DFA_minimization(a4);
+    NFA_free(a1);
+    NFA_free(a2);
+    NFA_free(a3);
+    NFA_free(a4);
+    return a5;
 }

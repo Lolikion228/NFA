@@ -138,6 +138,9 @@ char *get_name_parser(char *cmd){
     return name;
 }
 
+
+
+
 NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_cnt ){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
@@ -174,26 +177,19 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
             case '$':
                 char *name = get_name_parser(i);
                 int valid_id = 0;
-                if(strstr(i+1,"div2")==i+1){
+                if(strstr(i+1,"div")==i+1){
                     valid_id=1;
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/2|x.txt"));
-                }
-                if(strstr(i+1,"div3")==i+1){
-                    valid_id=1;
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/3|x.txt"));
-                }
-                if(strstr(i+1,"div4")==i+1){
-                    valid_id=1;
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/4|x.txt"));
-                }
-                if(strstr(i+1,"div8")==i+1){
-                    valid_id=1;
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/8|x.txt"));
+                    int num = (int) strtol(name+3,NULL,10);
+                    Stack2_push(a_stack, NFA_div_n(num));
+//                    printf("num=%d\n",num);
                 }
                 if(strstr(i+1,"is_zero")==i+1){
                     valid_id=1;
                     Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
                 }
+
+
+
 
                 if(!valid_id){
                     if(automata_cnt!=0){
