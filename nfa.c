@@ -602,27 +602,39 @@ NFA *NFA_mult_scalar(int coeff){
     NFA_free(res0);
     NFA *sum =  NFA_from_file("../automatons/lsd/sum.txt");
 
-    NFA *tmp,*tmp2,*tmp3;
+    NFA *tmp0, *tmp1,*tmp2,*tmp3,*tmp4;
+    NFA *curr1,*curr2,*curr3;
+    NFA *res1, *res2;
 
     for(int cnt = 0; coeff; coeff >>= 1){
         if(coeff & 1){
-            NFA *curr = NFA_xy_pow2(cnt); // 2^cnt * x = y
-            curr = NFA_extend(curr,2);
-            curr = NFA_extend(curr,3);
-            tmp = NFA_extend(res,1);
-            tmp = NFA_extend(tmp,3);
+            curr1 = NFA_xy_pow2(cnt); // 2^cnt * x = y
+            curr2 = NFA_extend(curr1,2);
+            curr3 = NFA_extend(curr2,3);
+
+            tmp0 = NFA_extend(res,1);
+            tmp1 = NFA_extend(tmp0,3);
             tmp2= NFA_extend(sum,0);
-            tmp3 = NFA_intersection(curr,tmp);
+            tmp3 = NFA_intersection(curr3,tmp1);
+
+            NFA_free(res);
             res = NFA_intersection(tmp3,tmp2);
-            res = NFA_project(res,1);
-            res = NFA_project(res,1);
-            NFA *tmp4 = NFA_to_DFA(res);
+            res1 = NFA_project(res,1);
+            res2 = NFA_project(res1,1);
+            NFA_free(res);
+            tmp4 = NFA_to_DFA(res2);
             res = DFA_minimization(tmp4);
-            NFA_free(tmp4);
-            NFA_free(curr);
-            NFA_free(tmp);
+
+            NFA_free(res1);
+            NFA_free(res2);
+            NFA_free(curr1);
+            NFA_free(curr2);
+            NFA_free(curr3);
+            NFA_free(tmp0);
+            NFA_free(tmp1);
             NFA_free(tmp2);
             NFA_free(tmp3);
+            NFA_free(tmp4);
         }
         cnt++;
     }
@@ -990,7 +1002,6 @@ NFA *NFA_remove_dead_states(const NFA *a){
         if(!new){break;}
     }
 
-
     int old_new_states_map[res->states_cnt];
     NFA *res2 = NFA_init(res->dim);
 
@@ -1041,8 +1052,8 @@ NFA *NFA_remove_dead_states(const NFA *a){
     NFA_free(res);
 
 
-    //если из какого-то стейта нельзя дойти до финального то удалить его?
-    //удалить стейты у которых все переходы в себя и они не финальны?
+    //если из какого-то стейта нельзя дойти до финального и он сам не финальный то удалить его?
+
 
 
     return res2;
