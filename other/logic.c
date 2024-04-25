@@ -145,7 +145,7 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
     Operator op, curr;
-
+    int max_var_cnt=-1;
     for(char *i = formula; *i != '\0'; ++i){
         int op_id = -1;
         switch(*i){
@@ -173,42 +173,199 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
             case '!':
                 op_id = 4;
                 break;
+            case 'E':
+                int pr_x=0;
+                int pr_y=0;
+                int pr_z=0;
+                char *first_bracket=i;
+                while(*first_bracket!='['){
+                    if(*first_bracket=='x'){pr_x=1;}
+                    if(*first_bracket=='y'){pr_y=1;}
+                    if(*first_bracket=='z'){pr_z=1;}
+                    ++first_bracket;
+                }
+                int cnt = 0;
+                while(*(first_bracket+cnt)!=']'){
+                    cnt++;
+                }
+
+                char *new_formula = calloc(cnt,sizeof(char));
+                memcpy(new_formula,first_bracket+1,cnt-1);
+                new_formula[cnt-1]='\0';
+
+                NFA *tmp = Parser(new_formula,automata_names,automata,automata_cnt);
+                free(new_formula);
+                if(pr_x){
+                    NFA *tmp1 = NFA_project(tmp,0);
+                    NFA_free(tmp);
+                    tmp = tmp1;
+                }
+
+                if(pr_y){
+                    if(pr_x){
+                        NFA *tmp2 = NFA_project(tmp,0);
+                        NFA_free(tmp);
+                        tmp = tmp2;
+                    }
+                    else{
+                        NFA *tmp2 = NFA_project(tmp,1);
+                        NFA_free(tmp);
+                        tmp = tmp2;
+                    }
+                }
+
+                if(pr_z){
+
+                    if(pr_y){
+                        if(pr_x){
+                            NFA *tmp2 = NFA_project(tmp,0);
+                            NFA_free(tmp);
+                            tmp = tmp2;
+                        }
+                        else{
+                            NFA *tmp2 = NFA_project(tmp,1);
+                            NFA_free(tmp);
+                            tmp = tmp2;
+                        }
+                    }
+                    else{
+                        if(pr_x){
+                            NFA *tmp2 = NFA_project(tmp,1);
+                            NFA_free(tmp);
+                            tmp = tmp2;
+                        }
+                        else{
+                            NFA *tmp2 = NFA_project(tmp,2);
+                            NFA_free(tmp);
+                            tmp = tmp2;
+                        }
+                    }
+                }
+
+                Stack2_push(a_stack,tmp);
+
+                i = first_bracket + cnt;
+
+                break;
 
             case '$':
+                int var_cnt=0;
+                char *l_par=i;
+                while(*l_par!='('){
+                    ++l_par;
+                }
+                for (char *j = l_par; *j != ')'; ++j) {
+                    if (*j == 'x') { ++var_cnt; }
+                    if (*j == 'y') { ++var_cnt; }
+                    if (*j == 'z') { ++var_cnt; }
+                }
+
+                if(var_cnt>max_var_cnt){
+                    max_var_cnt=var_cnt;
+                }
+
+                NFA *a_to_push;
+
                 char *name = get_name_parser(i);
                 int valid_id = 0;
                 if(strstr(i+1,"div")==i+1){
                     valid_id=1;
                     int num = (int) strtol(name+3,NULL,10);
-                    Stack2_push(a_stack, NFA_div_n(num));
-//                    printf("num=%d\n",num);
+                    a_to_push = NFA_div_n(num);
                 }
                 if(strstr(i+1,"is_zero")==i+1){
                     valid_id=1;
-                    Stack2_push(a_stack, NFA_from_file("../automatons/lsd/zeros.txt"));
+                    a_to_push = NFA_from_file("../automatons/lsd/zeros.txt");
                 }
-
-
-
+                if(strstr(i+1,"is_equal")==i+1){
+                    valid_id=1;
+                    a_to_push = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+                }
+                if(strstr(i+1,"sum")==i+1){
+                    valid_id=1;
+                    a_to_push = NFA_from_file("../automatons/lsd/sum.txt");
+                }
 
                 if(!valid_id){
                     if(automata_cnt!=0){
                         for(int j=0; j<automata_cnt; ++j){
                             if(!strcmp(name,automata_names[j])){
                                 NFA *tmp = NFA_copy(automata[j]);
-                                Stack2_push(a_stack, tmp);
+                                a_to_push = tmp;
                                 valid_id=1;
                             }
                         }
                     }
                 }
+
                 if(!valid_id){
                     printf("invalid automaton name\n");
                     printf("%s\n",i);
                     exit(1);
                 }
-                free(name);
 
+                if(var_cnt==1){
+                    int ch_var_ix=-1;
+
+
+                    for(char *j=l_par; *j==')'; ++j){
+                        if(*j=='x'){ch_var_ix=0;}
+                        if(*j=='y'){ch_var_ix=1;}
+                        if(*j=='z'){ch_var_ix=2;}
+                    }
+
+
+
+
+                    Stack2_push(a_stack,a_to_push);
+                }
+                if(var_cnt==2){
+
+                    int x_first=0;
+                    for (char *j = i; *j != ')'; ++j) {
+                        if (*j == 'x') { x_first=1; break; }
+                        if (*j == 'y') { break; }
+                    }
+
+                    if(x_first){
+                        Stack2_push(a_stack,a_to_push);
+                    }
+                    else{
+                        NFA *tmp = NFA_swap_digits(a_to_push,0,1);
+                        Stack2_push(a_stack,tmp);
+                        NFA_free(a_to_push);
+                    }
+
+                }
+
+                if(var_cnt==3){
+                    int x_pos=-1;
+                    int y_pos=-1;
+                    int z_pos=-1;
+                    int cnt_=0;
+                    for (char *j = i; *j != ')'; ++j) {
+                        if (*j == 'x') { x_pos=cnt_++; }
+                        if (*j == 'y') { y_pos=cnt_++; }
+                        if (*j == 'z') { z_pos=cnt_++; }
+                    }
+
+                    NFA *tmp1 = NFA_swap_digits(a_to_push,0,x_pos);
+                    NFA_free(a_to_push);
+                    if(x_pos==1){
+                        NFA *tmp2 = NFA_swap_digits(tmp1,0,y_pos);
+                        NFA_free(tmp1);
+                        Stack2_push(a_stack,tmp2);
+                    }
+                    else{
+                        NFA *tmp2 = NFA_swap_digits(tmp1,1,y_pos);
+                        Stack2_push(a_stack,tmp2);
+                        NFA_free(tmp1);
+                    }
+
+                }
+
+                free(name);
+                break;
 
             default:
                 break;

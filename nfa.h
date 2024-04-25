@@ -103,7 +103,7 @@ int add_subset(int *subset, int ***subsets, int *subsets_cnt, int subset_len);
 
 int arrays_are_equal(int *a1, int *a2, int len);
 
-NFA *kill_zeroes(NFA *a);
+NFA *kill_zeroes(NFA *a, const NFA *orig);
 
 NFA *NFA_div_n(int n);
 #endif //NFA_NFA_H

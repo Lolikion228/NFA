@@ -544,7 +544,10 @@ NFA *NFA_project(const NFA *a, int num_cord){
         }
     }
 
-    return res;
+    NFA *tmp = kill_zeroes(res,a);
+    NFA_free(res);
+
+    return tmp;
 }
 
 
@@ -1051,11 +1054,6 @@ NFA *NFA_remove_dead_states(const NFA *a){
     free(reachable);
     NFA_free(res);
 
-
-    //если из какого-то стейта нельзя дойти до финального и он сам не финальный то удалить его?
-
-
-
     return res2;
 }
 
@@ -1204,7 +1202,7 @@ NFA *NFA_to_DFA(NFA *a){
 
 
 
-NFA *kill_zeroes(NFA *a) {
+NFA *kill_zeroes(NFA *a, const NFA *orig) {
     NFA *res = NFA_copy(a);
     int any_final_on_zeros_at_all = 1;
 
@@ -1278,6 +1276,43 @@ NFA *kill_zeroes(NFA *a) {
     }
 
 
+    for(int i=0; i<res->states_cnt; ++i){
+//        printf("state_ix = %d\n",i);
+        if(res->states[i]->is_final){
+
+            int exists=0;
+            NFA_transition *curr1 = res->states[i]->transitions;
+
+            while(curr1){
+                if(curr1->state_to_ix==i && curr1->transition_trigger==0){
+                    exists=1;
+                    break;
+                }
+                curr1=curr1->next;
+            }
+
+//            printf("exists self_tr_by_zero = %d\n",exists);
+
+
+            if(!exists){ continue;}
+
+            int tr_to_self_by_zero_in_a = 0;
+            NFA_transition *curr = orig->states[i]->transitions;
+
+            while(curr){
+                if(curr->state_to_ix==i && curr->transition_trigger==0){
+                    tr_to_self_by_zero_in_a=1;
+                }
+                curr=curr->next;
+            }
+//            printf("exists self_tr_by_zero in a = %d\n",tr_to_self_by_zero_in_a);
+            if(!tr_to_self_by_zero_in_a){
+                res->states[i]->is_final=0;
+            }
+
+        }
+//        printf("-----\n");
+    }
 
 
     return res;
@@ -1287,12 +1322,10 @@ NFA *kill_zeroes(NFA *a) {
 NFA *NFA_div_n(int n){
     NFA *a1 = NFA_mult_scalar(n); // a*x=y
     NFA *a2 = NFA_project(a1,0);
-    NFA *a3 = kill_zeroes(a2);
-    NFA *a4 = NFA_to_DFA(a3);
-    NFA *a5 = DFA_minimization(a4);
+    NFA *a3 = NFA_to_DFA(a2);
+    NFA *a4 = DFA_minimization(a3);
     NFA_free(a1);
     NFA_free(a2);
     NFA_free(a3);
-    NFA_free(a4);
-    return a5;
+    return a4;
 }
