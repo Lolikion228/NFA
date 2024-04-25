@@ -83,8 +83,6 @@ NFA *NFA_const(int n);
 
 NFA *NFA_swap_digits(const NFA *a, int n1, int n2);
 
-NFA *NFA_rightquo(const NFA *a1,const NFA *a2);
-
 NFA *NFA_leftquo(const NFA *a1,const NFA *a2);
 
 NFA *NFA_mult_scalar(int coeff);
@@ -99,11 +97,8 @@ NFA *NFA_to_DFA(NFA *a);
 
 void NFA_complete(NFA *a);
 
-int add_subset(int *subset, int ***subsets, int *subsets_cnt, int subset_len);
-
-int arrays_are_equal(int *a1, int *a2, int len);
-
 NFA *kill_zeroes(NFA *a, const NFA *orig);
 
 NFA *NFA_div_n(int n);
+
 #endif //NFA_NFA_H

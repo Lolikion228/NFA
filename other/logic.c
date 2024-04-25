@@ -139,13 +139,112 @@ char *get_name_parser(char *cmd){
 }
 
 
+void var_permutations(int var_cnt, Stack2 *a_stack, NFA *a_to_push,char *i){
+    if(var_cnt==1){
+        Stack2_push(a_stack,a_to_push);
+    }
+    if(var_cnt==2){
+
+        int x_first=0;
+        for (char *j = i; *j != ')'; ++j) {
+            if (*j == 'x') { x_first=1; break; }
+            if (*j == 'y') { break; }
+        }
+
+        if(x_first){
+            Stack2_push(a_stack,a_to_push);
+        }
+        else{
+            NFA *tmp = NFA_swap_digits(a_to_push,0,1);
+            Stack2_push(a_stack,tmp);
+            NFA_free(a_to_push);
+        }
+
+    }
+
+    if(var_cnt==3){
+        int x_pos=-1;
+        int y_pos=-1;
+        int z_pos=-1;
+        int cnt_=0;
+        for (char *j = i; *j != ')'; ++j) {
+            if (*j == 'x') { x_pos=cnt_++; }
+            if (*j == 'y') { y_pos=cnt_++; }
+            if (*j == 'z') { z_pos=cnt_++; }
+        }
+
+        NFA *tmp1 = NFA_swap_digits(a_to_push,0,x_pos);
+        NFA_free(a_to_push);
+        if(x_pos==1){
+            NFA *tmp2 = NFA_swap_digits(tmp1,0,y_pos);
+            NFA_free(tmp1);
+            Stack2_push(a_stack,tmp2);
+        }
+        else{
+            NFA *tmp2 = NFA_swap_digits(tmp1,1,y_pos);
+            Stack2_push(a_stack,tmp2);
+            NFA_free(tmp1);
+        }
+
+    }
+}
+
+
+void pr_h(int pr_x, int pr_y, int pr_z, NFA **tmp){
+    if(pr_x){
+        NFA *tmp1 = NFA_project(*tmp,0);
+        NFA_free(*tmp);
+        *tmp = tmp1;
+    }
+
+    if(pr_y){
+        if(pr_x){
+            NFA *tmp2 = NFA_project(*tmp,0);
+            NFA_free(*tmp);
+            *tmp = tmp2;
+        }
+        else{
+            NFA *tmp2 = NFA_project(*tmp,1);
+            NFA_free(*tmp);
+            *tmp = tmp2;
+        }
+    }
+
+    if(pr_z){
+
+        if(pr_y){
+            if(pr_x){
+                NFA *tmp2 = NFA_project(*tmp,0);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+            else{
+                NFA *tmp2 = NFA_project(*tmp,1);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+        }
+        else{
+            if(pr_x){
+                NFA *tmp2 = NFA_project(*tmp,1);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+            else{
+                NFA *tmp2 = NFA_project(*tmp,2);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+        }
+    }
+}
 
 
 NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_cnt ){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
     Operator op, curr;
-    int max_var_cnt=-1;
+
     for(char *i = formula; *i != '\0'; ++i){
         int op_id = -1;
         switch(*i){
@@ -173,6 +272,7 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
             case '!':
                 op_id = 4;
                 break;
+
             case 'E':
                 int pr_x=0;
                 int pr_y=0;
@@ -194,53 +294,10 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                 new_formula[cnt-1]='\0';
 
                 NFA *tmp = Parser(new_formula,automata_names,automata,automata_cnt);
+
                 free(new_formula);
-                if(pr_x){
-                    NFA *tmp1 = NFA_project(tmp,0);
-                    NFA_free(tmp);
-                    tmp = tmp1;
-                }
 
-                if(pr_y){
-                    if(pr_x){
-                        NFA *tmp2 = NFA_project(tmp,0);
-                        NFA_free(tmp);
-                        tmp = tmp2;
-                    }
-                    else{
-                        NFA *tmp2 = NFA_project(tmp,1);
-                        NFA_free(tmp);
-                        tmp = tmp2;
-                    }
-                }
-
-                if(pr_z){
-
-                    if(pr_y){
-                        if(pr_x){
-                            NFA *tmp2 = NFA_project(tmp,0);
-                            NFA_free(tmp);
-                            tmp = tmp2;
-                        }
-                        else{
-                            NFA *tmp2 = NFA_project(tmp,1);
-                            NFA_free(tmp);
-                            tmp = tmp2;
-                        }
-                    }
-                    else{
-                        if(pr_x){
-                            NFA *tmp2 = NFA_project(tmp,1);
-                            NFA_free(tmp);
-                            tmp = tmp2;
-                        }
-                        else{
-                            NFA *tmp2 = NFA_project(tmp,2);
-                            NFA_free(tmp);
-                            tmp = tmp2;
-                        }
-                    }
-                }
+                pr_h(pr_x,pr_y,pr_z,&tmp);
 
                 Stack2_push(a_stack,tmp);
 
@@ -251,17 +308,15 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
             case '$':
                 int var_cnt=0;
                 char *l_par=i;
+
                 while(*l_par!='('){
                     ++l_par;
                 }
+
                 for (char *j = l_par; *j != ')'; ++j) {
                     if (*j == 'x') { ++var_cnt; }
                     if (*j == 'y') { ++var_cnt; }
                     if (*j == 'z') { ++var_cnt; }
-                }
-
-                if(var_cnt>max_var_cnt){
-                    max_var_cnt=var_cnt;
                 }
 
                 NFA *a_to_push;
@@ -304,65 +359,8 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                     exit(1);
                 }
 
-                if(var_cnt==1){
-                    int ch_var_ix=-1;
 
-
-                    for(char *j=l_par; *j==')'; ++j){
-                        if(*j=='x'){ch_var_ix=0;}
-                        if(*j=='y'){ch_var_ix=1;}
-                        if(*j=='z'){ch_var_ix=2;}
-                    }
-
-
-
-
-                    Stack2_push(a_stack,a_to_push);
-                }
-                if(var_cnt==2){
-
-                    int x_first=0;
-                    for (char *j = i; *j != ')'; ++j) {
-                        if (*j == 'x') { x_first=1; break; }
-                        if (*j == 'y') { break; }
-                    }
-
-                    if(x_first){
-                        Stack2_push(a_stack,a_to_push);
-                    }
-                    else{
-                        NFA *tmp = NFA_swap_digits(a_to_push,0,1);
-                        Stack2_push(a_stack,tmp);
-                        NFA_free(a_to_push);
-                    }
-
-                }
-
-                if(var_cnt==3){
-                    int x_pos=-1;
-                    int y_pos=-1;
-                    int z_pos=-1;
-                    int cnt_=0;
-                    for (char *j = i; *j != ')'; ++j) {
-                        if (*j == 'x') { x_pos=cnt_++; }
-                        if (*j == 'y') { y_pos=cnt_++; }
-                        if (*j == 'z') { z_pos=cnt_++; }
-                    }
-
-                    NFA *tmp1 = NFA_swap_digits(a_to_push,0,x_pos);
-                    NFA_free(a_to_push);
-                    if(x_pos==1){
-                        NFA *tmp2 = NFA_swap_digits(tmp1,0,y_pos);
-                        NFA_free(tmp1);
-                        Stack2_push(a_stack,tmp2);
-                    }
-                    else{
-                        NFA *tmp2 = NFA_swap_digits(tmp1,1,y_pos);
-                        Stack2_push(a_stack,tmp2);
-                        NFA_free(tmp1);
-                    }
-
-                }
+                var_permutations(var_cnt,a_stack,a_to_push,i);
 
                 free(name);
                 break;
@@ -390,6 +388,8 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
     NFA *res = Stack2_pop(a_stack);
     Stack_free(op_stack);
     Stack2_free(a_stack);
+
+
     return res;
 }
 
@@ -467,27 +467,3 @@ void RPN_print(char *formula){
 }
 
 
-/*
- * while there are tokens to be read:
-    read a token
-    if the token is:
-    - a function:
-        push it onto the operator stack
-    - an operator o1:
-        while (
-            there is an operator o2 at the top of the operator stack which is not a left parenthesis,
-            and o2 has greater precedence than o1
-        ):
-            pop o2 from the operator stack into the output queue
-        push o1 onto the operator stack
-    - a left parenthesis (i.e. "("):
-        push it onto the operator stack
-    - a right parenthesis (i.e. ")"):
-        while the operator at the top of the operator stack is not a left parenthesis:
-            pop the operator from the operator stack into the output queue
-        pop the left parenthesis from the operator stack and discard it
-        if there is a function token at the top of the operator stack, then:
-            pop the function from the operator stack into the output queue
-while there are tokens on the operator stack:
-    pop the operator from the operator stack onto the output queue
- * */

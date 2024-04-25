@@ -428,7 +428,7 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
 
 NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 //  ix_uni(ix_a1,ix_a2) = a2->states_cnt * ix_a1 + ix_a2
-    if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
+    if(a1->dim != a2->dim){printf("a1 dim != a2 dim\n");printf("got %d and %d\n",a1->dim,a2->dim);exit(1);}
     NFA *res = NFA_init(a1->dim);
 
     for(int i=0; i<a1->states_cnt; ++i){
@@ -799,65 +799,6 @@ NFA *NFA_leftquo(const NFA *a1,const NFA *a2){
         res->states[i]->is_starting = a1->states[i]->is_starting;
     }
     free(new_final);
-    return res;
-}
-
-// fix
-NFA *NFA_rightquo(const NFA *a1,const NFA *a2){
-    if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
-    NFA *res = NFA_copy(a1);
-    for(int i=0; i<res->states_cnt; ++i){
-        res->states[i]->is_final = 0;
-    }
-
-    int *new_starting= zeros(res->states_cnt);
-
-    for(int i=0; i<res->states_cnt; ++i){
-        res->states[i]->is_final = 1;
-        NFA *tmp = NFA_intersection(res,a2);
-        res->states[i]->is_final = 0;
-
-        int *curr_states = zeros(tmp->states_cnt);
-        for(int j=0; j<tmp->states_cnt; ++j){ curr_states[j] = tmp->states[j]->is_starting;}
-
-        while(1){
-            int *curr_states_new = zeros(tmp->states_cnt);
-
-            for(int j=0; j<tmp->states_cnt; ++j){
-                if(curr_states[j]){
-                    NFA_transition *curr_tr = tmp->states[j]->transitions;
-                    while(curr_tr){
-                        curr_states_new[curr_tr->state_to_ix]=1;
-                        curr_tr=curr_tr->next;
-                    }
-                }
-            }
-
-            int all_zeros = 1, exists_path = 0;
-            for(int j=0; j<tmp->states_cnt; ++j){
-                if( (curr_states_new[j]) && (!curr_states[j]) ){ all_zeros = 0; }
-                if( ( curr_states_new[j] || curr_states[j] ) && (tmp->states[j]->is_final)){ exists_path = 1; new_starting[i]=1; }
-            }
-
-            if(all_zeros || exists_path){ free(curr_states_new);break; }
-
-            for(int m=0; m<tmp->states_cnt; m++){
-                curr_states[m]=curr_states_new[m];
-            }
-
-            free(curr_states_new);
-        }
-        free(curr_states);
-        NFA_free(tmp);
-    }
-
-    for(int i=0; i<a1->states_cnt; ++i){
-        res->states[i]->is_final = a1->states[i]->is_final;
-        res->states[i]->is_starting = new_starting[i];
-    }
-
-    free(new_starting);
-
     return res;
 }
 

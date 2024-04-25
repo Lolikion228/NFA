@@ -75,7 +75,7 @@ char *get_name_for_eval(const char *command){
     return name;
 }
 
-int get_number_for_eval(const char *command){
+int *get_numbers_for_eval(const char *command, int dim){
 
     int first_ix = -1, second_ix = -1;
 
@@ -91,10 +91,20 @@ int get_number_for_eval(const char *command){
     char *num_str = malloc(sizeof(char) * (second_ix - first_ix ) );
     memcpy(num_str, command + first_ix + 1 , sizeof(char) * (second_ix - first_ix) );
     num_str[second_ix - first_ix - 1] = '\0';
-    int number = (int)strtol(num_str, NULL, 10);
+
+    int *numbers = malloc(3*sizeof(int));
+    if(dim==1){
+        sscanf (num_str,"%d", &numbers[0]);
+    }
+    if(dim==2){
+        sscanf (num_str,"%d%*c%d", &numbers[0],&numbers[1]);
+    }
+    if(dim==3){
+        sscanf (num_str,"%d%*c%d%*c%d", &numbers[0],&numbers[1],&numbers[2]);
+    }
     free(num_str);
 
-    return number;
+    return numbers;
 }
 
 
@@ -145,13 +155,16 @@ void app(){
 
             case eval:
                 char *name_ = get_name_for_eval(command);
-                int number = get_number_for_eval(command);
+                int aut_ix;
                 for(int i=0; i<automata_cnt; ++i){
                     if(!strcmp(automata_names[i],name_)){
-                        printf("result = %d\n", NFA_check(automata[i],&number));
+                        aut_ix=i;
                         break;
                     }
                 }
+                int *numbers = get_numbers_for_eval(command,automata[aut_ix]->dim);
+                printf("result = %d\n", NFA_check(automata[aut_ix],numbers));
+                free(numbers);
                 free(name_);
                 break;
         }
@@ -162,6 +175,7 @@ void app(){
                 free(automata_names[i]);
                 NFA_free(automata[i]);
             }
+
             free(automata_names);
             free(automata);
             break;
