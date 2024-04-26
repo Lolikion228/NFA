@@ -113,15 +113,25 @@ int *get_numbers_for_eval(const char *command, int dim){
  * eval name(number)
  * */
 void app(){
-    typedef enum cli_state {def, invalid_command, exit_, eval} cli_state;
-    int automata_cnt=0, exiting = 0;
+    typedef enum cli_state {def, invalid_command, exit_, eval, list} cli_state;
+    int automata_cnt=3, exiting = 0;
     char *command = malloc(330 * sizeof(char));
-    char **automata_names = NULL;
-    NFA **automata = NULL;
+
+    char **automata_names = malloc(3 * sizeof(char*) ); // load all from /automatons/lsd
+    NFA **automata = malloc(3 * sizeof(NFA*) );
+
+
+    automata_names[0]="sum";
+    automata_names[1]="is_equal";
+    automata_names[2]="is_zero";
+
+    automata[0] = NFA_from_file("../automatons/lsd/sum.txt");
+    automata[1] = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+    automata[2] = NFA_from_file("../automatons/lsd/zeros.txt");
+
 
     while(1){
         cli_state curr_state = invalid_command;
-
 
         printf(">>> ");
         command = fgets(command,322,stdin);
@@ -129,12 +139,22 @@ void app(){
         if(!strcmp(command,"exit\n")){ curr_state = exit_; }
         if(strstr(command,"def") == command){ curr_state = def; }
         if(strstr(command,"eval") == command){ curr_state = eval; }
-
+        if(strstr(command,"list") == command){ curr_state = list; }
 
         switch (curr_state) {
+
+
             case exit_:
                 printf("exiting...\n");
                 exiting = 1;
+                break;
+
+            case list:
+                // print predefined automata names
+                printf("predefined automata names:\n");
+                for(int j=0; j<3; ++j){
+                    printf("%d. %s\n",j,automata_names[j]);
+                }
                 break;
 
             case invalid_command:
@@ -146,7 +166,7 @@ void app(){
                 char *formula = get_formula_for_def(command);
                 automata_names = (char**)realloc(automata_names, (automata_cnt + 1) * (sizeof(char*)) );
                 automata = (NFA**)realloc(automata, (automata_cnt + 1) * (sizeof(NFA*)) );
-                automata_names[automata_cnt] = get_name_for_def(command);;
+                automata_names[automata_cnt] = get_name_for_def(command);
                 automata[automata_cnt] = Parser(formula,automata_names,automata,automata_cnt);
                 ++automata_cnt;
 
@@ -155,15 +175,21 @@ void app(){
 
             case eval:
                 char *name_ = get_name_for_eval(command);
-                int aut_ix;
+                int aut_ix=-1;
                 for(int i=0; i<automata_cnt; ++i){
                     if(!strcmp(automata_names[i],name_)){
                         aut_ix=i;
                         break;
                     }
                 }
+
+                if(aut_ix==-1){
+                    printf("invalid automaton name: %s\n",name_);
+                    exit(1);
+                }
                 int *numbers = get_numbers_for_eval(command,automata[aut_ix]->dim);
                 printf("result = %d\n", NFA_check(automata[aut_ix],numbers));
+
                 free(numbers);
                 free(name_);
                 break;
@@ -172,7 +198,9 @@ void app(){
 
         if(exiting){
             for(int i=0; i<automata_cnt; ++i){
-                free(automata_names[i]);
+                if(i>=3){
+                    free(automata_names[i]);
+                }
                 NFA_free(automata[i]);
             }
 

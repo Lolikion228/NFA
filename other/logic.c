@@ -190,7 +190,7 @@ void var_permutations(int var_cnt, Stack2 *a_stack, NFA *a_to_push,char *i){
 }
 
 
-void pr_h(int pr_x, int pr_y, int pr_z, NFA **tmp){
+void projection_helper(int pr_x, int pr_y, int pr_z, NFA **tmp){
     if(pr_x){
         NFA *tmp1 = NFA_project(*tmp,0);
         NFA_free(*tmp);
@@ -274,14 +274,14 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                 break;
 
             case 'E':
-                int pr_x=0;
-                int pr_y=0;
-                int pr_z=0;
+                int project_x = 0;
+                int project_y = 0;
+                int project_z = 0;
                 char *first_bracket=i;
-                while(*first_bracket!='['){
-                    if(*first_bracket=='x'){pr_x=1;}
-                    if(*first_bracket=='y'){pr_y=1;}
-                    if(*first_bracket=='z'){pr_z=1;}
+                while(*first_bracket != '['){
+                    if(*first_bracket == 'x'){ project_x = 1;}
+                    if(*first_bracket == 'y'){ project_y = 1;}
+                    if(*first_bracket == 'z'){ project_z = 1;}
                     ++first_bracket;
                 }
                 int cnt = 0;
@@ -291,13 +291,14 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
 
                 char *new_formula = calloc(cnt,sizeof(char));
                 memcpy(new_formula,first_bracket+1,cnt-1);
-                new_formula[cnt-1]='\0';
+                new_formula[cnt-1] = '\0';
 
-                NFA *tmp = Parser(new_formula,automata_names,automata,automata_cnt);
+                NFA *tmp = Parser(new_formula,automata_names,automata,automata_cnt); // everywhere in the code
+                // (automata_names,automata,automata_cnt) into a single structure
 
                 free(new_formula);
 
-                pr_h(pr_x,pr_y,pr_z,&tmp);
+                projection_helper(project_x, project_y, project_z, &tmp);
 
                 Stack2_push(a_stack,tmp);
 
@@ -305,43 +306,62 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
 
                 break;
 
+            case 'A':
+                // Ax[ formula(x,y) ]  <=>   !Ex[ !formula(x,y) ]
+                int project_x_ = 0;
+                int project_y_ = 0;
+                int project_z_ = 0;
+                char *first_bracket_=i;
+                while(*first_bracket_ != '['){
+                    if(*first_bracket_ == 'x'){ project_x_ = 1;}
+                    if(*first_bracket_ == 'y'){ project_y_ = 1;}
+                    if(*first_bracket_ == 'z'){ project_z_ = 1;}
+                    ++first_bracket_;
+                }
+                int cnt_ = 0;
+                while(*(first_bracket_+cnt_)!=']'){
+                    cnt_++;
+                }
+
+                char *new_formula_ = calloc(cnt_,sizeof(char));
+                memcpy(new_formula_,first_bracket_+1,cnt_-1);
+                new_formula_[cnt_-1] = '\0';
+
+                NFA *tmp1 = Parser(new_formula_,automata_names,automata,automata_cnt); // everywhere in the code
+                // (automata_names,automata,automata_cnt) into a single structure
+
+                free(new_formula_);
+
+                projection_helper(project_x_, project_y_, project_z_, &tmp1);
+
+                Stack2_push(a_stack,tmp1);
+
+                i = first_bracket_ + cnt_;
+
+                break;
+
+
             case '$':
-                int var_cnt=0;
-                char *l_par=i;
 
-                while(*l_par!='('){
-                    ++l_par;
-                }
-
-                for (char *j = l_par; *j != ')'; ++j) {
-                    if (*j == 'x') { ++var_cnt; }
-                    if (*j == 'y') { ++var_cnt; }
-                    if (*j == 'z') { ++var_cnt; }
-                }
-
+                ++i;
                 NFA *a_to_push;
 
-                char *name = get_name_parser(i);
-                int valid_id = 0;
-                if(strstr(i+1,"div")==i+1){
-                    valid_id=1;
+                char *name = get_name_parser(i-1);
+
+                if(strstr(i,"div")==i){
                     int num = (int) strtol(name+3,NULL,10);
                     a_to_push = NFA_div_n(num);
                 }
-                if(strstr(i+1,"is_zero")==i+1){
-                    valid_id=1;
+                else if(strstr(i,"is_zero")==i)
                     a_to_push = NFA_from_file("../automatons/lsd/zeros.txt");
-                }
-                if(strstr(i+1,"is_equal")==i+1){
-                    valid_id=1;
+                else if(strstr(i,"is_equal")==i)
                     a_to_push = NFA_from_file("../automatons/lsd/x_eq_y.txt");
-                }
-                if(strstr(i+1,"sum")==i+1){
-                    valid_id=1;
+                else if(strstr(i,"sum")==i)
                     a_to_push = NFA_from_file("../automatons/lsd/sum.txt");
-                }
+                else {
 
-                if(!valid_id){
+                    int valid_id = 0;
+
                     if(automata_cnt!=0){
                         for(int j=0; j<automata_cnt; ++j){
                             if(!strcmp(name,automata_names[j])){
@@ -350,21 +370,32 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                                 valid_id=1;
                             }
                         }
+
                     }
+
+                    if(!valid_id){
+                        printf("invalid automaton name\n");
+                        printf("%s\n",i);
+                        exit(1);
+                    }
+
                 }
 
-                if(!valid_id){
-                    printf("invalid automaton name\n");
-                    printf("%s\n",i);
-                    exit(1);
+                int var_cnt=0;
+                char *l_par=i;
+                while(*l_par!='('){
+                    ++l_par;
                 }
-
+                for (char *j = l_par; *j != ')'; ++j) {
+                    if (*j == 'x') { ++var_cnt; }
+                    if (*j == 'y') { ++var_cnt; }
+                    if (*j == 'z') { ++var_cnt; }
+                }
 
                 var_permutations(var_cnt,a_stack,a_to_push,i);
 
                 free(name);
                 break;
-
             default:
                 break;
         }
@@ -465,5 +496,3 @@ void RPN_print(char *formula){
     Stack_free(op_stack);
     printf("\n");
 }
-
-

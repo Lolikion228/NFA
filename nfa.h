@@ -101,4 +101,8 @@ NFA *kill_zeroes(NFA *a, const NFA *orig);
 
 NFA *NFA_div_n(int n);
 
+NFA *NFA_lin_term(int factor);
+
+NFA *subs(NFA *a, NFA *lin);
+
 #endif //NFA_NFA_H

@@ -79,7 +79,6 @@ int NFA_is_transitions_equal(NFA_transition *tr1, NFA_transition *tr2){
 }
 
 
-
 void NFA_add_transition(NFA *a, int state_from, int state_to, int trigger){
     if(trigger > (1 << a->dim) ){printf("too big num for trigger %d %d\n",a->dim,trigger);exit(1);}
     NFA_transition *transition = (NFA_transition *)malloc(sizeof(NFA_transition));
@@ -139,7 +138,6 @@ void NFA_remove_transition(NFA *a, int state_from, int state_to, int trigger){
 int NFA_check(const NFA *a, const int *sentences){
     int *sents2 = malloc(a->dim * sizeof(int));
     int max_len = -1, is_transition = 0, processed_words = 0, curr_wrd = 0, bit_cnt = 0;
-
     for(int i=0; i<a->dim; ++i){
         sents2[i] = sentences[i];
         if(bit_len(sentences[i])>max_len){
@@ -207,7 +205,6 @@ int NFA_check(const NFA *a, const int *sentences){
     free(curr_states);
     return 0;
 }
-
 
 
 void NFA_print(const NFA* a){
@@ -424,8 +421,6 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
 }
 
 
-
-
 NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 //  ix_uni(ix_a1,ix_a2) = a2->states_cnt * ix_a1 + ix_a2
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim\n");printf("got %d and %d\n",a1->dim,a2->dim);exit(1);}
@@ -504,6 +499,7 @@ NFA *NFA_swap_digits(const NFA *a, int n1, int n2){
     return res;
 }
 
+
 NFA *NFA_extend(const NFA *a, int num_cord){
     if(num_cord > a->dim){printf("num_cord > dim.\n"); exit(1);}
     NFA *res = NFA_init(a->dim + 1);
@@ -529,7 +525,6 @@ NFA *NFA_extend(const NFA *a, int num_cord){
     }
     return res;
 }
-
 
 
 NFA *NFA_project(const NFA *a, int num_cord){
@@ -660,7 +655,6 @@ NFA *NFA_mult_scalar(int coeff){
 */
 
 
-
 ///
 /// \param pow
 /// \return an automaton for ( 2^pow * x = y)
@@ -709,7 +703,6 @@ NFA *NFA_xy_pow2(int pow){
     free(pow2_NFAs);
     return res_;
 }
-
 
 
 NFA *NFA_const(int n){
@@ -817,6 +810,7 @@ int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger){
     return res;
 }
 
+
 int *NFA_eps_cl(const NFA *a, const int *states_set){
     int *res = calloc(a->states_cnt,sizeof(int));
     for(int i=0; i<a->states_cnt; ++i){
@@ -832,7 +826,7 @@ int *NFA_eps_cl(const NFA *a, const int *states_set){
     return res;
 }
 
-//fix?
+
 NFA *DFA_minimization(const NFA *a){
     if(!NFA_is_dfa(a)){printf("expected DFA, got NFA\n"); exit(1);}
 
@@ -1056,6 +1050,7 @@ void print_subsets(int subsets_cnt, int subset_len, int **subsets){
     }
 }
 
+
 NFA *NFA_to_DFA(NFA *a){
     int **subsets;
     int **transitions = NULL;
@@ -1142,7 +1137,6 @@ NFA *NFA_to_DFA(NFA *a){
 }
 
 
-
 NFA *kill_zeroes(NFA *a, const NFA *orig) {
     NFA *res = NFA_copy(a);
     int any_final_on_zeros_at_all = 1;
@@ -1218,7 +1212,6 @@ NFA *kill_zeroes(NFA *a, const NFA *orig) {
 
 
     for(int i=0; i<res->states_cnt; ++i){
-//        printf("state_ix = %d\n",i);
         if(res->states[i]->is_final){
 
             int exists=0;
@@ -1232,9 +1225,6 @@ NFA *kill_zeroes(NFA *a, const NFA *orig) {
                 curr1=curr1->next;
             }
 
-//            printf("exists self_tr_by_zero = %d\n",exists);
-
-
             if(!exists){ continue;}
 
             int tr_to_self_by_zero_in_a = 0;
@@ -1246,13 +1236,11 @@ NFA *kill_zeroes(NFA *a, const NFA *orig) {
                 }
                 curr=curr->next;
             }
-//            printf("exists self_tr_by_zero in a = %d\n",tr_to_self_by_zero_in_a);
             if(!tr_to_self_by_zero_in_a){
                 res->states[i]->is_final=0;
             }
 
         }
-//        printf("-----\n");
     }
 
 
@@ -1270,3 +1258,32 @@ NFA *NFA_div_n(int n){
     NFA_free(a3);
     return a4;
 }
+
+
+// linear terms (at least over x,y,z), i.e. a*x+b*y+c*z+d // a*x
+// NFA_lin_term(int *a, int n) // an array of size n for the linear term a[0]+a[1]*x[1]+...+a[n-1]*x[n-1]
+// returns an NFA of dim n that recognize ( a[0]+a[1]*x[1]+...+a[n-1]*x[n-1] = y)
+// Next, we define substitution of a linear term (NFA *lin for (a*x+b*y+c*z+d = t)) into an automaton NFA *a
+// function: NFA_subs(NFA *a, NFA *lin) -> exists t (a(t) /\  a[0]+a[1]*x[1]+...+a[n-1]*x[n-1] = t)
+// div3(x+2) -> x s.t. x = 1 (mod 3)
+// Ex($div2(2x+1)) -> False
+
+
+//returns an NFA for  factor * x  = y,  factor >= 0
+NFA *NFA_lin_term(int factor){
+    NFA *mult = NFA_mult_scalar(factor); // factor * x = y
+//    mult->bias = bias;
+    return mult;
+}
+
+NFA *subs(NFA *a, NFA *lin){
+    NFA *tmp1 = NFA_extend(a,0);
+    NFA *tmp2 = NFA_intersection(tmp1,lin); // a( (x1), t )  /\  coef*x = t
+    NFA *tmp3 = NFA_project(tmp2,1);
+    NFA_free(tmp1);
+    NFA_free(tmp2);
+    return tmp3;
+}
+
+
+//A( div2(x) | div2(x+1) ) : True
