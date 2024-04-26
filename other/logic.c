@@ -306,39 +306,9 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
 
                 break;
 
-            case 'A':
-                // Ax[ formula(x,y) ]  <=>   !Ex[ !formula(x,y) ]
-                int project_x_ = 0;
-                int project_y_ = 0;
-                int project_z_ = 0;
-                char *first_bracket_=i;
-                while(*first_bracket_ != '['){
-                    if(*first_bracket_ == 'x'){ project_x_ = 1;}
-                    if(*first_bracket_ == 'y'){ project_y_ = 1;}
-                    if(*first_bracket_ == 'z'){ project_z_ = 1;}
-                    ++first_bracket_;
-                }
-                int cnt_ = 0;
-                while(*(first_bracket_+cnt_)!=']'){
-                    cnt_++;
-                }
-
-                char *new_formula_ = calloc(cnt_,sizeof(char));
-                memcpy(new_formula_,first_bracket_+1,cnt_-1);
-                new_formula_[cnt_-1] = '\0';
-
-                NFA *tmp1 = Parser(new_formula_,automata_names,automata,automata_cnt); // everywhere in the code
-                // (automata_names,automata,automata_cnt) into a single structure
-
-                free(new_formula_);
-
-                projection_helper(project_x_, project_y_, project_z_, &tmp1);
-
-                Stack2_push(a_stack,tmp1);
-
-                i = first_bracket_ + cnt_;
-
-                break;
+//            case 'A':
+//                // Ax[ formula(x) ]  <=>   !Ex[ !formula(x) ]
+//                break;
 
 
             case '$':
@@ -376,7 +346,7 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                     if(!valid_id){
                         printf("invalid automaton name\n");
                         printf("%s\n",i);
-                        exit(1);
+                        break;
                     }
 
                 }
@@ -415,8 +385,10 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
         curr = Stack_pop(op_stack);
         parser_helper(curr,a_stack);
     }
-
-    NFA *res = Stack2_pop(a_stack);
+    NFA *res=NULL;
+    if(a_stack->size!=0){
+        res = Stack2_pop(a_stack);
+    }
     Stack_free(op_stack);
     Stack2_free(a_stack);
 

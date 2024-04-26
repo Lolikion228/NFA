@@ -105,4 +105,6 @@ NFA *NFA_lin_term(int factor);
 
 NFA *subs(NFA *a, NFA *lin);
 
+int NFA_th_check(NFA *a);
+
 #endif //NFA_NFA_H

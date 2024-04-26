@@ -1287,3 +1287,42 @@ NFA *subs(NFA *a, NFA *lin){
 
 
 //A( div2(x) | div2(x+1) ) : True
+
+//mem fix
+int NFA_th_check(NFA *a){
+    int *reachable = calloc(a->states_cnt,sizeof(int));
+    for(int i=0; i<a->states_cnt; ++i) {
+        reachable[i] = a->states[i]->is_starting;
+        if(a->states[i]->is_starting){
+            if(a->states[i]->is_final){
+                free(reachable);
+                return 1;
+            }
+        }
+    }
+
+    int changes = 1;
+    while(changes){
+        changes = 0;
+        for(int j=0; j<a->states_cnt; ++j){
+            if(reachable[j]){
+                NFA_transition *curr_tr = a->states[j]->transitions;
+                while(curr_tr){
+
+                    if(a->states[curr_tr->state_to_ix]->is_final){
+                        free(reachable);
+                        return 1;
+                    }
+                    if(reachable[curr_tr->state_to_ix]==0){changes=1;}
+                    reachable[curr_tr->state_to_ix]=1;
+
+                    curr_tr=curr_tr->next;
+                }
+            }
+        }
+    }
+
+    free(reachable);
+
+    return 0;
+}

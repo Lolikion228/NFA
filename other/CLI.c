@@ -151,8 +151,8 @@ void app(){
 
             case list:
                 // print predefined automata names
-                printf("predefined automata names:\n");
-                for(int j=0; j<3; ++j){
+                printf("available automata names:\n");
+                for(int j=0; j<automata_cnt; ++j){
                     printf("%d. %s\n",j,automata_names[j]);
                 }
                 break;
@@ -164,11 +164,14 @@ void app(){
             case def:
 
                 char *formula = get_formula_for_def(command);
-                automata_names = (char**)realloc(automata_names, (automata_cnt + 1) * (sizeof(char*)) );
+
+                NFA *tmp_1 = Parser(formula,automata_names,automata,automata_cnt);
+                if(tmp_1!=NULL){
                 automata = (NFA**)realloc(automata, (automata_cnt + 1) * (sizeof(NFA*)) );
+                automata[automata_cnt] = tmp_1;
+                automata_names = (char**)realloc(automata_names, (automata_cnt + 1) * (sizeof(char*)) );
                 automata_names[automata_cnt] = get_name_for_def(command);
-                automata[automata_cnt] = Parser(formula,automata_names,automata,automata_cnt);
-                ++automata_cnt;
+                ++automata_cnt;}
 
                 free(formula);
                 break;
@@ -185,12 +188,19 @@ void app(){
 
                 if(aut_ix==-1){
                     printf("invalid automaton name: %s\n",name_);
-                    exit(1);
+                    free(name_);
+                    break;
                 }
-                int *numbers = get_numbers_for_eval(command,automata[aut_ix]->dim);
-                printf("result = %d\n", NFA_check(automata[aut_ix],numbers));
 
-                free(numbers);
+
+                if(automata[aut_ix]->dim==0){
+                    printf("result = %d\n", NFA_th_check(automata[aut_ix]));
+                }
+                else{
+                    int *numbers = get_numbers_for_eval(command,automata[aut_ix]->dim);
+                    printf("result = %d\n", NFA_check(automata[aut_ix],numbers));
+                    free(numbers);
+                }
                 free(name_);
                 break;
         }
