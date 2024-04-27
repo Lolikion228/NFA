@@ -276,22 +276,22 @@ void NFA_to_pic(const NFA *a, int id){
     fclose(f);
     switch(id){
         case 1:
-            system("dot -Tpng ../fsm.gv -o ../temp/automata1.png");
+            system("dot -Tpng ../fsm.gv -o ../temp/automaton1.png");
             break;
         case 2:
-            system("dot -Tpng ../fsm.gv -o ../temp/automata2.png");
+            system("dot -Tpng ../fsm.gv -o ../temp/automaton2.png");
             break;
         case 3:
-            system("dot -Tpng ../fsm.gv -o ../temp/automata3.png");
+            system("dot -Tpng ../fsm.gv -o ../temp/automaton3.png");
             break;
         case 4:
-            system("dot -Tpng ../fsm.gv -o ../temp/automata4.png");
+            system("dot -Tpng ../fsm.gv -o ../temp/automaton4.png");
             break;
         case 5:
-            system("dot -Tpng ../fsm.gv -o ../temp/automata5.png");
+            system("dot -Tpng ../fsm.gv -o ../temp/automaton5.png");
             break;
         default:
-            system("dot -Tpng ../fsm.gv -o ../temp/automata0.png");
+            system("dot -Tpng ../fsm.gv -o ../temp/automaton0.png");
             break;
     }
 

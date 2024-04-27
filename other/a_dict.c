@@ -47,6 +47,15 @@ void dict_free(a_dict *dict){
 }
 
 void dict_add(a_dict *dict, char *key, NFA *a){
+
+    for(int i=0; i<dict->len; ++i){
+        if(!strcmp(dict->keys[i],key)){
+            NFA_free(dict->automata[i]);
+            dict->automata[i]=a;
+            return;
+        }
+    }
+
     dict->automata = (NFA**)realloc(dict->automata, (dict->len + 1) * (sizeof(NFA*)) );
     dict->automata[dict->len] = a;
     dict->keys = (char**)realloc(dict->keys, (dict->len + 1) * (sizeof(char*)) );
