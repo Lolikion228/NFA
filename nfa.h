@@ -103,7 +103,7 @@ NFA *NFA_div_n(int n);
 
 NFA *NFA_lin_term(int factor);
 
-NFA *subs(NFA *a, NFA *lin);
+NFA *NFA_subs(NFA *a, NFA *lin);
 
 int NFA_th_check(NFA *a);
 

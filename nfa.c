@@ -1276,9 +1276,9 @@ NFA *NFA_lin_term(int factor){
     return mult;
 }
 
-NFA *subs(NFA *a, NFA *lin){
+NFA *NFA_subs(NFA *a, NFA *lin){
     NFA *tmp1 = NFA_extend(a,0);
-    NFA *tmp2 = NFA_intersection(tmp1,lin); // a( (x1), t )  /\  coef*x = t
+    NFA *tmp2 = NFA_intersection(tmp1,lin); // a( (x), t )  /\  coef*x = t
     NFA *tmp3 = NFA_project(tmp2,1);
     NFA_free(tmp1);
     NFA_free(tmp2);
