@@ -105,6 +105,8 @@ void parser_helper(Operator op, Stack2 *a_stack){
     if(op.id==2){
         NFA *tmp1 = Stack2_pop(a_stack);
         NFA *tmp2 = Stack2_pop(a_stack);
+
+
         Stack2_push(a_stack, NFA_union(tmp1,tmp2));
         NFA_free(tmp1);
         NFA_free(tmp2);
@@ -240,6 +242,17 @@ void projection_helper(int pr_x, int pr_y, int pr_z, NFA **tmp){
 }
 
 
+NFA *lin_helper(char *cmd){
+    char *l_par = cmd;
+    while(*l_par != '('){
+        ++l_par;
+    }
+    int factor,bias;
+    sscanf(l_par,"%*c%d%*c%*c%d",&factor,&bias);
+    return NFA_lin_term(factor,bias);
+}
+
+
 NFA *Parser(char *formula, a_dict *dict ){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
@@ -284,7 +297,9 @@ NFA *Parser(char *formula, a_dict *dict ){
                     if(*first_bracket == 'z'){ project_z = 1;}
                     ++first_bracket;
                 }
+//                ++first_bracket;
                 int cnt = 0;
+//                int cnt_quantifiers = 0;
                 while(*(first_bracket+cnt)!=']'){
                     cnt++;
                 }
@@ -305,21 +320,61 @@ NFA *Parser(char *formula, a_dict *dict ){
 
                 break;
 
-//            case 'A':
-//                // Ax[ formula(x) ]  <=>   !Ex[ !formula(x) ]
-//                break;
+            case 'A':
+                // Ax[ formula(x) ]  <=>   !Ex[ !formula(x) ]
+                int project_x_ = 0;
+                int project_y_ = 0;
+                int project_z_ = 0;
+                char *first_bracket_=i;
+                while(*first_bracket_ != '['){
+                    if(*first_bracket_ == 'x'){ project_x_ = 1;}
+                    if(*first_bracket_ == 'y'){ project_y_ = 1;}
+                    if(*first_bracket_ == 'z'){ project_z_ = 1;}
+                    ++first_bracket_;
+                }
+                int cnt_ = 0;
+                while(*(first_bracket_+cnt_)!=']'){
+                    cnt_++;
+                }
+
+                char *new_formula_ = calloc(cnt_,sizeof(char));
+                memcpy(new_formula_,first_bracket_+1,cnt_-1);
+                new_formula_[cnt_-1] = '\0';
+
+                NFA *tmp_ = Parser(new_formula_,dict);
+
+                NFA *tmp_1 = NFA_complement(tmp_);
+                NFA_free(tmp_);
+
+                free(new_formula_);
+
+                projection_helper(project_x_, project_y_, project_z_, &tmp_1);
+                NFA *tmp_2 = NFA_complement(tmp_1);
+                NFA_free(tmp_1);
+                Stack2_push(a_stack,tmp_2);
+
+                i = first_bracket_ + cnt_;
+                break;
 
 
             case '$':
 
                 ++i;
                 NFA *a_to_push;
-
+                int from_dict = 0;
                 char *name = get_name_parser(i-1);
 
                 if(strstr(i,"div")==i){
                     int num = (int) strtol(name+3,NULL,10);
                     a_to_push = NFA_div_n(num);
+                }
+                else if(strstr(i,"const")==i){
+                    int num = (int) strtol(name+5,NULL,10);
+                    a_to_push = NFA_const(num);
+                }
+                else if(strstr(i,"mult")==i){
+                    int num = (int) strtol(name+4,NULL,10);
+                    a_to_push = NFA_mult_scalar(num);
                 }
                 else if(strstr(i,"is_zero")==i)
                     a_to_push = NFA_from_file("../automata/lsd/zeros.txt");
@@ -329,7 +384,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                     a_to_push = NFA_from_file("../automata/lsd/sum.txt");
                 else {
 
-                    NFA *tmp = dict_get_a(dict,name);
+                    NFA *tmp = NFA_copy(dict_get_a(dict,name));
 
                     if(!tmp){
                         printf("invalid automaton name\n");
@@ -339,23 +394,52 @@ NFA *Parser(char *formula, a_dict *dict ){
                     }
                     else{
                         a_to_push = tmp;
+                        from_dict = 1;
                     }
 
                 }
 
-                int var_cnt=0;
-                char *l_par=i;
-                while(*l_par!='('){
-                    ++l_par;
+                int lin = 0;
+                char *j = i;
+                while(*j != '('){
+                    ++j;
                 }
-                for (char *j = l_par; *j != ')'; ++j) {
-                    if (*j == 'x') { ++var_cnt; }
-                    if (*j == 'y') { ++var_cnt; }
-                    if (*j == 'z') { ++var_cnt; }
+                while(*j != ')'){
+                    ++j;
+                    if(*j=='0' || *j=='1' || *j=='2' || *j=='3' || *j=='4' || *j=='5' || *j=='6' || *j=='7' || *j=='8' || *j=='9'){
+                        lin=1;
+                    }
                 }
 
-                var_permutations(var_cnt,a_stack,a_to_push,i);
+                if(lin){
+                    NFA *lin_a = lin_helper(i);
+                    NFA *res = NFA_subs(a_to_push,lin_a);
+                    NFA_free(lin_a);
+                    Stack2_push(a_stack,res);
+                    if(!from_dict){
+                        NFA_free(a_to_push);
+                    }
+                }
+                else {
+                    int var_cnt = 0;
+                    char *l_par = i;
+                    while (*l_par != '(') {
+                        ++l_par;
+                    }
+                    for (char *j = l_par; *j != ')'; ++j) {
+                        if (*j == 'x') { ++var_cnt; }
+                        if (*j == 'y') { ++var_cnt; }
+                        if (*j == 'z') { ++var_cnt; }
+                    }
 
+
+                    if(!var_cnt){
+                        Stack2_push(a_stack,a_to_push);
+                    }
+                    else{
+                        var_permutations(var_cnt, a_stack, a_to_push, i);
+                    }
+                }
                 free(name);
                 break;
 
@@ -384,6 +468,8 @@ NFA *Parser(char *formula, a_dict *dict ){
     }
     Stack_free(op_stack);
     Stack2_free(a_stack);
+
+
 
 
     return res;

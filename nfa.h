@@ -29,6 +29,7 @@ typedef struct NFA_transition {
 
 
 typedef struct NFA{
+    int straight;
     NFA_state **states;
     int states_cnt;
     int dim;

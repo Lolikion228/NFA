@@ -296,12 +296,13 @@ void app(){
                 // print predefined automata names
                 printf("available automata names:\n");
                 for(int j=0; j<dict->len; ++j){
-                    printf("%d. %s (dim = %d) (is_dfa=%d) (states_cnt=%d)\n",
+                    printf("%d. %s (dim = %d) (states_cnt=%d) (is_dfa=%d) (straight=%d)\n",
                            j,
                            dict->keys[j],
                            dict->automata[j]->dim,
+                           dict->automata[j]->states_cnt,
                            NFA_is_dfa(dict->automata[j]),
-                           dict->automata[j]->states_cnt);
+                           dict->automata[j]->straight);
                 }
                 break;
 

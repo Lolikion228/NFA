@@ -29,6 +29,7 @@ NFA *NFA_init(int dim){
     a->states_cnt =     0;
     a->dim        =   dim;
     a->states     =  NULL;
+    a->straight   =     1;
     return a;
 }
 
@@ -417,6 +418,7 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
     }
 
 //    NFA_add_transition(res,0,a1->states_cnt+1,-1);
+    res->straight = a1->straight || a2->straight;
     return res;
 }
 
@@ -466,12 +468,20 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
             }
         }
     }
+    res->straight = a1->straight && a2->straight;
     return res;
 }
 
 
 NFA* NFA_complement(const NFA *a){
     NFA *res;
+
+    if(a->dim==0){
+        res = NFA_copy(a);
+        res->straight = !res->straight;
+        return res;
+    }
+
     if(!NFA_is_dfa(a)){
          res = NFA_to_DFA((NFA *)a);
     }
@@ -561,6 +571,7 @@ NFA *NFA_copy(const NFA *a){
             curr_tr = curr_tr->next;
         }
     }
+    res->straight = a->straight;
     return res;
 }
 
@@ -1052,6 +1063,7 @@ void print_subsets(int subsets_cnt, int subset_len, int **subsets){
 
 
 NFA *NFA_to_DFA(NFA *a){
+    if(NFA_is_dfa(a)){return NFA_copy(a);}
     int **subsets;
     int **transitions = NULL;
     int subsets_cnt = 0, subsets_cnt2 = 0, changed = 1,transitions_cnt = 0;
@@ -1277,6 +1289,7 @@ NFA *NFA_lin_term(int factor, int bias){
     NFA *mult = NFA_mult_scalar(factor); // factor * x = y
     NFA *bias_a = NFA_const(bias); // y = bias
     NFA *sum =  NFA_from_file("../automata/lsd/sum.txt"); //x+y=z
+
     sum = NFA_extend(sum,0);
     mult = NFA_extend(mult,2);
     mult = NFA_extend(mult,3);
@@ -1287,8 +1300,11 @@ NFA *NFA_lin_term(int factor, int bias){
     res = NFA_intersection(res,sum);
     res = NFA_project(res,1);
     res = NFA_project(res,1);
-
-    return res;
+    NFA *tmp1 = NFA_to_DFA(res);
+    NFA_free(res);
+    NFA *tmp2 = DFA_minimization(tmp1);
+    NFA_free(tmp1);
+    return tmp2;
 }
 
 NFA *NFA_subs(NFA *a, NFA *lin){
@@ -1297,7 +1313,12 @@ NFA *NFA_subs(NFA *a, NFA *lin){
     NFA *tmp3 = NFA_project(tmp2,1);
     NFA_free(tmp1);
     NFA_free(tmp2);
-    return tmp3;
+
+    tmp1 = NFA_to_DFA(tmp3);
+    NFA_free(tmp3);
+    tmp2 = DFA_minimization(tmp1);
+    NFA_free(tmp1);
+    return tmp2;
 }
 
 
@@ -1311,7 +1332,7 @@ int NFA_th_check(NFA *a){
         if(a->states[i]->is_starting){
             if(a->states[i]->is_final){
                 free(reachable);
-                return 1;
+                return a->straight ? 1 : 0;
             }
         }
     }
@@ -1326,7 +1347,7 @@ int NFA_th_check(NFA *a){
 
                     if(a->states[curr_tr->state_to_ix]->is_final){
                         free(reachable);
-                        return 1;
+                        return a->straight ? 1 : 0;
                     }
                     if(reachable[curr_tr->state_to_ix]==0){changes=1;}
                     reachable[curr_tr->state_to_ix]=1;
@@ -1339,5 +1360,5 @@ int NFA_th_check(NFA *a){
 
     free(reachable);
 
-    return 0;
+    return a->straight ? 0 : 1;
 }
