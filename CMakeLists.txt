@@ -19,6 +19,8 @@ add_executable(NFA
         other/Stack2.c
         other/CLI.h
         other/CLI.c
+        other/a_dict.h
+        other/a_dict.c
 )
 
 target_link_libraries(NFA m)

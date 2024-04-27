@@ -117,7 +117,7 @@ void app(){
     int automata_cnt=3, exiting = 0;
     char *command = malloc(330 * sizeof(char));
 
-    char **automata_names = malloc(3 * sizeof(char*) ); // load all from /automatons/lsd
+    char **automata_names = malloc(3 * sizeof(char*) ); // load all from /automata/lsd
     NFA **automata = malloc(3 * sizeof(NFA*) );
 
 
@@ -125,9 +125,9 @@ void app(){
     automata_names[1]="is_equal";
     automata_names[2]="is_zero";
 
-    automata[0] = NFA_from_file("../automatons/lsd/sum.txt");
-    automata[1] = NFA_from_file("../automatons/lsd/x_eq_y.txt");
-    automata[2] = NFA_from_file("../automatons/lsd/zeros.txt");
+    automata[0] = NFA_from_file("../automata/lsd/sum.txt");
+    automata[1] = NFA_from_file("../automata/lsd/x_eq_y.txt");
+    automata[2] = NFA_from_file("../automata/lsd/zeros.txt");
 
 
     while(1){

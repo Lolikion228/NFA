@@ -589,16 +589,16 @@ int NFA_is_dfa(const NFA *a){
 NFA *NFA_mult_scalar(int coeff){
 
     if(coeff==0){
-        NFA *res = NFA_from_file("../automatons/lsd/zeros.txt");
+        NFA *res = NFA_from_file("../automata/lsd/zeros.txt");
         NFA *res2 = NFA_extend(res,0);
         free(res);
         return res2;
     }
 
-    NFA *res0 = NFA_from_file("../automatons/lsd/zeros.txt");
+    NFA *res0 = NFA_from_file("../automata/lsd/zeros.txt");
     NFA *res = NFA_extend(res0,0);
     NFA_free(res0);
-    NFA *sum =  NFA_from_file("../automatons/lsd/sum.txt");
+    NFA *sum =  NFA_from_file("../automata/lsd/sum.txt");
 
     NFA *tmp0, *tmp1,*tmp2,*tmp3,*tmp4;
     NFA *curr1,*curr2,*curr3;
@@ -659,11 +659,11 @@ NFA *NFA_mult_scalar(int coeff){
 /// \param pow
 /// \return an automaton for ( 2^pow * x = y)
 NFA *NFA_xy_pow2(int pow){
-    NFA *sum = NFA_from_file("../automatons/lsd/sum.txt");
-    NFA *eq = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+    NFA *sum = NFA_from_file("../automata/lsd/sum.txt");
+    NFA *eq = NFA_from_file("../automata/lsd/x_eq_y.txt");
 
     NFA **pow2_NFAs = (NFA**)malloc((1+pow)*sizeof (NFA*)); // each nfa for  2^i * x = y
-    pow2_NFAs[0] = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+    pow2_NFAs[0] = NFA_from_file("../automata/lsd/x_eq_y.txt");
 
     if(pow>0) {
         NFA *eq_ex = NFA_extend(eq, 2);// x=y,z

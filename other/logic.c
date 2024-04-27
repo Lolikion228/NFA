@@ -323,11 +323,11 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                     a_to_push = NFA_div_n(num);
                 }
                 else if(strstr(i,"is_zero")==i)
-                    a_to_push = NFA_from_file("../automatons/lsd/zeros.txt");
+                    a_to_push = NFA_from_file("../automata/lsd/zeros.txt");
                 else if(strstr(i,"is_equal")==i)
-                    a_to_push = NFA_from_file("../automatons/lsd/x_eq_y.txt");
+                    a_to_push = NFA_from_file("../automata/lsd/x_eq_y.txt");
                 else if(strstr(i,"sum")==i)
-                    a_to_push = NFA_from_file("../automatons/lsd/sum.txt");
+                    a_to_push = NFA_from_file("../automata/lsd/sum.txt");
                 else {
 
                     int valid_id = 0;
