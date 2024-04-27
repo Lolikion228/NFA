@@ -43,5 +43,13 @@ void dict_free(a_dict *dict){
 
     free(dict->keys);
     free(dict->automata);
+    free(dict);
+}
 
+void dict_add(a_dict *dict, char *key, NFA *a){
+    dict->automata = (NFA**)realloc(dict->automata, (dict->len + 1) * (sizeof(NFA*)) );
+    dict->automata[dict->len] = a;
+    dict->keys = (char**)realloc(dict->keys, (dict->len + 1) * (sizeof(char*)) );
+    dict->keys[dict->len] = key;
+    ++dict->len;
 }

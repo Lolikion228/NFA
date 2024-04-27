@@ -8,6 +8,7 @@
 #include "string.h"
 #include "logic.h"
 #include "nfa.h"
+#include "a_dict.h"
 
 char *get_name_for_def(const char *command){
 
@@ -114,20 +115,22 @@ int *get_numbers_for_eval(const char *command, int dim){
  * */
 void app(){
     typedef enum cli_state {def, invalid_command, exit_, eval, list} cli_state;
-    int automata_cnt=3, exiting = 0;
+    int exiting = 0;
     char *command = malloc(330 * sizeof(char));
 
-    char **automata_names = malloc(3 * sizeof(char*) ); // load all from /automata/lsd
-    NFA **automata = malloc(3 * sizeof(NFA*) );
+    a_dict *dict = dict_init();
 
+    dict->keys = malloc(3 * sizeof(char*) ); // load all from /automata/lsd
+    dict->automata = malloc(3 * sizeof(NFA*) );
+    dict->len = 3;
 
-    automata_names[0]="sum";
-    automata_names[1]="is_equal";
-    automata_names[2]="is_zero";
+    dict->keys[0]="sum";
+    dict->keys[1]="is_equal";
+    dict->keys[2]="is_zero";
 
-    automata[0] = NFA_from_file("../automata/lsd/sum.txt");
-    automata[1] = NFA_from_file("../automata/lsd/x_eq_y.txt");
-    automata[2] = NFA_from_file("../automata/lsd/zeros.txt");
+    dict->automata[0] = NFA_from_file("../automata/lsd/sum.txt");
+    dict->automata[1] = NFA_from_file("../automata/lsd/x_eq_y.txt");
+    dict->automata[2] = NFA_from_file("../automata/lsd/zeros.txt");
 
 
     while(1){
@@ -152,8 +155,8 @@ void app(){
             case list:
                 // print predefined automata names
                 printf("available automata names:\n");
-                for(int j=0; j<automata_cnt; ++j){
-                    printf("%d. %s\n",j,automata_names[j]);
+                for(int j=0; j<dict->len; ++j){
+                    printf("%d. %s (dim = %d)\n",j,dict->keys[j],dict->automata[j]->dim);
                 }
                 break;
 
@@ -164,58 +167,46 @@ void app(){
             case def:
 
                 char *formula = get_formula_for_def(command);
+                char *name = get_name_for_def(command);
+                NFA *tmp_1 = Parser(formula,dict);
 
-                NFA *tmp_1 = Parser(formula,automata_names,automata,automata_cnt);
                 if(tmp_1!=NULL){
-                automata = (NFA**)realloc(automata, (automata_cnt + 1) * (sizeof(NFA*)) );
-                automata[automata_cnt] = tmp_1;
-                automata_names = (char**)realloc(automata_names, (automata_cnt + 1) * (sizeof(char*)) );
-                automata_names[automata_cnt] = get_name_for_def(command);
-                ++automata_cnt;}
+                    dict_add(dict,name,tmp_1);
+                }
+                else{
+                    free(name);
+                }
 
                 free(formula);
                 break;
 
             case eval:
                 char *name_ = get_name_for_eval(command);
-                int aut_ix=-1;
-                for(int i=0; i<automata_cnt; ++i){
-                    if(!strcmp(automata_names[i],name_)){
-                        aut_ix=i;
-                        break;
-                    }
-                }
 
-                if(aut_ix==-1){
+                NFA *tmp = dict_get_a(dict,name_);
+
+                if(!tmp){
                     printf("invalid automaton name: %s\n",name_);
                     free(name_);
                     break;
                 }
 
-
-                if(automata[aut_ix]->dim==0){
-                    printf("result = %d\n", NFA_th_check(automata[aut_ix]));
+                if(tmp->dim==0){
+                    printf("result = %d\n", NFA_th_check(tmp));
                 }
                 else{
-                    int *numbers = get_numbers_for_eval(command,automata[aut_ix]->dim);
-                    printf("result = %d\n", NFA_check(automata[aut_ix],numbers));
+                    int *numbers = get_numbers_for_eval(command,tmp->dim);
+                    printf("result = %d\n", NFA_check(tmp,numbers));
                     free(numbers);
                 }
+
                 free(name_);
                 break;
         }
 
 
         if(exiting){
-            for(int i=0; i<automata_cnt; ++i){
-                if(i>=3){
-                    free(automata_names[i]);
-                }
-                NFA_free(automata[i]);
-            }
-
-            free(automata_names);
-            free(automata);
+            dict_free(dict);
             break;
         }
 

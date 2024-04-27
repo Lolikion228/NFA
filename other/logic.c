@@ -10,7 +10,7 @@
 #include "other/Stack.h"
 #include "other/Stack2.h"
 #include "string.h"
-
+#include "a_dict.h"
 
 /*
  * id:  0  1  2  3  4   5     6     7
@@ -240,7 +240,7 @@ void projection_helper(int pr_x, int pr_y, int pr_z, NFA **tmp){
 }
 
 
-NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_cnt ){
+NFA *Parser(char *formula, a_dict *dict ){
     Stack *op_stack = Stack_init();
     Stack2 *a_stack = Stack2_init();
     Operator op, curr;
@@ -293,8 +293,7 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                 memcpy(new_formula,first_bracket+1,cnt-1);
                 new_formula[cnt-1] = '\0';
 
-                NFA *tmp = Parser(new_formula,automata_names,automata,automata_cnt); // everywhere in the code
-                // (automata_names,automata,automata_cnt) into a single structure
+                NFA *tmp = Parser(new_formula,dict);
 
                 free(new_formula);
 
@@ -330,23 +329,16 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
                     a_to_push = NFA_from_file("../automata/lsd/sum.txt");
                 else {
 
-                    int valid_id = 0;
+                    NFA *tmp = dict_get_a(dict,name);
 
-                    if(automata_cnt!=0){
-                        for(int j=0; j<automata_cnt; ++j){
-                            if(!strcmp(name,automata_names[j])){
-                                NFA *tmp = NFA_copy(automata[j]);
-                                a_to_push = tmp;
-                                valid_id=1;
-                            }
-                        }
-
-                    }
-
-                    if(!valid_id){
+                    if(!tmp){
                         printf("invalid automaton name\n");
                         printf("%s\n",i);
+                        free(name);
                         break;
+                    }
+                    else{
+                        a_to_push = tmp;
                     }
 
                 }
@@ -366,6 +358,7 @@ NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_c
 
                 free(name);
                 break;
+
             default:
                 break;
         }

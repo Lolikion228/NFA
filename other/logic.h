@@ -6,6 +6,8 @@
 #ifndef NFA_LOGIC_H
 #define NFA_LOGIC_H
 #include "nfa.h"
+#include "a_dict.h"
+
 typedef struct Operator Operator;
 
 typedef struct Operator{
@@ -15,7 +17,7 @@ typedef struct Operator{
 
 Operator op_init(int id);
 
-NFA *Parser(char *formula, char **automata_names, NFA **automata, int automata_cnt);
+NFA *Parser(char *formula, a_dict *dict);
 
 void RPN_print(char *formula);
 
