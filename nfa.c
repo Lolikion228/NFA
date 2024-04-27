@@ -1270,10 +1270,25 @@ NFA *NFA_div_n(int n){
 
 
 //returns an NFA for  factor * x  = y,  factor >= 0
-NFA *NFA_lin_term(int factor){
+NFA *NFA_lin_term(int factor, int bias){
+
+    //f(x,z): a*x + bias = y <-> Eu,v [ (a * x = u) /\ (v = bias) /\ ( u + v = y)  ]
+
     NFA *mult = NFA_mult_scalar(factor); // factor * x = y
-//    mult->bias = bias;
-    return mult;
+    NFA *bias_a = NFA_const(bias); // y = bias
+    NFA *sum =  NFA_from_file("../automata/lsd/sum.txt"); //x+y=z
+    sum = NFA_extend(sum,0);
+    mult = NFA_extend(mult,2);
+    mult = NFA_extend(mult,3);
+    bias_a = NFA_extend(bias_a,1);
+    bias_a = NFA_extend(bias_a,0);
+    bias_a = NFA_extend(bias_a,0);
+    NFA *res = NFA_intersection(mult,bias_a);
+    res = NFA_intersection(res,sum);
+    res = NFA_project(res,1);
+    res = NFA_project(res,1);
+
+    return res;
 }
 
 NFA *NFA_subs(NFA *a, NFA *lin){

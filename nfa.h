@@ -101,7 +101,7 @@ NFA *kill_zeroes(NFA *a, const NFA *orig);
 
 NFA *NFA_div_n(int n);
 
-NFA *NFA_lin_term(int factor);
+NFA *NFA_lin_term(int factor, int bias);
 
 NFA *NFA_subs(NFA *a, NFA *lin);
 
