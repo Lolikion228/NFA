@@ -301,6 +301,9 @@ NFA *Parser(char *formula, a_dict *dict ){
                 int cnt = 0;
 //                int cnt_quantifiers = 0;
                 while(*(first_bracket+cnt)!=']'){
+//                    if(*(first_bracket+cnt)=='E' || *(first_bracket+cnt)=='A'){
+//                        ++cnt_quantifiers;
+//                    }
                     cnt++;
                 }
 

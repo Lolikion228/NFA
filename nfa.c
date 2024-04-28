@@ -246,16 +246,36 @@ void NFA_to_pic(const NFA *a, int id){
                       "\trankdir=LR;\n";
 
     fprintf(f,template);
+
     int first=1;
     for(int i=0; i<a->states_cnt; ++i){
-
-        if(a->states[i]->is_final == 1){
+        if(a->states[i]->is_final == 1 && a->states[i]->is_starting == 0){
             if(first){fprintf(f,"\tnode [shape = doublecircle ];");first=0;}
              fprintf(f," %d", i);
         }
     }
     if(!first){fprintf(f,";\n");}
-    fprintf(f,"\tnode [shape = circle];\n");
+
+    first = 1;
+    for(int i=0; i<a->states_cnt; ++i){
+        if(a->states[i]->is_final == 0 && a->states[i]->is_starting == 1){
+            if(first){fprintf(f,"\tnode [shape=circle, color=blue ];");first=0;}
+            fprintf(f," %d", i);
+        }
+    }
+    if(!first){fprintf(f,";\n");}
+
+    first = 1;
+    for(int i=0; i<a->states_cnt; ++i){
+        if(a->states[i]->is_final == 1 && a->states[i]->is_starting == 1){
+            if(first){fprintf(f,"\tnode [shape=doublecircle, color=blue ];");first=0;}
+            fprintf(f," %d", i);
+        }
+    }
+    if(!first){fprintf(f,";\n");}
+
+
+    fprintf(f,"\tnode [shape = circle,color =black];\n");
 
     for(int i=0; i<a->states_cnt; ++i){
         NFA_transition *curr = a->states[i]->transitions;
@@ -418,7 +438,7 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
     }
 
 //    NFA_add_transition(res,0,a1->states_cnt+1,-1);
-    res->straight = a1->straight || a2->straight;
+//    res->straight = a1->straight || a2->straight;
     return res;
 }
 
@@ -468,7 +488,7 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
             }
         }
     }
-    res->straight = a1->straight && a2->straight;
+//    res->straight = a1->straight && a2->straight;
     return res;
 }
 
@@ -821,9 +841,28 @@ int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger){
     return res;
 }
 
+//
+//int *NFA_eps_cl(const NFA *a, const int *states_set){
+//    int *res = calloc(a->states_cnt,sizeof(int));
+//
+//    for(int i=0; i<a->states_cnt; ++i){
+//        if(states_set[i]){
+//            res[i]=1;
+//            NFA_transition *curr_tr = a->states[i]->transitions;
+//            while(curr_tr){
+//                if(curr_tr->transition_trigger == -1){ res[curr_tr->state_to_ix] = 1; }
+//                curr_tr = curr_tr->next;
+//            }
+//        }
+//    }
+//
+//    return res;
+//}
+
 
 int *NFA_eps_cl(const NFA *a, const int *states_set){
     int *res = calloc(a->states_cnt,sizeof(int));
+
     for(int i=0; i<a->states_cnt; ++i){
         if(states_set[i]){
             res[i]=1;
@@ -834,6 +873,25 @@ int *NFA_eps_cl(const NFA *a, const int *states_set){
             }
         }
     }
+
+    int changes = 1;
+    while(changes){
+        changes = 0;
+        for(int j=0; j<a->states_cnt; ++j){
+            if(res[j]){
+                NFA_transition *curr_tr = a->states[j]->transitions;
+                while(curr_tr){
+                    if(curr_tr->transition_trigger==-1){
+                        if(res[curr_tr->state_to_ix]==0){changes=1;}
+                        res[curr_tr->state_to_ix]=1;
+                    }
+                    curr_tr=curr_tr->next;
+                }
+            }
+        }
+    }
+
+
     return res;
 }
 
@@ -853,9 +911,20 @@ NFA *DFA_minimization(const NFA *a){
     }
 
     int partition[a->states_cnt];
+    int any_final=0;
+    int any_not_final=0;
     for (int i = 0; i < a->states_cnt; ++i) {
         partition[i] = a->states[i]->is_final ? 1 : 0;
+        if(a->states[i]->is_final){any_final=1;}
+        else{any_not_final=1;}
     }
+
+    if( !any_not_final || !any_final){
+        return NFA_copy(a);
+    }
+//    printf("%d\n",components_cnt);
+    //HERE
+
     int components_cnt = 2, components_cnt_new, changed;
 
     do {
@@ -1256,6 +1325,13 @@ NFA *kill_zeroes(NFA *a, const NFA *orig) {
     }
 
 
+    if(orig->dim==1) {
+        for (int i = 0; i < orig->states_cnt; ++i) {
+            if (orig->states[i]->is_starting) {
+                res->states[i]->is_final = 0;
+            }
+        }
+    }
     return res;
 }
 
