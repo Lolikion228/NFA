@@ -1328,7 +1328,17 @@ NFA *kill_zeroes(NFA *a, const NFA *orig) {
     if(orig->dim==1) {
         for (int i = 0; i < orig->states_cnt; ++i) {
             if (orig->states[i]->is_starting) {
-                res->states[i]->is_final = 0;
+                int self_tr=0;
+                NFA_transition *curr = orig->states[i]->transitions;
+                while(curr){
+                    if(curr->state_to_ix==i && curr->transition_trigger==0){
+                        self_tr=1;
+                    }
+                    curr=curr->next;
+                }
+                if(!self_tr){
+                    res->states[i]->is_final = 0;
+                }
             }
         }
     }
@@ -1366,20 +1376,40 @@ NFA *NFA_lin_term(int factor, int bias){
     NFA *bias_a = NFA_const(bias); // y = bias
     NFA *sum =  NFA_from_file("../automata/lsd/sum.txt"); //x+y=z
 
-    sum = NFA_extend(sum,0);
-    mult = NFA_extend(mult,2);
-    mult = NFA_extend(mult,3);
-    bias_a = NFA_extend(bias_a,1);
-    bias_a = NFA_extend(bias_a,0);
-    bias_a = NFA_extend(bias_a,0);
-    NFA *res = NFA_intersection(mult,bias_a);
-    res = NFA_intersection(res,sum);
-    res = NFA_project(res,1);
-    res = NFA_project(res,1);
-    NFA *tmp1 = NFA_to_DFA(res);
+    NFA* sum1 = NFA_extend(sum,0);
+    NFA_free(sum);
+    NFA *mult1 = NFA_extend(mult,2);
+    NFA_free(mult);
+    mult = NFA_extend(mult1,3);
+    NFA_free(mult1);
+
+
+    NFA *bias_a1 = NFA_extend(bias_a,1);
+    NFA_free(bias_a);
+    bias_a = NFA_extend(bias_a1,0);
+    NFA_free(bias_a1);
+    bias_a1 = NFA_extend(bias_a,0);
+    NFA_free(bias_a);
+
+
+    NFA *res = NFA_intersection(mult,bias_a1);
+    NFA_free(mult);
+    NFA_free(bias_a1);
+    NFA *res1 = NFA_intersection(res,sum1);
+    NFA_free(sum1);
     NFA_free(res);
+
+    res = NFA_project(res1,1);
+    NFA_free(res1);
+    res1 = NFA_project(res,1);
+    NFA_free(res);
+
+
+    NFA *tmp1 = NFA_to_DFA(res1);
+    NFA_free(res1);
     NFA *tmp2 = DFA_minimization(tmp1);
     NFA_free(tmp1);
+
     return tmp2;
 }
 
