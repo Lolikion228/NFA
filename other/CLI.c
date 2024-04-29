@@ -218,6 +218,11 @@ void min_helper(a_dict *dict, char *cmd){
     }
     else{
         NFA *tmp1 = NFA_to_DFA(dict->automata[tmp_ix]);
+        if(tmp1->dim==0){
+            printf("can't minimize an automaton that is 0-dim\n");
+            free(name);
+            return;
+        }
         NFA_free(dict->automata[tmp_ix]);
         dict->automata[tmp_ix] = DFA_minimization(tmp1);
         NFA_free(tmp1);
