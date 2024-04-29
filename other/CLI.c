@@ -201,19 +201,50 @@ void pic_helper(a_dict *dict, char *cmd){
     free(name);
 }
 
+void min_helper(a_dict *dict, char *cmd){
+
+    char *space=cmd;
+    while(*space != ' ')
+        ++space;
+
+    char *name = malloc(sizeof(char) * ( strlen(cmd)-9 ) );
+    name[strlen(cmd)-10]='\0';
+    memcpy(name,space+1,strlen(cmd)-10);
+
+    int tmp_ix = dict_get_a_ix(dict,name);
+
+    if(tmp_ix == -1){
+        printf("invalid automaton name: %s\n",name);
+    }
+    else{
+        NFA *tmp1 = NFA_to_DFA(dict->automata[tmp_ix]);
+        NFA_free(dict->automata[tmp_ix]);
+        dict->automata[tmp_ix] = DFA_minimization(tmp1);
+        NFA_free(tmp1);
+    }
+
+    free(name);
+
+}
+
+
 void write_help(){
     printf("*-*-*-*-*-*-*-*-*-*-*-* NFA_prover_CLI *-*-*-*-*-*-*-*-*-*-*-*\n\n");
 
     printf("help: help\n    just prints this text.\n\n");
     printf("exit: exit\n    interrupts the program.\n\n");
     printf("list: list\n    prints available automata names and some additional info about each of them.\n\n");
+    printf("minimize: minimize [automaton_name]\n    applies NFA->DFA and DFA_minimization to the chosen automaton\n\n");
+    printf("    example: minimize div322\n\n");
     printf("pic: pic [automaton_name]\n    creates an image of the automaton '/temp/automaton0.png'.\n\n");
     printf("    example: pic is_equal\n\n");
     printf("def: def [automaton_name] \"formula\" \n    defines a new automaton. you can use automata that were defined earlier.\n\n");
     printf("    use of a specific automaton: \"$div17(x)\" \n");
     printf("    logical operations: \"($div43(x) | !$div2(x)) & $is_zero(x)\" \n");
+    printf("    universal quantifier: \"Ax[ formula ]\" or \"Ax,y,z[ formula ]\" \n");
     printf("    existential quantifier: \"Ex[ formula ]\" or \"Ex,y,z[ formula ]\" \n\n");
-    printf("    example: def geq \"!Ey[ $sum(x,y,z) ] | $is_equal(x,y)\"\n\n");
+    printf("    example1: def geq \"!Ey[ $sum(x,y,z) ] | $is_equal(x,y)\"\n");
+    printf("    example2: def th3 \"Ax[ Ay[ Ez[ $sum(x,y,z) ] ] ]\"\n\n");
     printf("eval: eval [automaton_name](x_1,x_2,...,x_[automaton_dim])\n");
     printf("    evaluates x_i w.r.t. automaton_name. prints 1 if accepted, 0 otherwise.\n\n");
     printf("    example1: eval div15(45)\n       output: res = 1\n");
@@ -244,7 +275,7 @@ void write_help(){
  * eval name(number)
  * */
 void app(){
-    typedef enum cli_state {def, invalid_command, exit_, eval, list, pic, help} cli_state;
+    typedef enum cli_state {def, invalid_command, exit_, eval, list, pic, help, minimize} cli_state;
     int exiting = 0;
     char *command = malloc(330 * sizeof(char));
 
@@ -275,6 +306,7 @@ void app(){
         if(strstr(command,"list") == command){ curr_state = list; }
         if(strstr(command,"pic") == command){ curr_state = pic; }
         if(strstr(command,"help") == command){ curr_state = help; }
+        if(strstr(command,"minimize") == command){ curr_state = minimize; }
 
         switch (curr_state) {
 
@@ -288,6 +320,10 @@ void app(){
                 pic_helper(dict,command);
                 break;
 
+            case minimize:
+                min_helper(dict,command);
+                break;
+
             case help:
                 write_help();
                 break;
@@ -296,14 +332,18 @@ void app(){
                 // print predefined automata names
                 printf("available automata names:\n");
                 for(int j=0; j<dict->len; ++j){
-                    printf("%d. %s (dim = %d) (states_cnt=%d) (is_dfa=%d) (straight=%d)\n",
+                    printf("%d. %s (dim = %d) (states_cnt=%d) (is_dfa=%d)",
                            j,
                            dict->keys[j],
                            dict->automata[j]->dim,
                            dict->automata[j]->states_cnt,
-                           NFA_is_dfa(dict->automata[j]),
-                           dict->automata[j]->straight);
+                           NFA_is_dfa(dict->automata[j]));
+                    if(dict->automata[j]->dim==0){printf(" (truth=%d)",dict->automata[j]->truth );}
+                    printf("\n");
                 }
+                printf("%d. constN (dim = 1)  e.g. you can use $const13(x)\n",dict->len);
+                printf("%d. multN (dim = 2)  an automaton for N*x=y, e.g. you can use $mult15(x,y) \n",dict->len+1);
+                printf("%d. divN (dim = 1)  an automaton for N | x, e.g. you can use $div23(x) \n",dict->len+2);
                 break;
 
             case invalid_command:
@@ -338,7 +378,7 @@ void app(){
                 }
 
                 if(tmp->dim==0){
-                    printf("result = %d\n", NFA_th_check(tmp));
+                    printf("result = %d\n",tmp->truth);
                 }
                 else{
 

@@ -315,6 +315,10 @@ NFA *Parser(char *formula, a_dict *dict ){
 
                 projection_helper(project_x, project_y, project_z, &tmp);
 
+                if(tmp->dim==0){
+                    tmp->truth = NFA_th_check(tmp);
+                }
+
                 Stack2_push(a_stack,tmp);
 
                 i = first_bracket + cnt;
@@ -356,6 +360,9 @@ NFA *Parser(char *formula, a_dict *dict ){
                 projection_helper(project_x_, project_y_, project_z_, &tmp_1);
                 NFA *tmp_2 = NFA_complement(tmp_1);
                 NFA_free(tmp_1);
+                if(tmp_2->dim==0){
+                    tmp_2->truth = NFA_th_check(tmp_2);
+                }
                 Stack2_push(a_stack,tmp_2);
 
                 i = first_bracket_ + cnt_;

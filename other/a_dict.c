@@ -31,6 +31,17 @@ NFA  *dict_get_a(a_dict *dict, char *key){
     return res;
 }
 
+int dict_get_a_ix(a_dict *dict, char *key){
+    int res = -1;
+
+    for(int i=0; i<dict->len; ++i){
+        if(!strcmp(dict->keys[i],key)){
+            return i;
+        }
+    }
+
+    return res;
+}
 
 void dict_free(a_dict *dict){
 

@@ -26,10 +26,13 @@ NFA *NFA_init(int dim){
         printf("memory allocation error in NFA_init_1\n");
         exit(1);
     }
+
     a->states_cnt =     0;
     a->dim        =   dim;
     a->states     =  NULL;
     a->straight   =     1;
+    a->truth      =    -1;
+
     return a;
 }
 
@@ -396,6 +399,11 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
     NFA *res = NFA_init(a1->dim);
     NFA_add_state(res,0,1);
 
+    if(a1->dim==0){
+        res->truth=a1->truth || a2->truth;
+        return res;
+    }
+
     for(int i=0; i<a1->states_cnt; ++i){
         NFA_add_state(res, a1->states[i]->is_final,0);
     }
@@ -437,8 +445,9 @@ NFA *NFA_union(const NFA *a1, const NFA *a2){
         }
     }
 
-//    NFA_add_transition(res,0,a1->states_cnt+1,-1);
-//    res->straight = a1->straight || a2->straight;
+
+
+
     return res;
 }
 
@@ -447,6 +456,12 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
 //  ix_uni(ix_a1,ix_a2) = a2->states_cnt * ix_a1 + ix_a2
     if(a1->dim != a2->dim){printf("a1 dim != a2 dim\n");printf("got %d and %d\n",a1->dim,a2->dim);exit(1);}
     NFA *res = NFA_init(a1->dim);
+
+    if(a1->dim==0){
+        NFA_add_state(res,0,1);
+        res->truth=a1->truth && a2->truth;
+        return res;
+    }
 
     for(int i=0; i<a1->states_cnt; ++i){
         for(int j=0; j<a2->states_cnt; ++j){
@@ -488,7 +503,9 @@ NFA *NFA_intersection(const NFA *a1, const NFA *a2) {
             }
         }
     }
-//    res->straight = a1->straight && a2->straight;
+
+
+
     return res;
 }
 
@@ -499,6 +516,7 @@ NFA* NFA_complement(const NFA *a){
     if(a->dim==0){
         res = NFA_copy(a);
         res->straight = !res->straight;
+        res->truth = !res->truth;
         return res;
     }
 
@@ -572,6 +590,7 @@ NFA *NFA_project(const NFA *a, int num_cord){
     NFA *tmp = kill_zeroes(res,a);
     NFA_free(res);
 
+
     return tmp;
 }
 
@@ -592,6 +611,7 @@ NFA *NFA_copy(const NFA *a){
         }
     }
     res->straight = a->straight;
+    res->truth=a->truth;
     return res;
 }
 
