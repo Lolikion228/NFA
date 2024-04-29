@@ -13,8 +13,8 @@
 #include "a_dict.h"
 
 /*
- * id:  0  1  2  3  4   5     6     7
- * op:  (  )  |  &  !   div2  div3  is_zero
+ * id:  0  1  2  3  4   5     6     7        8
+ * op:  (  )  |  &  !   div2  div3  is_zero  E
  * */
 
 Operator op_init(int id){
@@ -105,24 +105,23 @@ void parser_helper(Operator op, Stack2 *a_stack){
     if(op.id==2){
         NFA *tmp1 = Stack2_pop(a_stack);
         NFA *tmp2 = Stack2_pop(a_stack);
-
-
         Stack2_push(a_stack, NFA_union(tmp1,tmp2));
         NFA_free(tmp1);
         NFA_free(tmp2);
     }
-    if(op.id==3){
+    else if(op.id==3){
         NFA *tmp1 = Stack2_pop(a_stack);
         NFA *tmp2 = Stack2_pop(a_stack);
         Stack2_push(a_stack, NFA_intersection(tmp1,tmp2));
         NFA_free(tmp1);
         NFA_free(tmp2);
     }
-    if(op.id==4){
+    else if(op.id==4){
         NFA *tmp1 = Stack2_pop(a_stack);
         Stack2_push(a_stack, NFA_complement(tmp1));
         NFA_free(tmp1);
     }
+
 }
 
 
@@ -297,15 +296,17 @@ NFA *Parser(char *formula, a_dict *dict ){
                     if(*first_bracket == 'z'){ project_z = 1;}
                     ++first_bracket;
                 }
-//                ++first_bracket;
+                ++first_bracket;
                 int cnt = 0;
-//                int cnt_quantifiers = 0;
-                while(*(first_bracket+cnt)!=']'){
+                int cnt_quantifiers = 1;
+                while(! (*(first_bracket+cnt)!=']' && cnt_quantifiers==0 )){
+                    if(*(first_bracket+cnt) == '['){++cnt_quantifiers;}
+                    else if(*(first_bracket+cnt) == ']'){--cnt_quantifiers;}
                     ++cnt;
                 }
 
                 char *new_formula = calloc(cnt,sizeof(char));
-                memcpy(new_formula,first_bracket+1,cnt-1);
+                memcpy(new_formula,first_bracket,cnt-1);
                 new_formula[cnt-1] = '\0';
 
                 NFA *tmp = Parser(new_formula,dict);
@@ -332,13 +333,17 @@ NFA *Parser(char *formula, a_dict *dict ){
                     if(*first_bracket_ == 'z'){ project_z_ = 1;}
                     ++first_bracket_;
                 }
+                ++first_bracket_;
                 int cnt_ = 0;
-                while(*(first_bracket_+cnt_)!=']'){
-                    cnt_++;
+                int cnt_quantifiers_ = 1;
+                while(! (*(first_bracket_+cnt_)!=']' && cnt_quantifiers_==0 )){
+                    if(*(first_bracket_+cnt_) == '['){++cnt_quantifiers_;}
+                    else if(*(first_bracket_+cnt_) == ']'){--cnt_quantifiers_;}
+                    ++cnt_;
                 }
 
                 char *new_formula_ = calloc(cnt_,sizeof(char));
-                memcpy(new_formula_,first_bracket_+1,cnt_-1);
+                memcpy(new_formula_,first_bracket_,cnt_-1);
                 new_formula_[cnt_-1] = '\0';
 
                 NFA *tmp_ = Parser(new_formula_,dict);
