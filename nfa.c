@@ -1447,6 +1447,23 @@ NFA *NFA_subs(NFA *a, NFA *lin){
     return tmp2;
 }
 
+NFA *NFA_subs2(NFA *a, NFA *lin1, NFA *lin2){
+    a = NFA_extend(a,2);
+    a = NFA_extend(a,0);
+    lin2 = NFA_swap_digits(lin2,0,1);
+    lin2 = NFA_extend(lin2,0);
+    lin2 = NFA_extend(lin2,0);
+    lin1 = NFA_extend(lin1,2);
+    lin1 = NFA_extend(lin1,3);
+    NFA *res = NFA_intersection(a,lin1);
+    res = NFA_intersection(res,lin2);
+    res = NFA_project(res,1);
+    res = NFA_project(res,1);
+    res = NFA_to_DFA(res);
+    res = DFA_minimization(res);
+    return res;
+}
+
 
 //A( div2(x) | div2(x+1) ) : True
 

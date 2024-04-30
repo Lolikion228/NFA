@@ -109,4 +109,5 @@ NFA *NFA_subs(NFA *a, NFA *lin);
 
 int NFA_th_check(NFA *a);
 
+NFA *NFA_subs2(NFA *a, NFA *lin1, NFA *lin2);
 #endif //NFA_NFA_H
