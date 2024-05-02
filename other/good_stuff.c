@@ -19,6 +19,7 @@ void print_array(int a[], int len){
 }
 
 int project_int(int n, int num_cord){
+    if(n == -1){return -1;}
     int n1 = n & ( (1 << num_cord) - 1 );
     int n2 = n >> (num_cord + 1);
     return n1 + (n2 << num_cord);

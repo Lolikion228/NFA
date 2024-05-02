@@ -290,6 +290,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                 int project_y = 0;
                 int project_z = 0;
                 char *first_bracket=i;
+
                 while(*first_bracket != '['){
                     if(*first_bracket == 'x'){ project_x = 1;}
                     if(*first_bracket == 'y'){ project_y = 1;}
@@ -297,9 +298,11 @@ NFA *Parser(char *formula, a_dict *dict ){
                     ++first_bracket;
                 }
                 ++first_bracket;
+
                 int cnt = 0;
                 int cnt_quantifiers = 1;
-                while(! (*(first_bracket+cnt)!=']' && cnt_quantifiers==0 )){
+
+                while(! (*(first_bracket+cnt)!=']' && cnt_quantifiers==0 ) ){
                     if(*(first_bracket+cnt) == '['){++cnt_quantifiers;}
                     else if(*(first_bracket+cnt) == ']'){--cnt_quantifiers;}
                     ++cnt;
@@ -315,9 +318,7 @@ NFA *Parser(char *formula, a_dict *dict ){
 
                 projection_helper(project_x, project_y, project_z, &tmp);
 
-                if(tmp->dim==0){
-                    tmp->truth = NFA_th_check(tmp);
-                }
+
 
                 Stack2_push(a_stack,tmp);
 
@@ -326,6 +327,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                 break;
 
             case 'A':
+//                printf("HERE A\n");
                 // Ax[ formula(x) ]  <=>   !Ex[ !formula(x) ]
                 int project_x_ = 0;
                 int project_y_ = 0;
@@ -360,9 +362,6 @@ NFA *Parser(char *formula, a_dict *dict ){
                 projection_helper(project_x_, project_y_, project_z_, &tmp_1);
                 NFA *tmp_2 = NFA_complement(tmp_1);
                 NFA_free(tmp_1);
-                if(tmp_2->dim==0){
-                    tmp_2->truth = NFA_th_check(tmp_2);
-                }
                 Stack2_push(a_stack,tmp_2);
 
                 i = first_bracket_ + cnt_;
@@ -481,9 +480,6 @@ NFA *Parser(char *formula, a_dict *dict ){
     Stack_free(op_stack);
     Stack2_free(a_stack);
 
-
-
-
     return res;
 }
 
@@ -559,3 +555,5 @@ void RPN_print(char *formula){
     Stack_free(op_stack);
     printf("\n");
 }
+
+

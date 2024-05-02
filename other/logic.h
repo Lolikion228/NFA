@@ -21,4 +21,5 @@ NFA *Parser(char *formula, a_dict *dict);
 
 void RPN_print(char *formula);
 
+NFA *RegEx2NFA(char *formula );
 #endif //NFA_LOGIC_H

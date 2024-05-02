@@ -108,7 +108,6 @@ int *get_numbers_for_eval(const char *command, int dim){
     return numbers;
 }
 
-// i = [12;124]
 int *get_var_bounds(char* command,char variable){
     char *var = command;
     int *res = malloc(2 * sizeof(int));
@@ -181,7 +180,6 @@ void loop_helper(NFA *tmp, char *command){
     }
 }
 
-//pic id\n
 void pic_helper(a_dict *dict, char *cmd){
     char *space=cmd;
     while(*space != ' ')
@@ -232,7 +230,6 @@ void min_helper(a_dict *dict, char *cmd){
 
 }
 
-
 void write_help(){
     printf("*-*-*-*-*-*-*-*-*-*-*-* NFA_prover_CLI *-*-*-*-*-*-*-*-*-*-*-*\n\n");
 
@@ -275,10 +272,9 @@ void write_help(){
            "          [ i, j, k ] = [ 1, 2, 2 ]; res = 0\n\n");
     printf("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n\n");
 }
-/*
- * def name "formula"
- * eval name(number)
- * */
+
+
+
 void app(){
     typedef enum cli_state {def, invalid_command, exit_, eval, list, pic, help, minimize} cli_state;
     int exiting = 0;
@@ -343,7 +339,7 @@ void app(){
                            dict->automata[j]->dim,
                            dict->automata[j]->states_cnt,
                            NFA_is_dfa(dict->automata[j]));
-                    if(dict->automata[j]->dim==0){printf(" (truth=%d)",dict->automata[j]->truth );}
+                    printf(" (straight=%d)",dict->automata[j]->straight);
                     printf("\n");
                 }
                 printf("%d. constN (dim = 1)  e.g. you can use $const13(x)\n",dict->len);
@@ -383,7 +379,7 @@ void app(){
                 }
 
                 if(tmp->dim==0){
-                    printf("result = %d\n",tmp->truth);
+                    printf("result = %d\n", NFA_th_check(tmp));
                 }
                 else{
 
