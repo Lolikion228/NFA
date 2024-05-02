@@ -16,7 +16,7 @@ a_dict *dict_init(){
 }
 
 
-NFA  *dict_get_a(a_dict *dict, char *key){
+NFA *dict_get_a(a_dict *dict, char *key){
     NFA *res = NULL;
 
     for(int i=0; i<dict->len; ++i){
@@ -31,6 +31,7 @@ NFA  *dict_get_a(a_dict *dict, char *key){
     return res;
 }
 
+
 int dict_get_a_ix(a_dict *dict, char *key){
     int res = -1;
 
@@ -42,6 +43,7 @@ int dict_get_a_ix(a_dict *dict, char *key){
 
     return res;
 }
+
 
 void dict_free(a_dict *dict){
 
@@ -56,6 +58,7 @@ void dict_free(a_dict *dict){
     free(dict->automata);
     free(dict);
 }
+
 
 void dict_add(a_dict *dict, char *key, NFA *a){
 

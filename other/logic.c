@@ -318,8 +318,6 @@ NFA *Parser(char *formula, a_dict *dict ){
 
                 projection_helper(project_x, project_y, project_z, &tmp);
 
-
-
                 Stack2_push(a_stack,tmp);
 
                 i = first_bracket + cnt;
@@ -327,7 +325,6 @@ NFA *Parser(char *formula, a_dict *dict ){
                 break;
 
             case 'A':
-//                printf("HERE A\n");
                 // Ax[ formula(x) ]  <=>   !Ex[ !formula(x) ]
                 int project_x_ = 0;
                 int project_y_ = 0;

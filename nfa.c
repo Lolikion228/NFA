@@ -30,8 +30,6 @@ NFA *NFA_init(int dim){
     a->states_cnt =     0;
     a->dim        =   dim;
     a->states     =  NULL;
-//    a->straight   =     1;
-//    a->truth      =    -1;
 
     return a;
 }
@@ -138,7 +136,6 @@ void NFA_remove_transition(NFA *a, int state_from, int state_to, int trigger){
 }
 
 
-//eps tr to final states???
 int NFA_check(const NFA *a, const int *sentences){
     if(a->dim==0){printf("check got 0-dim\n");exit(1);}
     int *sents2 = malloc(a->dim * sizeof(int));
@@ -210,7 +207,6 @@ int NFA_check(const NFA *a, const int *sentences){
     free(curr_states);
     return 0;
 }
-
 
 void NFA_print(const NFA* a){
     printf("automata_states:\n\n");
@@ -762,6 +758,123 @@ NFA *NFA_xy_pow2(int pow){
     return res_;
 }
 
+NFA *kill_zeroes(NFA *a, const NFA *orig) {
+    NFA *res = NFA_copy(a);
+    if(orig->dim==1){return res;}
+
+    int *new_final = zeros(res->states_cnt);
+    int any_final_on_zeros_at_all = 1;
+
+
+    while (any_final_on_zeros_at_all) {
+        any_final_on_zeros_at_all = 0;
+
+        for (int i = 0; i < res->states_cnt; ++i) {
+
+            int any_final_on_zeros = 0;
+            int *reachable = zeros(res->states_cnt);
+            NFA_transition *curr_tr = res->states[i]->transitions;
+            while (curr_tr) {
+                if (curr_tr->transition_trigger == 0) {
+                    if (res->states[curr_tr->state_to_ix]->is_final) {
+                        any_final_on_zeros = 1;
+                    }
+                    reachable[curr_tr->state_to_ix] = 1;
+                }
+                curr_tr = curr_tr->next;
+            }
+
+            int changes = 1;
+            while (changes) {
+                changes = 0;
+                for (int j = 0; j < res->states_cnt; ++j) {
+                    if (reachable[j]) {
+                        curr_tr = res->states[j]->transitions;
+                        while (curr_tr) {
+                            if (curr_tr->transition_trigger == 0) {
+                                if (res->states[curr_tr->state_to_ix]->is_final) {
+                                    any_final_on_zeros = 1;
+                                }
+                                if (reachable[curr_tr->state_to_ix] == 0) { changes = 1; }
+                                reachable[curr_tr->state_to_ix] = 1;
+                            }
+                            curr_tr = curr_tr->next;
+                        }
+                    }
+                }
+            }
+
+            if (any_final_on_zeros) {
+                any_final_on_zeros_at_all = 1;
+                res->states[i]->is_final = 1;
+                new_final[i]=1;
+                for (int j = 0; j < res->states_cnt; ++j) {
+                    if (reachable[j] && res->states[j]->is_final) {
+//                            printf("%d is gone1\n", j);
+                        res->states[j]->is_final = 0;
+                    }
+                }
+            }
+            free(reachable);
+        }
+
+
+    }
+
+
+    for (int i = 0; i < a->states_cnt; ++i) {
+        if (a->states[i]->is_final) {
+            NFA_transition *curr = a->states[i]->transitions;
+            while (curr) {
+                if (curr->transition_trigger == 0) {
+                    if (curr->state_to_ix == i) {
+                        res->states[i]->is_final = 1;
+                    }
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+
+    for (int i = 0; i < res->states_cnt; ++i) {
+        if (res->states[i]->is_final) {
+
+            int exists = 0;
+            NFA_transition *curr1 = res->states[i]->transitions;
+
+            while (curr1) {
+                if (curr1->state_to_ix == i && curr1->transition_trigger == 0) {
+                    exists = 1;
+                    break;
+                }
+                curr1 = curr1->next;
+            }
+
+            if (!exists) { continue; }
+
+            int tr_to_self_by_zero_in_a = 0;
+            NFA_transition *curr = orig->states[i]->transitions;
+
+            while (curr) {
+                if (curr->state_to_ix == i && curr->transition_trigger == 0) {
+                    tr_to_self_by_zero_in_a = 1;
+                }
+                curr = curr->next;
+            }
+            if (!tr_to_self_by_zero_in_a) {
+//                    printf("%d is gone2\n", i);
+                res->states[i]->is_final = 0;
+            }
+
+        }
+    }
+
+
+
+    return res;
+}
+
 
 NFA *NFA_const(int n){
     NFA *a = NFA_init(1);
@@ -867,24 +980,6 @@ int *NFA_reachable_by(const NFA *a, const int *states_set, int trigger){
     }
     return res;
 }
-
-//
-//int *NFA_eps_cl(const NFA *a, const int *states_set){
-//    int *res = calloc(a->states_cnt,sizeof(int));
-//
-//    for(int i=0; i<a->states_cnt; ++i){
-//        if(states_set[i]){
-//            res[i]=1;
-//            NFA_transition *curr_tr = a->states[i]->transitions;
-//            while(curr_tr){
-//                if(curr_tr->transition_trigger == -1){ res[curr_tr->state_to_ix] = 1; }
-//                curr_tr = curr_tr->next;
-//            }
-//        }
-//    }
-//
-//    return res;
-//}
 
 
 int *NFA_eps_cl(const NFA *a, const int *states_set){
@@ -1247,140 +1342,6 @@ NFA *NFA_to_DFA(NFA *a){
 }
 
 
-//NFA *kill_zeroes(NFA *a, const NFA *orig) {
-//    NFA *res = NFA_copy(a);
-//    int *new_final = zeros(res->states_cnt);
-//    int any_final_on_zeros_at_all = 1;
-//
-//
-//        while (any_final_on_zeros_at_all) {
-//            any_final_on_zeros_at_all = 0;
-//
-//            for (int i = 0; i < res->states_cnt; ++i) {
-//
-//                int any_final_on_zeros = 0;
-//                int *reachable = zeros(res->states_cnt);
-//                NFA_transition *curr_tr = res->states[i]->transitions;
-//                while (curr_tr) {
-//                    if (curr_tr->transition_trigger == 0) {
-//                        if (res->states[curr_tr->state_to_ix]->is_final) {
-//                            any_final_on_zeros = 1;
-//                        }
-//                        reachable[curr_tr->state_to_ix] = 1;
-//                    }
-//                    curr_tr = curr_tr->next;
-//                }
-//
-//                int changes = 1;
-//                while (changes) {
-//                    changes = 0;
-//                    for (int j = 0; j < res->states_cnt; ++j) {
-//                        if (reachable[j]) {
-//                            curr_tr = res->states[j]->transitions;
-//                            while (curr_tr) {
-//                                if (curr_tr->transition_trigger == 0) {
-//                                    if (res->states[curr_tr->state_to_ix]->is_final) {
-//                                        any_final_on_zeros = 1;
-//                                    }
-//                                    if (reachable[curr_tr->state_to_ix] == 0) { changes = 1; }
-//                                    reachable[curr_tr->state_to_ix] = 1;
-//                                }
-//                                curr_tr = curr_tr->next;
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                if (any_final_on_zeros) {
-//                    any_final_on_zeros_at_all = 1;
-//                    res->states[i]->is_final = 1;
-//                    new_final[i]=1;
-//                    for (int j = 0; j < res->states_cnt; ++j) {
-//                        if (reachable[j] && res->states[j]->is_final) {
-////                            printf("%d is gone1\n", j);
-//                            res->states[j]->is_final = 0;
-//                        }
-//                    }
-//                }
-//                free(reachable);
-//            }
-//
-//
-//        }
-//
-//
-//        for (int i = 0; i < a->states_cnt; ++i) {
-//            if (a->states[i]->is_final) {
-//                NFA_transition *curr = a->states[i]->transitions;
-//                while (curr) {
-//                    if (curr->transition_trigger == 0) {
-//                        if (curr->state_to_ix == i) {
-//                            res->states[i]->is_final = 1;
-//                        }
-//                    }
-//                    curr = curr->next;
-//                }
-//            }
-//        }
-//
-//
-//        for (int i = 0; i < res->states_cnt; ++i) {
-//            if (res->states[i]->is_final) {
-//
-//                int exists = 0;
-//                NFA_transition *curr1 = res->states[i]->transitions;
-//
-//                while (curr1) {
-//                    if (curr1->state_to_ix == i && curr1->transition_trigger == 0) {
-//                        exists = 1;
-//                        break;
-//                    }
-//                    curr1 = curr1->next;
-//                }
-//
-//                if (!exists) { continue; }
-//
-//                int tr_to_self_by_zero_in_a = 0;
-//                NFA_transition *curr = orig->states[i]->transitions;
-//
-//                while (curr) {
-//                    if (curr->state_to_ix == i && curr->transition_trigger == 0) {
-//                        tr_to_self_by_zero_in_a = 1;
-//                    }
-//                    curr = curr->next;
-//                }
-//                if (!tr_to_self_by_zero_in_a) {
-////                    printf("%d is gone2\n", i);
-//                    res->states[i]->is_final = 0;
-//                }
-//
-//            }
-//        }
-//
-//
-//    if(orig->dim==1) {
-//        for (int i = 0; i < orig->states_cnt; ++i) {
-//            if (orig->states[i]->is_starting) {
-//                int self_tr=0;
-//                NFA_transition *curr = orig->states[i]->transitions;
-//                while(curr){
-//                    if(curr->state_to_ix==i && curr->transition_trigger==0){
-//                        self_tr=1;
-//                    }
-//                    curr=curr->next;
-//                }
-//                if(!self_tr){
-////                    printf("%d is gone3\n",i);
-//                    res->states[i]->is_final = 0;
-//                }
-//            }
-//        }
-//    }
-//
-//    return res;
-//}
-
-
 NFA *NFA_div_n(int n){
     NFA *a1 = NFA_mult_scalar(n); // a*x=y
     NFA *a2 = NFA_project(a1,0);
@@ -1402,14 +1363,14 @@ NFA *NFA_div_n(int n){
 // Ex($div2(2x+1)) -> False
 
 
-//returns an NFA for  factor * x  = y,  factor >= 0
+//returns an NFA for  factor * x + bias  = y
 NFA *NFA_lin_term(int factor, int bias){
 
-    //f(x,z): a*x + bias = y <-> Eu,v [ (a * x = u) /\ (v = bias) /\ ( u + v = y)  ]
+    //f(x,y): a*x + bias = y <-> Eu,v [ (a * x = u) /\ (v = bias) /\ ( u + v = y)  ]
 
-    NFA *mult = NFA_mult_scalar(factor); // factor * x = y
-    NFA *bias_a = NFA_const(bias); // y = bias
-    NFA *sum =  NFA_from_file("../automata/lsd/sum.txt"); //x+y=z
+    NFA *mult = NFA_mult_scalar(factor);
+    NFA *bias_a = NFA_const(bias);
+    NFA *sum =  NFA_from_file("../automata/lsd/sum.txt");
 
     NFA* sum1 = NFA_extend(sum,0);
     NFA_free(sum);
@@ -1451,60 +1412,18 @@ NFA *NFA_lin_term(int factor, int bias){
 NFA *NFA_subs(NFA *a, NFA *lin){
     NFA *tmp1 = NFA_extend(a,0); // x,t: a([x],t)
     NFA *tmp2 = NFA_intersection(tmp1,lin); // a( [x], t )  /\  coef*x = t
-//    NFA_to_pic(tmp2,2);
-//    NFA_print(tmp2);
     NFA *tmp3 = NFA_project(tmp2,1);
     NFA_free(tmp1);
     NFA_free(tmp2);
+
     tmp1 = NFA_to_DFA(tmp3);
     NFA_free(tmp3);
     tmp2 = DFA_minimization(tmp1);
     NFA_free(tmp1);
+
     return tmp2;
 }
 
-NFA *NFA_subs2(NFA *a, NFA *lin1, NFA *lin2){
-    printf("%d %d %d %d\n",a->states_cnt,lin1->states_cnt,lin2->states_cnt,a->states_cnt*lin1->states_cnt*lin2->states_cnt);
-    NFA *a1 = NFA_extend(a,2);
-    NFA *a2 = NFA_extend(a1,0);
-    NFA_free(a1);
-
-    NFA *lin2_1 = NFA_swap_digits(lin2,0,1);
-    NFA *lin2_2 = NFA_extend(lin2_1,0);
-    NFA_free(lin2_1);
-    lin2_1 = NFA_extend(lin2_2,0);
-    NFA_free(lin2_2);
-
-
-    NFA *lin1_1 = NFA_extend(lin1,2);
-    NFA *lin1_2 = NFA_extend(lin1_1,3);
-    NFA_free(lin1_1);
-
-    NFA *res = NFA_intersection(a2,lin1_2);
-    NFA_free(a2);
-    NFA_free(lin1_2);
-
-    NFA *res_1 = NFA_intersection(res,lin2_1);
-    NFA_free(res);
-    NFA_free(lin2_1);
-    res = NFA_project(res_1,1);
-    NFA_free(res_1);
-    res_1 = NFA_project(res,1);
-    NFA_free(res);
-
-    return res_1;
-}
-
-//NFA *NFA_subs3(NFA *a, NFA *lin1, NFA *lin2){
-//    a = NFA_extend(a,2);
-//    a = NFA_extend(a,0);
-//
-//    return res;
-//}
-
-//A( div2(x) | div2(x+1) ) : True
-
-//REWORK AND MAKE LIKE CHECK
 int NFA_th_check(NFA *a){
 
     int max_len=31,processed_words=0;
@@ -1556,123 +1475,6 @@ int NFA_th_check(NFA *a){
         if(curr_states[i] & a->states[i]->is_final){ free(curr_states); return  a->straight ? 1 : 0;}
     }
     free(curr_states);
-//    printf("here\n");
+
     return a->straight ? 0 : 1;
-}
-
-NFA *kill_zeroes(NFA *a, const NFA *orig) {
-    NFA *res = NFA_copy(a);
-    if(orig->dim==1){return res;}
-
-    int *new_final = zeros(res->states_cnt);
-    int any_final_on_zeros_at_all = 1;
-
-
-    while (any_final_on_zeros_at_all) {
-        any_final_on_zeros_at_all = 0;
-
-        for (int i = 0; i < res->states_cnt; ++i) {
-
-            int any_final_on_zeros = 0;
-            int *reachable = zeros(res->states_cnt);
-            NFA_transition *curr_tr = res->states[i]->transitions;
-            while (curr_tr) {
-                if (curr_tr->transition_trigger == 0) {
-                    if (res->states[curr_tr->state_to_ix]->is_final) {
-                        any_final_on_zeros = 1;
-                    }
-                    reachable[curr_tr->state_to_ix] = 1;
-                }
-                curr_tr = curr_tr->next;
-            }
-
-            int changes = 1;
-            while (changes) {
-                changes = 0;
-                for (int j = 0; j < res->states_cnt; ++j) {
-                    if (reachable[j]) {
-                        curr_tr = res->states[j]->transitions;
-                        while (curr_tr) {
-                            if (curr_tr->transition_trigger == 0) {
-                                if (res->states[curr_tr->state_to_ix]->is_final) {
-                                    any_final_on_zeros = 1;
-                                }
-                                if (reachable[curr_tr->state_to_ix] == 0) { changes = 1; }
-                                reachable[curr_tr->state_to_ix] = 1;
-                            }
-                            curr_tr = curr_tr->next;
-                        }
-                    }
-                }
-            }
-
-            if (any_final_on_zeros) {
-                any_final_on_zeros_at_all = 1;
-                res->states[i]->is_final = 1;
-                new_final[i]=1;
-                for (int j = 0; j < res->states_cnt; ++j) {
-                    if (reachable[j] && res->states[j]->is_final) {
-//                            printf("%d is gone1\n", j);
-                        res->states[j]->is_final = 0;
-                    }
-                }
-            }
-            free(reachable);
-        }
-
-
-    }
-
-
-    for (int i = 0; i < a->states_cnt; ++i) {
-        if (a->states[i]->is_final) {
-            NFA_transition *curr = a->states[i]->transitions;
-            while (curr) {
-                if (curr->transition_trigger == 0) {
-                    if (curr->state_to_ix == i) {
-                        res->states[i]->is_final = 1;
-                    }
-                }
-                curr = curr->next;
-            }
-        }
-    }
-
-
-    for (int i = 0; i < res->states_cnt; ++i) {
-        if (res->states[i]->is_final) {
-
-            int exists = 0;
-            NFA_transition *curr1 = res->states[i]->transitions;
-
-            while (curr1) {
-                if (curr1->state_to_ix == i && curr1->transition_trigger == 0) {
-                    exists = 1;
-                    break;
-                }
-                curr1 = curr1->next;
-            }
-
-            if (!exists) { continue; }
-
-            int tr_to_self_by_zero_in_a = 0;
-            NFA_transition *curr = orig->states[i]->transitions;
-
-            while (curr) {
-                if (curr->state_to_ix == i && curr->transition_trigger == 0) {
-                    tr_to_self_by_zero_in_a = 1;
-                }
-                curr = curr->next;
-            }
-            if (!tr_to_self_by_zero_in_a) {
-//                    printf("%d is gone2\n", i);
-                res->states[i]->is_final = 0;
-            }
-
-        }
-    }
-
-
-
-    return res;
 }

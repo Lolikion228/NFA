@@ -110,4 +110,6 @@ NFA *NFA_subs(NFA *a, NFA *lin);
 int NFA_th_check(NFA *a);
 
 NFA *NFA_subs2(NFA *a, NFA *lin1, NFA *lin2);
+
+NFA *NFA_lin_term_b(int bias);
 #endif //NFA_NFA_H
