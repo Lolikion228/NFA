@@ -13,8 +13,8 @@
 #include "a_dict.h"
 
 /*
- * id:  0  1  2  3  4   5     6     7        8
- * op:  (  )  |  &  !   div2  div3  is_zero  E
+ * id:  0  1  2  3  4   5     6     7        8  9
+ * op:  (  )  |  &  !   div2  div3  is_zero  E  A
  * */
 
 Operator op_init(int id){
@@ -51,6 +51,20 @@ Operator op_init(int id){
         case 7:
             res.id = 7;
             res.priority = -1;
+            break;
+        case 8:
+            res.id = 8;
+            res.priority = -1;
+            res.pr_x=0;
+            res.pr_y=0;
+            res.pr_z=0;
+            break;
+        case 9:
+            res.id = 9;
+            res.priority = -1;
+            res.pr_x=0;
+            res.pr_y=0;
+            res.pr_z=0;
             break;
         default:
             printf("wrong op_id\n");
@@ -100,6 +114,54 @@ void op_print(int id){
     }
 }
 
+void projection_helper(int pr_x, int pr_y, int pr_z, NFA **tmp){
+    if(pr_x){
+        NFA *tmp1 = NFA_project(*tmp,0);
+        NFA_free(*tmp);
+        *tmp = tmp1;
+    }
+
+    if(pr_y){
+        if(pr_x){
+            NFA *tmp2 = NFA_project(*tmp,0);
+            NFA_free(*tmp);
+            *tmp = tmp2;
+        }
+        else{
+            NFA *tmp2 = NFA_project(*tmp,1);
+            NFA_free(*tmp);
+            *tmp = tmp2;
+        }
+    }
+
+    if(pr_z){
+
+        if(pr_y){
+            if(pr_x){
+                NFA *tmp2 = NFA_project(*tmp,0);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+            else{
+                NFA *tmp2 = NFA_project(*tmp,1);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+        }
+        else{
+            if(pr_x){
+                NFA *tmp2 = NFA_project(*tmp,1);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+            else{
+                NFA *tmp2 = NFA_project(*tmp,2);
+                NFA_free(*tmp);
+                *tmp = tmp2;
+            }
+        }
+    }
+}
 
 void parser_helper(Operator op, Stack2 *a_stack){
     if(op.id==2){
@@ -120,6 +182,20 @@ void parser_helper(Operator op, Stack2 *a_stack){
         NFA *tmp1 = Stack2_pop(a_stack);
         Stack2_push(a_stack, NFA_complement(tmp1));
         NFA_free(tmp1);
+    }
+    else if(op.id==8){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        projection_helper(op.pr_x,op.pr_y,op.pr_z,&tmp1);
+        Stack2_push(a_stack, tmp1);
+    }
+    else if(op.id==9){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        NFA *tmp2 = NFA_complement(tmp1);
+        NFA_free(tmp1);
+        projection_helper(op.pr_x,op.pr_y,op.pr_z,&tmp2);
+        tmp1 = NFA_complement(tmp2);
+        NFA_free(tmp2);
+        Stack2_push(a_stack, tmp1);
     }
 
 }
@@ -195,54 +271,7 @@ void var_permutations(int var_cnt, Stack2 *a_stack, NFA *a_to_push,char *i){
 }
 
 
-void projection_helper(int pr_x, int pr_y, int pr_z, NFA **tmp){
-    if(pr_x){
-        NFA *tmp1 = NFA_project(*tmp,0);
-        NFA_free(*tmp);
-        *tmp = tmp1;
-    }
 
-    if(pr_y){
-        if(pr_x){
-            NFA *tmp2 = NFA_project(*tmp,0);
-            NFA_free(*tmp);
-            *tmp = tmp2;
-        }
-        else{
-            NFA *tmp2 = NFA_project(*tmp,1);
-            NFA_free(*tmp);
-            *tmp = tmp2;
-        }
-    }
-
-    if(pr_z){
-
-        if(pr_y){
-            if(pr_x){
-                NFA *tmp2 = NFA_project(*tmp,0);
-                NFA_free(*tmp);
-                *tmp = tmp2;
-            }
-            else{
-                NFA *tmp2 = NFA_project(*tmp,1);
-                NFA_free(*tmp);
-                *tmp = tmp2;
-            }
-        }
-        else{
-            if(pr_x){
-                NFA *tmp2 = NFA_project(*tmp,1);
-                NFA_free(*tmp);
-                *tmp = tmp2;
-            }
-            else{
-                NFA *tmp2 = NFA_project(*tmp,2);
-                NFA_free(*tmp);
-                *tmp = tmp2;
-            }
-        }
-    }
-}
 
 
 NFA *lin_helper(char *cmd){
@@ -255,44 +284,6 @@ NFA *lin_helper(char *cmd){
     return NFA_lin_term(factor,bias);
 }
 
-NFA *ExQuant(char **i, a_dict*dict, int straight){
-    int project_x = 0;
-    int project_y = 0;
-    int project_z = 0;
-    char *first_bracket=*i;
-
-    while(*first_bracket != '['){
-        if(*first_bracket == 'x'){ project_x = 1;}
-        if(*first_bracket == 'y'){ project_y = 1;}
-        if(*first_bracket == 'z'){ project_z = 1;}
-        ++first_bracket;
-    }
-    ++first_bracket;
-
-    int cnt = 0;
-    int cnt_quantifiers = 1;
-
-    while(! (*(first_bracket+cnt)!=']' && cnt_quantifiers==0 ) ){
-        if(*(first_bracket+cnt) == '['){++cnt_quantifiers;}
-        else if(*(first_bracket+cnt) == ']'){--cnt_quantifiers;}
-        ++cnt;
-    }
-
-    char *new_formula = calloc(cnt,sizeof(char));
-    memcpy(new_formula,first_bracket,cnt-1);
-    new_formula[cnt-1] = '\0';
-
-    NFA *tmp = Parser(new_formula,dict);
-    if(!straight){
-        NFA *tmp1 = NFA_complement(tmp);
-        NFA_free(tmp);
-        tmp = tmp1;
-    }
-    free(new_formula);
-    projection_helper(project_x, project_y, project_z, &tmp);
-    *i = first_bracket + cnt - 1;
-    return tmp;
-}
 
 NFA *Parser(char *formula, a_dict *dict ){
     Stack *op_stack = Stack_init();
@@ -329,15 +320,27 @@ NFA *Parser(char *formula, a_dict *dict ){
                 break;
 
             case 'E':
-                NFA *tmp = ExQuant(&i,dict,1);
-                Stack2_push(a_stack,tmp);
+                Operator op_= op_init(8);
+                char *first_bracket=i;
+                while(*first_bracket != '('){
+                    if(*first_bracket == 'x'){ op_.pr_x = 1;}
+                    if(*first_bracket == 'y'){ op_.pr_y = 1;}
+                    if(*first_bracket == 'z'){ op_.pr_z = 1;}
+                    ++first_bracket;
+                }
+                Stack_push(op_stack,op_);
                 break;
 
             case 'A':
-                NFA *tmp_1 = ExQuant(&i,dict,0);
-                NFA *tmp_2 = NFA_complement(tmp_1);
-                NFA_free(tmp_1);
-                Stack2_push(a_stack,tmp_2);
+                Operator op_1= op_init(9);
+                char *first_bracket_=i;
+                while(*first_bracket_ != '('){
+                    if(*first_bracket_ == 'x'){ op_1.pr_x = 1;}
+                    if(*first_bracket_ == 'y'){ op_1.pr_y = 1;}
+                    if(*first_bracket_ == 'z'){ op_1.pr_z = 1;}
+                    ++first_bracket_;
+                }
+                Stack_push(op_stack,op_1);
                 break;
 
             case '$':
@@ -345,7 +348,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                 NFA *a_to_push;
                 int from_dict = 0;
                 char *symbol=i;
-                char *name = get_name_parser(i-1,&symbol);
+                char *name = get_name_parser(i-1,&symbol);//нельзя цифры в именах???
 
                 if(*symbol >= '0' && *symbol <= '9') {
                     if (strstr(i, "div") == i) {

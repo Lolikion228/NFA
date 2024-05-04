@@ -13,6 +13,9 @@ typedef struct Operator Operator;
 typedef struct Operator{
     int id;
     int priority;
+    int pr_x;
+    int pr_y;
+    int pr_z;
 }Operator;
 
 Operator op_init(int id);
