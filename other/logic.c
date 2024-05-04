@@ -125,7 +125,7 @@ void parser_helper(Operator op, Stack2 *a_stack){
 }
 
 
-char *get_name_parser(char *cmd){
+char *get_name_parser(char *cmd, char **i){
 
     char *end = cmd;
     while( (*end) != '('){
@@ -136,6 +136,10 @@ char *get_name_parser(char *cmd){
     memcpy(name,cmd+1,end-cmd-1);
     name[end-cmd-1]='\0';
 
+
+    while( **i!='('  && **i>'9' ){
+        ++*i;
+    }
     return name;
 }
 
@@ -251,6 +255,44 @@ NFA *lin_helper(char *cmd){
     return NFA_lin_term(factor,bias);
 }
 
+NFA *ExQuant(char **i, a_dict*dict, int straight){
+    int project_x = 0;
+    int project_y = 0;
+    int project_z = 0;
+    char *first_bracket=*i;
+
+    while(*first_bracket != '['){
+        if(*first_bracket == 'x'){ project_x = 1;}
+        if(*first_bracket == 'y'){ project_y = 1;}
+        if(*first_bracket == 'z'){ project_z = 1;}
+        ++first_bracket;
+    }
+    ++first_bracket;
+
+    int cnt = 0;
+    int cnt_quantifiers = 1;
+
+    while(! (*(first_bracket+cnt)!=']' && cnt_quantifiers==0 ) ){
+        if(*(first_bracket+cnt) == '['){++cnt_quantifiers;}
+        else if(*(first_bracket+cnt) == ']'){--cnt_quantifiers;}
+        ++cnt;
+    }
+
+    char *new_formula = calloc(cnt,sizeof(char));
+    memcpy(new_formula,first_bracket,cnt-1);
+    new_formula[cnt-1] = '\0';
+
+    NFA *tmp = Parser(new_formula,dict);
+    if(!straight){
+        NFA *tmp1 = NFA_complement(tmp);
+        NFA_free(tmp);
+        tmp = tmp1;
+    }
+    free(new_formula);
+    projection_helper(project_x, project_y, project_z, &tmp);
+    *i = first_bracket + cnt - 1;
+    return tmp;
+}
 
 NFA *Parser(char *formula, a_dict *dict ){
     Stack *op_stack = Stack_init();
@@ -258,6 +300,7 @@ NFA *Parser(char *formula, a_dict *dict ){
     Operator op, curr;
 
     for(char *i = formula; *i != '\0'; ++i){
+
         int op_id = -1;
         switch(*i){
 
@@ -286,114 +329,40 @@ NFA *Parser(char *formula, a_dict *dict ){
                 break;
 
             case 'E':
-                int project_x = 0;
-                int project_y = 0;
-                int project_z = 0;
-                char *first_bracket=i;
-
-                while(*first_bracket != '['){
-                    if(*first_bracket == 'x'){ project_x = 1;}
-                    if(*first_bracket == 'y'){ project_y = 1;}
-                    if(*first_bracket == 'z'){ project_z = 1;}
-                    ++first_bracket;
-                }
-                ++first_bracket;
-
-                int cnt = 0;
-                int cnt_quantifiers = 1;
-
-                while(! (*(first_bracket+cnt)!=']' && cnt_quantifiers==0 ) ){
-                    if(*(first_bracket+cnt) == '['){++cnt_quantifiers;}
-                    else if(*(first_bracket+cnt) == ']'){--cnt_quantifiers;}
-                    ++cnt;
-                }
-
-                char *new_formula = calloc(cnt,sizeof(char));
-                memcpy(new_formula,first_bracket,cnt-1);
-                new_formula[cnt-1] = '\0';
-
-                NFA *tmp = Parser(new_formula,dict);
-
-                free(new_formula);
-
-                projection_helper(project_x, project_y, project_z, &tmp);
-
+                NFA *tmp = ExQuant(&i,dict,1);
                 Stack2_push(a_stack,tmp);
-
-                i = first_bracket + cnt;
-
                 break;
 
             case 'A':
-                // Ax[ formula(x) ]  <=>   !Ex[ !formula(x) ]
-                int project_x_ = 0;
-                int project_y_ = 0;
-                int project_z_ = 0;
-                char *first_bracket_=i;
-                while(*first_bracket_ != '['){
-                    if(*first_bracket_ == 'x'){ project_x_ = 1;}
-                    if(*first_bracket_ == 'y'){ project_y_ = 1;}
-                    if(*first_bracket_ == 'z'){ project_z_ = 1;}
-                    ++first_bracket_;
-                }
-                ++first_bracket_;
-                int cnt_ = 0;
-                int cnt_quantifiers_ = 1;
-                while(! (*(first_bracket_+cnt_)!=']' && cnt_quantifiers_==0 )){
-                    if(*(first_bracket_+cnt_) == '['){++cnt_quantifiers_;}
-                    else if(*(first_bracket_+cnt_) == ']'){--cnt_quantifiers_;}
-                    ++cnt_;
-                }
-
-                char *new_formula_ = calloc(cnt_,sizeof(char));
-                memcpy(new_formula_,first_bracket_,cnt_-1);
-                new_formula_[cnt_-1] = '\0';
-
-                NFA *tmp_ = Parser(new_formula_,dict);
-
-                NFA *tmp_1 = NFA_complement(tmp_);
-                NFA_free(tmp_);
-
-                free(new_formula_);
-
-                projection_helper(project_x_, project_y_, project_z_, &tmp_1);
+                NFA *tmp_1 = ExQuant(&i,dict,0);
                 NFA *tmp_2 = NFA_complement(tmp_1);
                 NFA_free(tmp_1);
                 Stack2_push(a_stack,tmp_2);
-
-                i = first_bracket_ + cnt_;
                 break;
 
-
             case '$':
-
                 ++i;
                 NFA *a_to_push;
                 int from_dict = 0;
-                char *name = get_name_parser(i-1);
+                char *symbol=i;
+                char *name = get_name_parser(i-1,&symbol);
 
-                if(strstr(i,"div")==i){
-                    int num = (int) strtol(name+3,NULL,10);
-                    a_to_push = NFA_div_n(num);
+                if(*symbol >= '0' && *symbol <= '9') {
+                    if (strstr(i, "div") == i) {
+                        int num = (int) strtol(symbol, NULL, 10);
+                        a_to_push = NFA_div_n(num);
+                    } else if (strstr(i, "const") == i) {
+                        int num = (int) strtol(symbol, NULL, 10);
+                        a_to_push = NFA_const(num);
+                    } else if (strstr(i, "mult") == i) {
+                        int num = (int) strtol(symbol, NULL, 10);
+                        a_to_push = NFA_mult_scalar(num);
+                    }
                 }
-                else if(strstr(i,"const")==i){
-                    int num = (int) strtol(name+5,NULL,10);
-                    a_to_push = NFA_const(num);
-                }
-                else if(strstr(i,"mult")==i){
-                    int num = (int) strtol(name+4,NULL,10);
-                    a_to_push = NFA_mult_scalar(num);
-                }
-                else if(strstr(i,"is_zero")==i)
-                    a_to_push = NFA_from_file("../automata/lsd/zeros.txt");
-                else if(strstr(i,"is_equal")==i)
-                    a_to_push = NFA_from_file("../automata/lsd/x_eq_y.txt");
-                else if(strstr(i,"sum")==i)
-                    a_to_push = NFA_from_file("../automata/lsd/sum.txt");
+
+
                 else {
-
                     NFA *tmp = NFA_copy(dict_get_a(dict,name));
-
                     if(!tmp){
                         printf("invalid automaton name\n");
                         printf("%s\n",i);
@@ -404,23 +373,27 @@ NFA *Parser(char *formula, a_dict *dict ){
                         a_to_push = tmp;
                         from_dict = 1;
                     }
-
                 }
-
                 int lin = 0;
-                char *j = i;
+                char *j = symbol;
                 while(*j != '('){
-                    ++j;
-                }
-                while(*j != ')'){
-                    ++j;
-                    if(*j=='0' || *j=='1' || *j=='2' || *j=='3' || *j=='4' || *j=='5' || *j=='6' || *j=='7' || *j=='8' || *j=='9'){
-                        lin=1;
-                    }
-                }
 
+                    ++j;
+                } // otherwise -> unexpected symbol: '(' expected
+
+                while(*j != ')'){
+
+                    ++j;
+                    if(*j >= '0' && *j <= '9') //*j=='0' || *j=='1' || *j=='2' || *j=='3' || *j=='4' || *j=='5' || *j=='6' || *j=='7' || *j=='8' || *j=='9'){
+                        lin=1;
+                }
+                // we always expect linear term: x, x+1, 1+x 2*x, 2*x+1, etc
                 if(lin){
+
+//                    printf("%s\n",i);
+
                     NFA *lin_a = lin_helper(i);
+
                     NFA *res = NFA_subs(a_to_push,lin_a);
                     NFA_free(lin_a);
                     Stack2_push(a_stack,res);
@@ -439,13 +412,12 @@ NFA *Parser(char *formula, a_dict *dict ){
                         if (*j == 'y') { ++var_cnt; }
                         if (*j == 'z') { ++var_cnt; }
                     }
-
-
                     if(!var_cnt){
                         Stack2_push(a_stack,a_to_push);
                     }
                     else{
                         var_permutations(var_cnt, a_stack, a_to_push, i);
+
                     }
                 }
                 free(name);

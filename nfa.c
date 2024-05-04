@@ -391,7 +391,12 @@ NFA *NFA_from_file(char* file_pth){
 
 
 NFA *NFA_union(const NFA *a1, const NFA *a2){
-    if(a1->dim != a2->dim){printf("a1 dim != a2 dim");exit(1);}
+    if(a1->dim != a2->dim){
+        printf("a1 dim != a2 dim\n");
+        NFA_to_pic(a2,2);
+        printf("got %d %d\n",a1->dim,a2->dim);
+        exit(1);
+    }
     if(a1->dim==0){printf("union got 0-dim\n");exit(1);}
     NFA *res = NFA_init(a1->dim);
     NFA_add_state(res,0,1);
@@ -760,7 +765,7 @@ NFA *NFA_xy_pow2(int pow){
 
 NFA *kill_zeroes(NFA *a, const NFA *orig) {
     NFA *res = NFA_copy(a);
-    if(orig->dim==1){return res;}
+
 
     int *new_final = zeros(res->states_cnt);
     int any_final_on_zeros_at_all = 1;
@@ -1409,17 +1414,29 @@ NFA *NFA_lin_term(int factor, int bias){
     return tmp2;
 }
 
+// input: (a, lin), where a->dim == 1.
+// returns: an automaton of dim (lin->dim - 1) for a(lin).
+// Et (a(t) /\ lin(x,t)), where lin(x,t) <-> a*x+b = t
 NFA *NFA_subs(NFA *a, NFA *lin){
-    NFA *tmp1 = NFA_extend(a,0); // x,t: a([x],t)
+    NFA* tmp1 = NFA_copy(a);
+    for (int i = 0; i < lin->dim - 1; ++i)
+    {
+        NFA *tmp2 = NFA_extend(tmp1,0);
+        NFA_free(tmp1);
+        tmp1 = tmp2;
+    }
+    // (a(x,t))
     NFA *tmp2 = NFA_intersection(tmp1,lin); // a( [x], t )  /\  coef*x = t
-    NFA *tmp3 = NFA_project(tmp2,1);
+    NFA *tmp3 = NFA_project(tmp2,lin->dim - 1);
     NFA_free(tmp1);
     NFA_free(tmp2);
 
+    // Questionable ...
     tmp1 = NFA_to_DFA(tmp3);
     NFA_free(tmp3);
     tmp2 = DFA_minimization(tmp1);
     NFA_free(tmp1);
+    // Consider commenting out
 
     return tmp2;
 }

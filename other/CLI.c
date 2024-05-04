@@ -339,7 +339,7 @@ void app(){
                            dict->automata[j]->dim,
                            dict->automata[j]->states_cnt,
                            NFA_is_dfa(dict->automata[j]));
-                    printf(" (straight=%d)",dict->automata[j]->straight);
+//                    printf(" (straight=%d)",dict->automata[j]->straight);
                     printf("\n");
                 }
                 printf("%d. constN (dim = 1)  e.g. you can use $const13(x)\n",dict->len);
@@ -369,7 +369,7 @@ void app(){
 
             case eval:
                 char *name_ = get_name_for_eval(command);
-
+                // add eval for a formula: eval "formula" -> TRUE / FALSE
                 NFA *tmp = dict_get_a(dict,name_);
 
                 if(!tmp){
@@ -402,9 +402,7 @@ void app(){
                         printf("result = %d\n", NFA_check(tmp,numbers));
                         free(numbers);
                     }
-
                 }
-
                 free(name_);
                 break;
         }

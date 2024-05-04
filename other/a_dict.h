@@ -22,4 +22,5 @@ void dict_free(a_dict *dict);
 void dict_add(a_dict *dict, char *key, NFA *a);
 
 int dict_get_a_ix(a_dict *dict, char *key);
+
 #endif //NFA_A_DICT_H
