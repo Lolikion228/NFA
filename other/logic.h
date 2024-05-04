@@ -20,6 +20,8 @@ typedef struct Operator{
 
 Operator op_init(int id);
 
+NFA *read_cool_lin(char *str);
+
 NFA *Parser(char *formula, a_dict *dict);
 
 void RPN_print(char *formula);

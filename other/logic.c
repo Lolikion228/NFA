@@ -54,14 +54,14 @@ Operator op_init(int id){
             break;
         case 8:
             res.id = 8;
-            res.priority = -1;
+            res.priority = 100;
             res.pr_x=0;
             res.pr_y=0;
             res.pr_z=0;
             break;
         case 9:
             res.id = 9;
-            res.priority = -1;
+            res.priority = 100;
             res.pr_x=0;
             res.pr_y=0;
             res.pr_z=0;
@@ -284,6 +284,10 @@ NFA *lin_helper(char *cmd){
     return NFA_lin_term(factor,bias);
 }
 
+NFA *read_cool_lin(char *str){
+
+}
+
 
 NFA *Parser(char *formula, a_dict *dict ){
     Stack *op_stack = Stack_init();
@@ -393,8 +397,6 @@ NFA *Parser(char *formula, a_dict *dict ){
                 // we always expect linear term: x, x+1, 1+x 2*x, 2*x+1, etc
                 if(lin){
 
-//                    printf("%s\n",i);
-
                     NFA *lin_a = lin_helper(i);
 
                     NFA *res = NFA_subs(a_to_push,lin_a);
@@ -404,25 +406,9 @@ NFA *Parser(char *formula, a_dict *dict ){
                         NFA_free(a_to_push);
                     }
                 }
-                else {
-                    int var_cnt = 0;
-                    char *l_par = i;
-                    while (*l_par != '(') {
-                        ++l_par;
-                    }
-                    for (char *j = l_par; *j != ')'; ++j) {
-                        if (*j == 'x') { ++var_cnt; }
-                        if (*j == 'y') { ++var_cnt; }
-                        if (*j == 'z') { ++var_cnt; }
-                    }
-                    if(!var_cnt){
-                        Stack2_push(a_stack,a_to_push);
-                    }
-                    else{
-                        var_permutations(var_cnt, a_stack, a_to_push, i);
+                else
+                    Stack2_push(a_stack,a_to_push);
 
-                    }
-                }
                 free(name);
                 break;
 
