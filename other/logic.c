@@ -306,12 +306,12 @@ NFA *read_cool_lin(char *str){
     }
 
     char *arg = malloc(sizeof(char)*(cnt+2));
-    arg[cnt-1]='\0';
+    arg[cnt+1]='\0';
     memcpy(arg,l_par,cnt+1);
 
     int plus=0,iks=0,nums=0,x_first=-1;
     char *plus_ptr=NULL;
-    for(char *i=arg ; *i!='\0'; ++i){
+    for(char *i=arg ; *i!=')'; ++i){
         if(*i=='x'){iks=1;}
         if(*i=='+'){plus=1;plus_ptr=i;}
         if(*i<='9' && *i>='0'){nums=1;}
@@ -340,7 +340,7 @@ NFA *read_cool_lin(char *str){
         }
 
         if(x_first){
-            for(char *i=str; *i!='+'; ++i){
+            for(char *i=l_par; *i!='+'; ++i){
                 if(*i<='9' && *i>='0'){is_factor=1;}
             }
             factor = 1;
@@ -361,7 +361,6 @@ NFA *read_cool_lin(char *str){
         }
 
     }
-
 //    printf("arg=%s\n",arg);
 //    printf("factor=%d bias=%d nums=%d x_first=%d\n",factor,bias,nums,x_first);
 //    printf("----------\n");

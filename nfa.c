@@ -592,8 +592,12 @@ NFA *NFA_project(const NFA *a, int num_cord){
         }
     }
 //    NFA_to_pic(res,1);
+
     NFA *tmp = kill_zeroes(res,a);
+//    NFA *tmp1 = kill_zeroes2(res);
+
     NFA_free(res);
+//    NFA_free(tmp);
 
     if(a->dim==1){
         tmp->straight=1;
@@ -880,6 +884,28 @@ NFA *kill_zeroes(NFA *a, const NFA *orig) {
     return res;
 }
 
+NFA *kill_zeroes2(NFA *a) {
+    NFA *res = NFA_copy(a);
+    int changes = 1;
+
+    while(changes){
+        changes = 0;
+
+        for(int i=0; i<res->states_cnt; ++i){
+            NFA_transition *curr_tr = res->states[i]->transitions;
+            while(curr_tr){
+                if( (curr_tr->transition_trigger == 0) && (res->states[curr_tr->state_to_ix]->is_final) ){
+                    if(!res->states[i]->is_final){changes = 1;}
+                    res->states[i]->is_final=1;
+                }
+                curr_tr = curr_tr->next;
+            }
+        }
+
+    }
+
+    return res;
+}
 
 NFA *NFA_const(int n){
     NFA *a = NFA_init(1);

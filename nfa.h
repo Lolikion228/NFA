@@ -100,6 +100,7 @@ NFA *NFA_to_DFA(NFA *a);
 void NFA_complete(NFA *a);
 
 NFA *kill_zeroes(NFA *a, const NFA *orig);
+NFA *kill_zeroes2(NFA *a);
 
 NFA *NFA_div_n(int n);
 
