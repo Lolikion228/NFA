@@ -201,7 +201,7 @@ void parser_helper(Operator op, Stack2 *a_stack){
 }
 
 
-char *get_name_parser(char *cmd, char **i){
+char *get_name_parser(char *cmd){
 
     char *end = cmd;
     while( (*end) != '('){
@@ -213,9 +213,6 @@ char *get_name_parser(char *cmd, char **i){
     name[end-cmd-1]='\0';
 
 
-    while( **i!='('  && **i>'9' ){
-        ++*i;
-    }
     return name;
 }
 
@@ -285,7 +282,81 @@ NFA *lin_helper(char *cmd){
 }
 
 NFA *read_cool_lin(char *str){
+    int factor=-1,bias=-1;
+    char *l_par = str;
 
+    while(*l_par != '('){
+        ++l_par;
+    }
+    int cnt=0;
+    while(*(l_par+cnt) != ')'){
+        ++cnt;
+    }
+
+    char *arg = malloc(sizeof(char)*(cnt+2));
+    arg[cnt-1]='\0';
+    memcpy(arg,l_par,cnt+1);
+
+    int plus=0,iks=0,nums=0,x_first=-1;
+    char *plus_ptr=NULL;
+    for(char *i=arg ; *i!='\0'; ++i){
+        if(*i=='x'){iks=1;}
+        if(*i=='+'){plus=1;plus_ptr=i;}
+        if(*i<='9' && *i>='0'){nums=1;}
+    }
+
+
+
+    if(!iks){
+        bias = (int)strtol(l_par+1,NULL,10);
+        factor = 0;
+    }
+    else if(!plus){
+        if(nums){
+            factor = (int)strtol(l_par+1,NULL,10);
+        }
+        else{
+            factor = 1;
+        }
+        bias=0;
+    }
+    else{
+        int is_factor=0;
+        for(int i=0 ; i < strlen(arg); ++i){
+            if(arg[i]=='x'){x_first=1; break;}
+            if(arg[i]=='+'){x_first=0; break;}
+        }
+
+        if(x_first){
+            for(char *i=str; *i!='+'; ++i){
+                if(*i<='9' && *i>='0'){is_factor=1;}
+            }
+            factor = 1;
+            if(is_factor){
+                factor = (int)strtol(l_par+1,NULL,10);
+            }
+            bias = (int)strtol(plus_ptr+1,NULL,10);
+        }
+        else{
+            for(char *i=plus_ptr; *i!=')'; ++i){
+                if(*i<='9' && *i>='0'){is_factor=1;}
+            }
+            factor = 1;
+            if(is_factor){
+                factor = (int)strtol(plus_ptr+1,NULL,10);
+            }
+            bias = (int)strtol(l_par+1,NULL,10);
+        }
+
+    }
+
+
+
+
+//    printf("arg=%s\n",arg);
+//    printf("factor=%d bias=%d nums=%d x_first=%d\n",factor,bias,nums,x_first);
+//    printf("----------\n");
+    return NFA_lin_term(factor,bias);
 }
 
 
@@ -351,23 +422,19 @@ NFA *Parser(char *formula, a_dict *dict ){
                 ++i;
                 NFA *a_to_push;
                 int from_dict = 0;
-                char *symbol=i;
-                char *name = get_name_parser(i-1,&symbol);//нельзя цифры в именах???
+                char *name = get_name_parser(i-1);//нельзя цифры в именах???
 
-                if(*symbol >= '0' && *symbol <= '9') {
-                    if (strstr(i, "div") == i) {
-                        int num = (int) strtol(symbol, NULL, 10);
-                        a_to_push = NFA_div_n(num);
-                    } else if (strstr(i, "const") == i) {
-                        int num = (int) strtol(symbol, NULL, 10);
-                        a_to_push = NFA_const(num);
-                    } else if (strstr(i, "mult") == i) {
-                        int num = (int) strtol(symbol, NULL, 10);
-                        a_to_push = NFA_mult_scalar(num);
-                    }
+
+                if (strstr(i, "div") == i) {
+                    int num = (int) strtol(i+3, NULL, 10);
+                    a_to_push = NFA_div_n(num);
+                } else if (strstr(i, "const") == i) {
+                    int num = (int) strtol(i+5, NULL, 10);
+                    a_to_push = NFA_const(num);
+                } else if (strstr(i, "mult") == i) {
+                    int num = (int) strtol(i+4, NULL, 10);
+                    a_to_push = NFA_mult_scalar(num);
                 }
-
-
                 else {
                     NFA *tmp = NFA_copy(dict_get_a(dict,name));
                     if(!tmp){
@@ -382,7 +449,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                     }
                 }
                 int lin = 0;
-                char *j = symbol;
+                char *j = i;
                 while(*j != '('){
 
                     ++j;
@@ -397,7 +464,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                 // we always expect linear term: x, x+1, 1+x 2*x, 2*x+1, etc
                 if(lin){
 
-                    NFA *lin_a = lin_helper(i);
+                    NFA *lin_a = read_cool_lin(i);
 
                     NFA *res = NFA_subs(a_to_push,lin_a);
                     NFA_free(lin_a);
