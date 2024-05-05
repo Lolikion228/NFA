@@ -13,8 +13,8 @@
 #include "a_dict.h"
 
 /*
- * id:  0  1  2  3  4   5     6     7        8  9
- * op:  (  )  |  &  !   div2  div3  is_zero  E  A
+ * id:  0  1  2  3  4   5     6     7        8  9  10
+ * op:  (  )  |  &  !   div2  div3  is_zero  E  A  >
  * */
 
 Operator op_init(int id){
@@ -65,6 +65,10 @@ Operator op_init(int id){
             res.pr_x=0;
             res.pr_y=0;
             res.pr_z=0;
+            break;
+        case 10:
+            res.id = 10;
+            res.priority = 1;
             break;
         default:
             printf("wrong op_id\n");
@@ -197,6 +201,15 @@ void parser_helper(Operator op, Stack2 *a_stack){
         NFA_free(tmp2);
         Stack2_push(a_stack, tmp1);
     }
+    else if(op.id==10){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        NFA *tmp2 = Stack2_pop(a_stack);
+        NFA *tmp3 = NFA_complement(tmp1);
+        Stack2_push(a_stack, NFA_union(tmp3,tmp2));
+        NFA_free(tmp1);
+        NFA_free(tmp2);
+        NFA_free(tmp3);
+    }
 
 }
 
@@ -216,69 +229,69 @@ char *get_name_parser(char *cmd){
 }
 
 
-void var_permutations(int var_cnt, Stack2 *a_stack, NFA *a_to_push,char *i){
-    if(var_cnt==1){
-        Stack2_push(a_stack,a_to_push);
-    }
-    if(var_cnt==2){
-
-        int x_first=0;
-        for (char *j = i; *j != ')'; ++j) {
-            if (*j == 'x') { x_first=1; break; }
-            if (*j == 'y') { break; }
-        }
-
-        if(x_first){
-            Stack2_push(a_stack,a_to_push);
-        }
-        else{
-            NFA *tmp = NFA_swap_digits(a_to_push,0,1);
-            Stack2_push(a_stack,tmp);
-            NFA_free(a_to_push);
-        }
-
-    }
-
-    if(var_cnt==3){
-        int x_pos=-1;
-        int y_pos=-1;
-        int z_pos=-1;
-        int cnt_=0;
-        for (char *j = i; *j != ')'; ++j) {
-            if (*j == 'x') { x_pos=cnt_++; }
-            if (*j == 'y') { y_pos=cnt_++; }
-            if (*j == 'z') { z_pos=cnt_++; }
-        }
-
-        NFA *tmp1 = NFA_swap_digits(a_to_push,0,x_pos);
-        NFA_free(a_to_push);
-        if(x_pos==1){
-            NFA *tmp2 = NFA_swap_digits(tmp1,0,y_pos);
-            NFA_free(tmp1);
-            Stack2_push(a_stack,tmp2);
-        }
-        else{
-            NFA *tmp2 = NFA_swap_digits(tmp1,1,y_pos);
-            Stack2_push(a_stack,tmp2);
-            NFA_free(tmp1);
-        }
-
-    }
-}
-
-
+//void var_permutations(int var_cnt, Stack2 *a_stack, NFA *a_to_push,char *i){
+//    if(var_cnt==1){
+//        Stack2_push(a_stack,a_to_push);
+//    }
+//    if(var_cnt==2){
+//
+//        int x_first=0;
+//        for (char *j = i; *j != ')'; ++j) {
+//            if (*j == 'x') { x_first=1; break; }
+//            if (*j == 'y') { break; }
+//        }
+//
+//        if(x_first){
+//            Stack2_push(a_stack,a_to_push);
+//        }
+//        else{
+//            NFA *tmp = NFA_swap_digits(a_to_push,0,1);
+//            Stack2_push(a_stack,tmp);
+//            NFA_free(a_to_push);
+//        }
+//
+//    }
+//
+//    if(var_cnt==3){
+//        int x_pos=-1;
+//        int y_pos=-1;
+//        int z_pos=-1;
+//        int cnt_=0;
+//        for (char *j = i; *j != ')'; ++j) {
+//            if (*j == 'x') { x_pos=cnt_++; }
+//            if (*j == 'y') { y_pos=cnt_++; }
+//            if (*j == 'z') { z_pos=cnt_++; }
+//        }
+//
+//        NFA *tmp1 = NFA_swap_digits(a_to_push,0,x_pos);
+//        NFA_free(a_to_push);
+//        if(x_pos==1){
+//            NFA *tmp2 = NFA_swap_digits(tmp1,0,y_pos);
+//            NFA_free(tmp1);
+//            Stack2_push(a_stack,tmp2);
+//        }
+//        else{
+//            NFA *tmp2 = NFA_swap_digits(tmp1,1,y_pos);
+//            Stack2_push(a_stack,tmp2);
+//            NFA_free(tmp1);
+//        }
+//
+//    }
+//}
 
 
 
-NFA *lin_helper(char *cmd){
-    char *l_par = cmd;
-    while(*l_par != '('){
-        ++l_par;
-    }
-    int factor,bias;
-    sscanf(l_par,"%*c%d%*c%*c%d",&factor,&bias);
-    return NFA_lin_term(factor,bias);
-}
+
+
+//NFA *lin_helper(char *cmd){
+//    char *l_par = cmd;
+//    while(*l_par != '('){
+//        ++l_par;
+//    }
+//    int factor,bias;
+//    sscanf(l_par,"%*c%d%*c%*c%d",&factor,&bias);
+//    return NFA_lin_term(factor,bias);
+//}
 
 NFA *read_cool_lin(char *str){
     int factor=-1,bias=-1;
@@ -390,6 +403,10 @@ NFA *Parser(char *formula, a_dict *dict ){
                 op_id = 4;
                 break;
 
+            case '>':
+                op_id = 10;
+                break;
+
             case 'E':
                 Operator op_= op_init(8);
                 char *first_bracket=i;
@@ -418,7 +435,6 @@ NFA *Parser(char *formula, a_dict *dict ){
                 ++i;
                 NFA *a_to_push;
                 int from_dict = 0;
-
                 char *name = get_name_parser(i);
 
                 if (strstr(i, "div") == i) {
@@ -456,6 +472,7 @@ NFA *Parser(char *formula, a_dict *dict ){
                 }
                 else
                     Stack2_push(a_stack,a_to_push);
+
                 free(name);
                 break;
 
