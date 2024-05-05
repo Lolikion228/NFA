@@ -101,6 +101,7 @@ void NFA_complete(NFA *a);
 
 NFA *kill_zeroes(NFA *a, const NFA *orig);
 NFA *kill_zeroes2(NFA *a);
+int *NFA_eps_cl(const NFA *a, const int *states_set);
 
 NFA *NFA_div_n(int n);
 

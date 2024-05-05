@@ -151,6 +151,10 @@ int NFA_check(const NFA *a, const int *sentences){
     for(int i=0; i<a->states_cnt; ++i){
         curr_states[i] = a->states[i]->is_starting;
     }
+    int *eps = NFA_eps_cl(a,curr_states);
+    for(int i=0; i<a->states_cnt; ++i){
+        curr_states[i] = eps[i];
+    }
     while(1) {
         curr_wrd = 0;
         bit_cnt = 0;
@@ -165,7 +169,10 @@ int NFA_check(const NFA *a, const int *sentences){
         for(int i=0; i<a->states_cnt; ++i){
             curr_states2[i] = 0;
         }
-
+        int *eps2 = NFA_eps_cl(a,curr_states);
+        for(int i=0; i<a->states_cnt; ++i){
+            curr_states[i] = eps2[i];
+        }
         for(int i=0; i<a->states_cnt; ++i) {
             if(curr_states[i] == 1) {
 
@@ -591,12 +598,11 @@ NFA *NFA_project(const NFA *a, int num_cord){
             curr_tr=curr_tr->next;
         }
     }
-//    NFA_to_pic(res,1);
 
     NFA *tmp = kill_zeroes(res,a);
-//    NFA *tmp1 = kill_zeroes2(res);
+//    NFA *tmp = kill_zeroes2(res);
 
-    NFA_free(res);
+//    NFA_free(res);
 //    NFA_free(tmp);
 
     if(a->dim==1){
@@ -1375,6 +1381,7 @@ NFA *NFA_to_DFA(NFA *a){
 
 NFA *NFA_div_n(int n){
     NFA *a1 = NFA_mult_scalar(n); // a*x=y
+//    NFA_to_pic(a1,1);
     NFA *a2 = NFA_project(a1,0);
     NFA *a3 = NFA_to_DFA(a2);
     NFA *a4 = DFA_minimization(a3);
@@ -1474,7 +1481,10 @@ int NFA_th_check(NFA *a){
     for(int i=0; i<a->states_cnt; ++i){
         curr_states[i] = a->states[i]->is_starting;
     }
-
+    int *eps = NFA_eps_cl(a,curr_states);
+    for(int i=0; i<a->states_cnt; ++i){
+        curr_states[i] = eps[i];
+    }
     while(1) {
         int is_transition = 0;
         int curr_states2[a->states_cnt];

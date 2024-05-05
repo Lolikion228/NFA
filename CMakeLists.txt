@@ -21,6 +21,8 @@ add_executable(NFA
         other/CLI.c
         other/a_dict.h
         other/a_dict.c
+        other/reg.c
+        other/reg.h
 )
 
 target_link_libraries(NFA m)

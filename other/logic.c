@@ -293,6 +293,7 @@ char *get_name_parser(char *cmd){
 //    return NFA_lin_term(factor,bias);
 //}
 
+//a(ax+b,ay+d,)
 NFA *read_cool_lin(char *str){
     int factor=-1,bias=-1;
     char *l_par = str;
@@ -576,5 +577,4 @@ void RPN_print(char *formula){
     Stack_free(op_stack);
     printf("\n");
 }
-
 
