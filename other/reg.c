@@ -7,7 +7,12 @@
 #include "logic.h"
 #include "Stack.h"
 #include "Stack2.h"
+#include "string.h"
+#include "stdlib.h"
 
+
+
+// | * .
 NFA *RegEx_to_NFA(char *formula){
 
     Stack *op_stack = Stack_init();
@@ -32,19 +37,26 @@ NFA *RegEx_to_NFA(char *formula){
                 break;
 
             case '|':
+                printf("here\n");
                 op_id = 2;
                 break;
 
             case '0':
-                break;
-
             case '1':
+                int num = (int)strtol(i,NULL,2);
+//                printf("")
+                Stack2_push(a_stack, NFA_const(num));
+                while( (*i=='0' || *i=='1') && *i!='\0' )
+                    ++i;
+                --i;
                 break;
 
             case '.':
+                op_id=12;
                 break;
 
             case '*':
+                op_id=11;
                 break;
 
             default:

@@ -11,10 +11,10 @@
 #include "other/Stack2.h"
 #include "string.h"
 #include "a_dict.h"
-
+#include "reg.h"
 /*
- * id:  0  1  2  3  4   5     6     7        8  9  10
- * op:  (  )  |  &  !   div2  div3  is_zero  E  A  >
+ * id:  0  1  2  3  4   5     6     7        8  9  10  11  12
+ * op:  (  )  |  &  !   div2  div3  is_zero  E  A  >   *   .
  * */
 
 Operator op_init(int id){
@@ -30,15 +30,15 @@ Operator op_init(int id){
             break;
         case 2:
             res.id = 2;
-            res.priority = 2;
+            res.priority = 20;
             break;
         case 3:
             res.id = 3;
-            res.priority = 3;
+            res.priority = 30;
             break;
         case 4:
             res.id = 4;
-            res.priority = 4;
+            res.priority = 40;
             break;
         case 5:
             res.id = 5;
@@ -69,6 +69,14 @@ Operator op_init(int id){
         case 10:
             res.id = 10;
             res.priority = 1;
+            break;
+        case 11:
+            res.id = 11;
+            res.priority = 19;
+            break;
+        case 12:
+            res.id = 12;
+            res.priority = 18;
             break;
         default:
             printf("wrong op_id\n");
@@ -209,6 +217,20 @@ void parser_helper(Operator op, Stack2 *a_stack){
         NFA_free(tmp1);
         NFA_free(tmp2);
         NFA_free(tmp3);
+    }
+    else if(op.id==11){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        NFA *tmp2 = NFA_CL_star(tmp1);
+        Stack2_push(a_stack, tmp2);
+        NFA_free(tmp1);
+    }
+    else if(op.id==12){
+        NFA *tmp1 = Stack2_pop(a_stack);
+        NFA *tmp2 = Stack2_pop(a_stack);
+        NFA *tmp3 = NFA_concat(tmp1,tmp2);
+        Stack2_push(a_stack, tmp3);
+        NFA_free(tmp1);
+        NFA_free(tmp2);
     }
 
 }
