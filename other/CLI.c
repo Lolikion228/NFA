@@ -9,6 +9,7 @@
 #include "string.h"
 #include "logic.h"
 #include "a_dict.h"
+#include "reg.h"
 
 char *get_name_for_def(const char *command){
 
@@ -127,13 +128,26 @@ int *get_var_bounds(char* command,char variable){
 }
 
 void loop_helper(NFA *tmp, char *command){
+    int only_true=0;
+    for(char*i=command; *i!='\0'; ++i){
+        if(*i=='-'){
+            only_true=1;
+            break;
+        }
+    }
+
     switch (tmp->dim) {
 
         case 1:
             int *i_bounds_1 = get_var_bounds(command,'i');
 
             for(int i_=i_bounds_1[0]; i_ <= i_bounds_1[1]; ++i_){
-                printf("[ i ] = [ %d ]; res = %d\n",i_, NFA_check(tmp,&i_));
+                if(only_true){
+                    if(NFA_check(tmp,&i_))
+                        printf("[ i ] = [ %d ] = [ %b ]\n",i_,i_);
+                }
+                else
+                    printf("[ i ] = [ %d ] = [ %b ]; res = %d\n",i_,i_, NFA_check(tmp,&i_));
             }
 
             free(i_bounds_1);
@@ -148,7 +162,12 @@ void loop_helper(NFA *tmp, char *command){
                 for(int j_=j_bounds_2[0]; j_ <= j_bounds_2[1]; ++j_){
                     nums_2[0]=i_;
                     nums_2[1]=j_;
-                    printf("[ i, j ] = [ %d, %d ]; res = %d\n",i_, j_, NFA_check(tmp,nums_2));
+                    if(only_true){
+                        if(NFA_check(tmp,nums_2))
+                            printf("[ i, j ] = [ %d, %d ] = [ %b, %b ] \n",i_, j_, i_, j_);
+                    }
+                    else
+                        printf("[ i, j ] = [ %d, %d ] = [ %b, %b ]; res = %d\n",i_, j_,i_,j_, NFA_check(tmp,nums_2));
                 }
 
             free(i_bounds_2);
@@ -168,7 +187,11 @@ void loop_helper(NFA *tmp, char *command){
                         nums_3[0]=i_;
                         nums_3[1]=j_;
                         nums_3[2]=k_;
-                        printf("[ i, j, k ] = [ %d, %d, %d ]; res = %d\n",i_, j_,k_, NFA_check(tmp,nums_3));
+                        if(only_true){
+                            if(NFA_check(tmp,nums_3))
+                                printf("[ i, j, k ] = [ %d, %d, %d ] = [ %b, %b, %b ]",i_, j_,k_,i_, j_,k_);
+                        }
+                        printf("[ i, j, k ] = [ %d, %d, %d ] = [ %b, %b, %b ]; res = %d\n",i_, j_,k_,i_, j_,k_, NFA_check(tmp,nums_3));
                     }
 
             free(i_bounds_3);
@@ -276,7 +299,7 @@ void write_help(){
 
 
 void app(){
-    typedef enum cli_state {def, invalid_command, exit_, eval, list, pic, help, minimize} cli_state;
+    typedef enum cli_state {def, invalid_command, exit_, eval, list, pic, help, minimize, reg} cli_state;
     int exiting = 0;
     char *command = malloc(330 * sizeof(char));
 
@@ -303,6 +326,7 @@ void app(){
 
         if(!strcmp(command,"exit\n")){ curr_state = exit_; }
         if(strstr(command,"def") == command){ curr_state = def; }
+        if(strstr(command,"reg") == command){ curr_state = reg; }
         if(strstr(command,"eval") == command){ curr_state = eval; }
         if(strstr(command,"list") == command){ curr_state = list; }
         if(strstr(command,"pic") == command){ curr_state = pic; }
@@ -355,6 +379,7 @@ void app(){
 
                 char *formula = get_formula_for_def(command);
                 char *name = get_name_for_def(command);
+
                 NFA *tmp_1 = Parser(formula,dict);
 
                 if(tmp_1!=NULL){
@@ -365,6 +390,14 @@ void app(){
                 }
 
                 free(formula);
+                break;
+
+            case reg:
+                char *f = get_formula_for_def(command);
+                char *name_22 = get_name_for_def(command);
+                NFA *tmp_2 = RegEx_to_NFA(f);
+                dict_add(dict,name_22,tmp_2);
+                free(f);
                 break;
 
             case eval:

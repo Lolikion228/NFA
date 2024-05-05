@@ -37,7 +37,6 @@ NFA *RegEx_to_NFA(char *formula){
                 break;
 
             case '|':
-                printf("here\n");
                 op_id = 2;
                 break;
 
