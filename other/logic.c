@@ -208,10 +208,9 @@ char *get_name_parser(char *cmd){
         ++end;
     }
 
-    char *name = malloc(sizeof(char)*(end-cmd));
-    memcpy(name,cmd+1,end-cmd-1);
-    name[end-cmd-1]='\0';
-
+    char *name = malloc(sizeof(char)*(end-cmd+1));
+    memcpy(name,cmd,end-cmd);
+    name[end-cmd]='\0';
 
     return name;
 }
@@ -350,9 +349,6 @@ NFA *read_cool_lin(char *str){
 
     }
 
-
-
-
 //    printf("arg=%s\n",arg);
 //    printf("factor=%d bias=%d nums=%d x_first=%d\n",factor,bias,nums,x_first);
 //    printf("----------\n");
@@ -422,8 +418,8 @@ NFA *Parser(char *formula, a_dict *dict ){
                 ++i;
                 NFA *a_to_push;
                 int from_dict = 0;
-                char *name = get_name_parser(i-1);//нельзя цифры в именах???
 
+                char *name = get_name_parser(i);
 
                 if (strstr(i, "div") == i) {
                     int num = (int) strtol(i+3, NULL, 10);
@@ -448,24 +444,9 @@ NFA *Parser(char *formula, a_dict *dict ){
                         from_dict = 1;
                     }
                 }
-                int lin = 0;
-                char *j = i;
-                while(*j != '('){
 
-                    ++j;
-                } // otherwise -> unexpected symbol: '(' expected
-
-                while(*j != ')'){
-
-                    ++j;
-                    if(*j >= '0' && *j <= '9') //*j=='0' || *j=='1' || *j=='2' || *j=='3' || *j=='4' || *j=='5' || *j=='6' || *j=='7' || *j=='8' || *j=='9'){
-                        lin=1;
-                }
-                // we always expect linear term: x, x+1, 1+x 2*x, 2*x+1, etc
-                if(lin){
-
+                if(a_to_push->dim==1){
                     NFA *lin_a = read_cool_lin(i);
-
                     NFA *res = NFA_subs(a_to_push,lin_a);
                     NFA_free(lin_a);
                     Stack2_push(a_stack,res);
@@ -475,7 +456,6 @@ NFA *Parser(char *formula, a_dict *dict ){
                 }
                 else
                     Stack2_push(a_stack,a_to_push);
-
                 free(name);
                 break;
 
